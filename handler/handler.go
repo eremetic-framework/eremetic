@@ -17,7 +17,8 @@ import (
 
 // CreateRequest handles creating a request for resources
 func CreateRequest(request types.Request, w http.ResponseWriter) {
-	handle(request)
+	WriteJSON(202, nil, w)
+	go handle(request)
 }
 
 // WriteJSON handles writing a JSON response back to the HTTP socket
