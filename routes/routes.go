@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/alde/eremetic/handler"
 	"github.com/alde/eremetic/types"
 	"github.com/gorilla/mux"
 )
@@ -44,24 +45,12 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &request)
 	handleError(err, w)
 
-	createRequest(request, w)
-}
-
-func createRequest(request types.Request, w http.ResponseWriter) {
-	writeJSON(http.StatusOK, request, w)
-}
-
-func writeJSON(status int, data interface{}, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	handler.CreateRequest(request, w)
 }
 
 func handleError(err error, w http.ResponseWriter) {
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422)
-		if err := json.NewEncoder(w).Encode(err); err != nil {
+		if err = handler.WriteJSON(422, err, w); err != nil {
 			panic(err)
 		}
 	}
