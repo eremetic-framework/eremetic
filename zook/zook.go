@@ -18,21 +18,34 @@ func DiscoverMaster(zkString string) string {
 
 	c, _, err := z.Children(path)
 	handleError(err)
-	fmt.Println(c)
 
-	var nodes []zkChild
-
-	for _, child := range c {
-		var resp zkChild
-		data, _, _ := z.Get(path + "/" + child)
-		err = json.Unmarshal(data, &resp)
-		if err != nil {
+	var node string
+	for _, n := range c {
+		if !strings.HasPrefix(n, "json.info_") {
 			continue
 		}
-		log.Printf("Found node with IP: %s, Hostname: %s, Port: %d", resp.Address.IP, resp.Address.Hostname, resp.Address.Port)
-		nodes = append(nodes, resp)
+
+		if node == "" || strings.Compare(n, node) < 0 {
+			node = n
+		}
 	}
-	return fmt.Sprintf("%s:%d", nodes[0].Address.IP, nodes[0].Address.Port)
+
+	if node == "" {
+		log.Fatal("Could not discover master")
+	}
+
+	var resp zkChild
+	data, _, err := z.Get(path + "/" + node)
+	handleError(err)
+	err = json.Unmarshal(data, &resp)
+	handleError(err)
+
+	log.Printf(
+		"Found node with IP: %s, Hostname: %s, Port: %d",
+		resp.Address.IP, resp.Address.Hostname, resp.Address.Port)
+
+	return fmt.Sprintf("%s:%d", resp.Address.IP, resp.Address.Port)
+
 }
 
 func splitURI(uri string) ([]string, string) {
