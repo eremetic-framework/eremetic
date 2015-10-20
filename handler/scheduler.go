@@ -99,8 +99,10 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 		}
 
 		if len(tasks) == 0 {
+			log.Print("No tasks to launch. Declining offer.")
 			driver.DeclineOffer(offer.Id, defaultFilter)
 		} else {
+			log.Printf("Launching %d tasks.", len(tasks))
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, tasks, defaultFilter)
 		}
 	}
