@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -29,6 +30,8 @@ func WriteJSON(status int, data interface{}, w http.ResponseWriter) error {
 }
 
 func handle(request types.Request) {
+	publishedAddr := net.ParseIP(viper.GetString("messenger_address"))
+	bindingPort := uint16(viper.GetInt("messenger_port"))
 	master := zook.DiscoverMaster(viper.GetString("zookeeper"))
 	scheduler := createEremeticScheduler(request)
 	defer close(scheduler.shutdown)
@@ -39,7 +42,10 @@ func handle(request types.Request) {
 			Name: proto.String("Eremetic"),
 			User: proto.String(""),
 		},
-		Scheduler: scheduler,
+		Scheduler:        scheduler,
+		BindingAddress:   net.ParseIP("0.0.0.0"),
+		PublishedAddress: publishedAddr,
+		BindingPort:      bindingPort,
 	})
 	if err != nil {
 		log.Printf("Unable to create scheduler driver: %s", err)
