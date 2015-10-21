@@ -14,6 +14,7 @@ func readConfig() {
 	path, _ := osext.ExecutableFolder()
 	viper.AddConfigPath("/etc/eremetic")
 	viper.AddConfigPath(path)
+	viper.AutomaticEnv()
 	viper.SetConfigName("eremetic")
 	viper.ReadInConfig()
 }
