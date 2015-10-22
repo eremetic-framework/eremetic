@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/alde/eremetic/handler"
 	"github.com/alde/eremetic/routes"
 	"github.com/kardianos/osext"
 	"github.com/spf13/viper"
@@ -25,5 +26,6 @@ func main() {
 
 	router := routes.Create()
 	log.Printf("listening to %s", bind)
+	go handler.Run()
 	log.Fatal(http.ListenAndServe(bind, router))
 }

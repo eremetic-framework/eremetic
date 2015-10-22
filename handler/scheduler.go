@@ -36,9 +36,7 @@ type eremeticScheduler struct {
 	done chan struct{}
 }
 
-func (s *eremeticScheduler) newTaskPrototype(offer *mesos.Offer) *mesos.TaskInfo {
-	taskID := s.tasksCreated
-	s.tasksCreated++
+func createTaskInfo(taskID int, offer *mesos.Offer, s *eremeticScheduler) *mesos.TaskInfo {
 	return &mesos.TaskInfo{
 		TaskId: &mesos.TaskID{
 			Value: proto.String(fmt.Sprintf("Eremetic-%d: Running '%s' on '%s'", taskID, s.command, s.dockerImage)),
@@ -49,6 +47,12 @@ func (s *eremeticScheduler) newTaskPrototype(offer *mesos.Offer) *mesos.TaskInfo
 			mesosutil.NewScalarResource("mem", s.taskMem),
 		},
 	}
+}
+
+func (s *eremeticScheduler) newTaskPrototype(offer *mesos.Offer) *mesos.TaskInfo {
+	taskID := s.tasksCreated
+	s.tasksCreated++
+	return createTaskInfo(taskID, offer, s)
 }
 
 func (s *eremeticScheduler) newTask(offer *mesos.Offer) *mesos.TaskInfo {

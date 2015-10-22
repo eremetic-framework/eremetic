@@ -16,10 +16,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+var requests = make(chan *types.Request)
+
 // CreateRequest handles creating a request for resources
 func CreateRequest(request types.Request, w http.ResponseWriter) {
-	WriteJSON(202, nil, w)
-	go handle(request)
+	defer WriteJSON(202, nil, w)
+	log.Printf("Adding request for '%s' to queue.", request.DockerImage)
+	requests <- &request
 }
 
 // WriteJSON handles writing a JSON response back to the HTTP socket
@@ -27,6 +30,18 @@ func WriteJSON(status int, data interface{}, w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(status)
 	return json.NewEncoder(w).Encode(data)
+}
+
+// Run the RequestChannel Listener
+func Run() {
+	log.Print("Entering handler.Run loop")
+	for {
+		select {
+		case req := <-requests:
+			log.Println("Found a request in the queue!")
+			handle(*req)
+		}
+	}
 }
 
 func handle(request types.Request) {
