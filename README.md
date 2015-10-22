@@ -16,3 +16,12 @@ create /etc/eremetic/eremetic.yml with:
     address: 0.0.0.0
     port: 8080
     zookeeper: zk://<zookeeper_node1:port>,<zookeeper_node2:port>,(...)/mesos
+    messenger_address: <callback address for mesos>
+    messenger_port: <port for mesos to communicate on>
+
+## Contributors
+- Rickard Dybeck
+- David Keijser
+
+## Licensing
+Apache-2
