@@ -27,6 +27,7 @@ func createEremeticTask(request types.Request) eremeticTask {
 			ExecutorId: &mesos.ExecutorID{Value: proto.String("eremetic-executor")},
 			Command: &mesos.CommandInfo{
 				Value: proto.String(request.Command),
+				User:  proto.String("root"),
 			},
 			Container: &mesos.ContainerInfo{
 				Type: mesos.ContainerInfo_DOCKER.Enum(),
