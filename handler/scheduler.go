@@ -2,14 +2,11 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
-
 	log "github.com/dmuth/google-go-log4go"
 
 	"github.com/alde/eremetic/types"
 	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
-	"github.com/mesos/mesos-go/mesosutil"
 	sched "github.com/mesos/mesos-go/scheduler"
 )
 
@@ -19,15 +16,12 @@ var (
 
 // eremeticScheduler holds the structure of the Eremetic Scheduler
 type eremeticScheduler struct {
-	taskCPUs      float64
-	taskMem       float64
-	dockerImage   string
-	command       string
 	tasksToLaunch int
 	tasksCreated  int
 	tasksRunning  int
 
-	eremeticExecutor *mesos.ExecutorInfo
+	// task to start
+	tasks chan eremeticTask
 
 	// This channel is closed when the program receives an interrupt,
 	// signalling that the program should shut down.
@@ -37,30 +31,10 @@ type eremeticScheduler struct {
 	done chan struct{}
 }
 
-func createTaskInfo(taskID int, offer *mesos.Offer, s *eremeticScheduler) *mesos.TaskInfo {
-	return &mesos.TaskInfo{
-		TaskId: &mesos.TaskID{
-			Value: proto.String(fmt.Sprintf("Eremetic-%d: Running '%s' on '%s'", taskID, s.command, s.dockerImage)),
-		},
-		SlaveId: offer.SlaveId,
-		Resources: []*mesos.Resource{
-			mesosutil.NewScalarResource("cpus", s.taskCPUs),
-			mesosutil.NewScalarResource("mem", s.taskMem),
-		},
-	}
-}
-
-func (s *eremeticScheduler) newTaskPrototype(offer *mesos.Offer) *mesos.TaskInfo {
+func (s *eremeticScheduler) newTask(offer *mesos.Offer, spec *eremeticTask) *mesos.TaskInfo {
 	taskID := s.tasksCreated
 	s.tasksCreated++
-	return createTaskInfo(taskID, offer, s)
-}
-
-func (s *eremeticScheduler) newTask(offer *mesos.Offer) *mesos.TaskInfo {
-	task := s.newTaskPrototype(offer)
-	task.Name = proto.String("EREMETIC_" + *task.TaskId.Value)
-	task.Executor = s.eremeticExecutor
-	return task
+	return createTaskInfo(spec, taskID, offer)
 }
 
 // Registered is called when the Scheduler is Registered
@@ -93,23 +67,16 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 				close(s.done)
 			}
 			continue
+		case t := <-s.tasks:
+			log.Debug("Preparing to launch task")
+			task := s.newTask(offer, &t)
+			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
+			continue
 		default:
 		}
 
-		tasks := []*mesos.TaskInfo{}
-		for s.tasksToLaunch > 0 {
-			task := s.newTask(offer)
-			tasks = append(tasks, task)
-			s.tasksToLaunch--
-		}
-
-		if len(tasks) == 0 {
-			log.Debug("No tasks to launch. Declining offer.")
-			driver.DeclineOffer(offer.Id, defaultFilter)
-		} else {
-			log.Debugf("Launching %d tasks.", len(tasks))
-			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, tasks, defaultFilter)
-		}
+		log.Debug("No tasks to launch. Declining offer.")
+		driver.DeclineOffer(offer.Id, defaultFilter)
 	}
 }
 
@@ -139,7 +106,7 @@ func (s *eremeticScheduler) FrameworkMessage(
 
 	log.Debug("Getting a framework message")
 	switch *executorID.Value {
-	case *s.eremeticExecutor.ExecutorId.Value:
+	case "eremetic-executor":
 		var result interface{}
 		err := json.Unmarshal([]byte(message), &result)
 		if err != nil {
@@ -166,28 +133,18 @@ func (s *eremeticScheduler) Error(_ sched.SchedulerDriver, err string) {
 	log.Debugf("Receiving an error: %s", err)
 }
 
-func createEremeticScheduler(request types.Request) *eremeticScheduler {
+func createEremeticScheduler() *eremeticScheduler {
 	s := &eremeticScheduler{
-		taskCPUs:      request.TaskCPUs,
-		taskMem:       request.TaskMem,
-		dockerImage:   request.DockerImage,
-		command:       request.Command,
-		tasksToLaunch: request.TasksToLaunch,
-		shutdown:      make(chan struct{}),
-		done:          make(chan struct{}),
-		eremeticExecutor: &mesos.ExecutorInfo{
-			ExecutorId: &mesos.ExecutorID{Value: proto.String("eremetic-executor")},
-			Command: &mesos.CommandInfo{
-				Value: proto.String(request.Command),
-			},
-			Container: &mesos.ContainerInfo{
-				Type: mesos.ContainerInfo_DOCKER.Enum(),
-				Docker: &mesos.ContainerInfo_DockerInfo{
-					Image: proto.String(request.DockerImage),
-				},
-			},
-			Name: proto.String("Eremetic"),
-		},
+		shutdown: make(chan struct{}),
+		done:     make(chan struct{}),
+		tasks:    make(chan eremeticTask, 100),
 	}
 	return s
+}
+
+func scheduleTasks(s *eremeticScheduler, request types.Request) {
+	for i := 0; i < request.TasksToLaunch; i++ {
+		log.Debug("Adding task to queue")
+		s.tasks <- createEremeticTask(request)
+	}
 }

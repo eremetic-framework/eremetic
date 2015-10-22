@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 
 	"github.com/alde/eremetic/handler"
 	"github.com/alde/eremetic/routes"
@@ -45,6 +46,18 @@ func main() {
 	readConfig()
 	setupLogging()
 	bind := fmt.Sprintf("%s:%d", viper.GetString("address"), viper.GetInt("port"))
+
+	// Catch interrupt
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, os.Kill)
+		s := <-c
+		if s != os.Interrupt {
+			return
+		}
+
+		log.Info("Eremetic is shutting down")
+	}()
 
 	router := routes.Create()
 	log.Infof("listening to %s", bind)
