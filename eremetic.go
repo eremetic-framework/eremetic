@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/alde/eremetic/handler"
 	"github.com/alde/eremetic/routes"
@@ -10,6 +12,8 @@ import (
 	"github.com/kardianos/osext"
 	"github.com/spf13/viper"
 )
+
+const version = "0.1.0"
 
 func readConfig() {
 	path, _ := osext.ExecutableFolder()
@@ -26,7 +30,18 @@ func setupLogging() {
 	log.SetDisplayTime(true)
 }
 
+func handleFlags() {
+	var printVersion bool
+	flag.BoolVar(&printVersion, "version", false, "Print version and exit.")
+	flag.Parse()
+	if printVersion {
+		fmt.Println(version)
+		os.Exit(0)
+	}
+}
+
 func main() {
+	handleFlags()
 	readConfig()
 	setupLogging()
 	bind := fmt.Sprintf("%s:%d", viper.GetString("address"), viper.GetInt("port"))
@@ -35,5 +50,8 @@ func main() {
 	log.Infof("listening to %s", bind)
 	go handler.Run()
 	err := http.ListenAndServe(bind, router)
-	log.Info(err.Error())
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(1)
+	}
 }
