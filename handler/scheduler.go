@@ -3,7 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+
+	log "github.com/dmuth/google-go-log4go"
 
 	"github.com/alde/eremetic/types"
 	"github.com/gogo/protobuf/proto"
@@ -67,26 +68,26 @@ func (s *eremeticScheduler) Registered(
 	_ sched.SchedulerDriver,
 	frameworkID *mesos.FrameworkID,
 	masterInfo *mesos.MasterInfo) {
-	log.Printf("Framework %s registered with master %s", frameworkID, masterInfo)
+	log.Debugf("Framework %s registered with master %s", frameworkID, masterInfo)
 }
 
 // Reregistered is called when the Scheduler is Reregistered
 func (s *eremeticScheduler) Reregistered(_ sched.SchedulerDriver, masterInfo *mesos.MasterInfo) {
-	log.Printf("Framework re-registered with master %s", masterInfo)
+	log.Debugf("Framework re-registered with master %s", masterInfo)
 }
 
 // Disconnected is called when the Scheduler is Disconnected
 func (s *eremeticScheduler) Disconnected(sched.SchedulerDriver) {
-	log.Println("Framework disconnected with master")
+	log.Debugf("Framework disconnected with master")
 }
 
 // ResourceOffers handles the Resource Offers
 func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers []*mesos.Offer) {
-	log.Printf("Received %d resource offers", len(offers))
+	log.Debugf("Received %d resource offers", len(offers))
 	for _, offer := range offers {
 		select {
 		case <-s.shutdown:
-			log.Println("Shutting down: declining offer on [", offer.Hostname, "]")
+			log.Infof("Shutting down: declining offer on [%s]", offer.Hostname)
 			driver.DeclineOffer(offer.Id, defaultFilter)
 			if s.tasksRunning == 0 {
 				close(s.done)
@@ -103,10 +104,10 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 		}
 
 		if len(tasks) == 0 {
-			log.Print("No tasks to launch. Declining offer.")
+			log.Debug("No tasks to launch. Declining offer.")
 			driver.DeclineOffer(offer.Id, defaultFilter)
 		} else {
-			log.Printf("Launching %d tasks.", len(tasks))
+			log.Debugf("Launching %d tasks.", len(tasks))
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, tasks, defaultFilter)
 		}
 	}
@@ -114,7 +115,7 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 
 // StatusUpdate takes care of updating the status
 func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
-	log.Printf("Received task status [%s] for task [%s]", types.NameFor(status.State), *status.TaskId.Value)
+	log.Debugf("Received task status [%s] for task [%s]", types.NameFor(status.State), *status.TaskId.Value)
 
 	if *status.State == mesos.TaskState_TASK_RUNNING {
 		s.tasksRunning++
@@ -136,41 +137,35 @@ func (s *eremeticScheduler) FrameworkMessage(
 	slaveID *mesos.SlaveID,
 	message string) {
 
-	log.Println("Getting a framework message")
+	log.Debug("Getting a framework message")
 	switch *executorID.Value {
 	case *s.eremeticExecutor.ExecutorId.Value:
-		log.Printf("Received framework message from renderer")
 		var result interface{}
 		err := json.Unmarshal([]byte(message), &result)
 		if err != nil {
-			log.Printf("Error deserializing Result: [%s]", err)
+			log.Errorf("Error deserializing Result: [%s]", err)
 			return
 		}
-		log.Printf(
-			"Appending [%s] to render results",
-			result,
-		)
 
 	default:
-		log.Printf("Received a framework message from some unknown source: %s", *executorID.Value)
+		log.Debugf("Received a framework message from some unknown source: %s", *executorID.Value)
 	}
 }
 
 func (s *eremeticScheduler) OfferRescinded(_ sched.SchedulerDriver, offerID *mesos.OfferID) {
-	log.Printf("Offer %s rescinded", offerID)
+	log.Debugf("Offer %s rescinded", offerID)
 }
 func (s *eremeticScheduler) SlaveLost(_ sched.SchedulerDriver, slaveID *mesos.SlaveID) {
-	log.Printf("Slave %s lost", slaveID)
+	log.Debugf("Slave %s lost", slaveID)
 }
 func (s *eremeticScheduler) ExecutorLost(_ sched.SchedulerDriver, executorID *mesos.ExecutorID, slaveID *mesos.SlaveID, status int) {
-	log.Printf("Executor %s on slave %s was lost", executorID, slaveID)
+	log.Debugf("Executor %s on slave %s was lost", executorID, slaveID)
 }
 
 func (s *eremeticScheduler) Error(_ sched.SchedulerDriver, err string) {
-	log.Printf("Receiving an error: %s", err)
+	log.Debugf("Receiving an error: %s", err)
 }
 
-// CreateeremeticScheduler creates a new scheduler for Rendler.
 func createEremeticScheduler(request types.Request) *eremeticScheduler {
 	s := &eremeticScheduler{
 		taskCPUs:      request.TaskCPUs,

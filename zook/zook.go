@@ -3,9 +3,11 @@ package zook
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"os"
 	"strings"
 	"time"
+
+	log "github.com/dmuth/google-go-log4go"
 
 	"github.com/samuel/go-zookeeper/zk"
 )
@@ -31,7 +33,8 @@ func DiscoverMaster(zkString string) string {
 	}
 
 	if node == "" {
-		log.Fatal("Could not discover master")
+		log.Error("Could not discover master")
+		os.Exit(1)
 	}
 
 	var resp zkChild
@@ -40,7 +43,7 @@ func DiscoverMaster(zkString string) string {
 	err = json.Unmarshal(data, &resp)
 	handleError(err)
 
-	log.Printf(
+	log.Debugf(
 		"Found node with IP: %s, Hostname: %s, Port: %d",
 		resp.Address.IP, resp.Address.Hostname, resp.Address.Port)
 
@@ -69,6 +72,7 @@ type zkAddress struct {
 
 func handleError(err error) {
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err.Error())
+		os.Exit(1)
 	}
 }

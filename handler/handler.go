@@ -2,11 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+
+	log "github.com/dmuth/google-go-log4go"
 
 	"github.com/alde/eremetic/types"
 	"github.com/alde/eremetic/zook"
@@ -21,7 +22,7 @@ var requests = make(chan *types.Request)
 // CreateRequest handles creating a request for resources
 func CreateRequest(request types.Request, w http.ResponseWriter) {
 	defer WriteJSON(202, nil, w)
-	log.Printf("Adding request for '%s' to queue.", request.DockerImage)
+	log.Debugf("Adding request for '%s' to queue.", request.DockerImage)
 	requests <- &request
 }
 
@@ -34,11 +35,11 @@ func WriteJSON(status int, data interface{}, w http.ResponseWriter) error {
 
 // Run the RequestChannel Listener
 func Run() {
-	log.Print("Entering handler.Run loop")
+	log.Debug("Entering handler.Run loop")
 	for {
 		select {
 		case req := <-requests:
-			log.Println("Found a request in the queue!")
+			log.Debug("Found a request in the queue!")
 			handle(*req)
 		}
 	}
@@ -63,7 +64,7 @@ func handle(request types.Request) {
 		BindingPort:      bindingPort,
 	})
 	if err != nil {
-		log.Printf("Unable to create scheduler driver: %s", err)
+		log.Errorf("Unable to create scheduler driver: %s", err)
 		return
 	}
 
@@ -76,14 +77,14 @@ func handle(request types.Request) {
 			return
 		}
 
-		log.Println("Eremetic is shutting down")
+		log.Info("Eremetic is shutting down")
 
 		// we have shut down
 		driver.Stop(false)
 	}()
 
 	if status, err := driver.Run(); err != nil {
-		log.Printf("Framework stopped with status %s and error: %s\n", status.String(), err.Error())
+		log.Errorf("Framework stopped with status %s and error: %s\n", status.String(), err.Error())
 	}
-	log.Println("Exiting...")
+	log.Info("Exiting...")
 }
