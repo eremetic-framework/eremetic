@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"time"
 
 	log "github.com/dmuth/google-go-log4go"
 
@@ -86,6 +87,7 @@ func updateStatusForTask(status *mesos.TaskStatus) {
 	id := status.TaskId.GetValue()
 	log.Debugf("TaskId [%s] status [%s]", id, status.State)
 	task := runningTasks[id]
+	task.deleteAt = time.Now().Add(time.Hour)
 	task.Status = status.State.String()
 	runningTasks[id] = task
 }

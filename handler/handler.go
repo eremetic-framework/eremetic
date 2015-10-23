@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gorilla/mux"
@@ -72,6 +73,18 @@ func Run() {
 			log.Debug("Found a request in the queue!")
 			scheduleTasks(scheduler, *req)
 		}
+	}
+}
+
+// CleanupTasks is an infinite loop removing terminal Tasks that have stuck around too long.
+func CleanupTasks() {
+	for {
+		for i, t := range runningTasks {
+			if t.deleteAt.After(time.Now()) && types.IsTerminalString(t.Status) {
+				delete(runningTasks, i)
+			}
+		}
+		time.Sleep(time.Minute * 15)
 	}
 }
 

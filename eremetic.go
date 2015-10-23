@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const version = "0.2.0"
+const version = "0.3.0"
 
 func readConfig() {
 	path, _ := osext.ExecutableFolder()
@@ -62,6 +62,7 @@ func main() {
 	router := routes.Create()
 	log.Infof("listening to %s", bind)
 	go handler.Run()
+	go handler.CleanupTasks()
 	err := http.ListenAndServe(bind, router)
 	if err != nil {
 		log.Error(err.Error())

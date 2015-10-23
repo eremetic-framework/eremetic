@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/alde/eremetic/types"
 	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
@@ -14,6 +16,7 @@ type eremeticTask struct {
 	Container *mesos.ContainerInfo `json:"container"`
 	Status    string               `json:"status"`
 	ID        string               `json:"-"`
+	deleteAt  time.Time
 }
 
 var runningTasks map[string]eremeticTask
