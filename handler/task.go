@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/alde/eremetic/types"
@@ -68,7 +69,7 @@ func createTaskInfo(task *eremeticTask, taskID int, offer *mesos.Offer) *mesos.T
 			Value: proto.String(task.ID),
 		},
 		SlaveId:   offer.SlaveId,
-		Name:      proto.String("Eremetic task " + string(taskID)),
+		Name:      proto.String(fmt.Sprintf("Eremetic task %d", taskID)),
 		Command:   task.Command,
 		Container: task.Container,
 		Resources: []*mesos.Resource{

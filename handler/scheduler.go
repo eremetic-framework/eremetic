@@ -18,9 +18,7 @@ var (
 
 // eremeticScheduler holds the structure of the Eremetic Scheduler
 type eremeticScheduler struct {
-	tasksToLaunch int
-	tasksCreated  int
-	tasksRunning  int
+	tasksCreated int
 
 	// task to start
 	tasks chan eremeticTask
@@ -65,9 +63,6 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 		case <-s.shutdown:
 			log.Infof("Shutting down: declining offer on [%s]", offer.Hostname)
 			driver.DeclineOffer(offer.Id, defaultFilter)
-			if s.tasksRunning == 0 {
-				close(s.done)
-			}
 			continue
 		case t := <-s.tasks:
 			log.Debug("Preparing to launch task")
@@ -96,19 +91,7 @@ func updateStatusForTask(status *mesos.TaskStatus) {
 func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
 	log.Debugf("Received task status [%s] for task [%s]", types.NameFor(status.State), *status.TaskId.Value)
 
-	if *status.State == mesos.TaskState_TASK_RUNNING {
-		s.tasksRunning++
-	} else if types.IsTerminal(status.State) {
-		updateStatusForTask(status)
-		s.tasksRunning--
-		if s.tasksRunning == 0 {
-			select {
-			case <-s.shutdown:
-				close(s.done)
-			default:
-			}
-		}
-	}
+	updateStatusForTask(status)
 }
 
 func (s *eremeticScheduler) FrameworkMessage(
