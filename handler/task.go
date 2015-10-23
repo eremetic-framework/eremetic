@@ -22,6 +22,23 @@ type eremeticTask struct {
 var runningTasks map[string]eremeticTask
 
 func createEremeticTask(request types.Request) eremeticTask {
+	var volumes []*mesos.Volume
+	for _, v := range request.Volumes {
+		volumes = append(volumes, &mesos.Volume{
+			Mode:          mesos.Volume_RW.Enum(),
+			ContainerPath: proto.String(v.ContainerPath),
+			HostPath:      proto.String(v.HostPath),
+		})
+	}
+
+	var environment []*mesos.Environment_Variable
+	for k, v := range request.Environment {
+		environment = append(environment, &mesos.Environment_Variable{
+			Name:  proto.String(k),
+			Value: proto.String(v),
+		})
+	}
+
 	task := eremeticTask{
 		TaskCPUs: request.TaskCPUs,
 		TaskMem:  request.TaskMem,
@@ -29,12 +46,16 @@ func createEremeticTask(request types.Request) eremeticTask {
 		Command: &mesos.CommandInfo{
 			Value: proto.String(request.Command),
 			User:  proto.String("root"),
+			Environment: &mesos.Environment{
+				Variables: environment,
+			},
 		},
 		Container: &mesos.ContainerInfo{
 			Type: mesos.ContainerInfo_DOCKER.Enum(),
 			Docker: &mesos.ContainerInfo_DockerInfo{
 				Image: proto.String(request.DockerImage),
 			},
+			Volumes: volumes,
 		},
 	}
 	return task
