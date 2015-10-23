@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+
 	log "github.com/dmuth/google-go-log4go"
 
 	"github.com/alde/eremetic/types"
@@ -57,7 +58,7 @@ func (s *eremeticScheduler) Disconnected(sched.SchedulerDriver) {
 
 // ResourceOffers handles the Resource Offers
 func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers []*mesos.Offer) {
-	log.Debugf("Received %d resource offers", len(offers))
+	log.Tracef("Received %d resource offers", len(offers))
 	for _, offer := range offers {
 		select {
 		case <-s.shutdown:
@@ -70,14 +71,23 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 		case t := <-s.tasks:
 			log.Debug("Preparing to launch task")
 			task := s.newTask(offer, &t)
+			runningTasks[t.ID] = t
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
 			continue
 		default:
 		}
 
-		log.Debug("No tasks to launch. Declining offer.")
+		log.Trace("No tasks to launch. Declining offer.")
 		driver.DeclineOffer(offer.Id, defaultFilter)
 	}
+}
+
+func updateStatusForTask(status *mesos.TaskStatus) {
+	id := status.TaskId.GetValue()
+	log.Debugf("TaskId [%s] status [%s]", id, status.State)
+	task := runningTasks[id]
+	task.Status = status.State.String()
+	runningTasks[id] = task
 }
 
 // StatusUpdate takes care of updating the status
@@ -87,6 +97,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 	if *status.State == mesos.TaskState_TASK_RUNNING {
 		s.tasksRunning++
 	} else if types.IsTerminal(status.State) {
+		updateStatusForTask(status)
 		s.tasksRunning--
 		if s.tasksRunning == 0 {
 			select {
@@ -113,6 +124,7 @@ func (s *eremeticScheduler) FrameworkMessage(
 			log.Errorf("Error deserializing Result: [%s]", err)
 			return
 		}
+		log.Debug(message)
 
 	default:
 		log.Debugf("Received a framework message from some unknown source: %s", *executorID.Value)
@@ -145,6 +157,7 @@ func createEremeticScheduler() *eremeticScheduler {
 func scheduleTasks(s *eremeticScheduler, request types.Request) {
 	for i := 0; i < request.TasksToLaunch; i++ {
 		log.Debug("Adding task to queue")
-		s.tasks <- createEremeticTask(request)
+		task := createEremeticTask(request)
+		s.tasks <- task
 	}
 }

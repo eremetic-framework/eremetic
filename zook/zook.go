@@ -12,6 +12,16 @@ import (
 	"github.com/samuel/go-zookeeper/zk"
 )
 
+func compare(a, b string) int {
+	if a == b {
+		return 0
+	}
+	if a < b {
+		return -1
+	}
+	return +1
+}
+
 // DiscoverMaster attempts to find the Mesos Master from a Zookeeper URI
 func DiscoverMaster(zkString string) string {
 	uris, path := splitURI(zkString)
@@ -27,7 +37,7 @@ func DiscoverMaster(zkString string) string {
 			continue
 		}
 
-		if node == "" || strings.Compare(n, node) < 0 {
+		if node == "" || compare(n, node) < 0 {
 			node = n
 		}
 	}

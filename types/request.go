@@ -7,4 +7,5 @@ type Request struct {
 	DockerImage   string  `json:"docker_image"`
 	Command       string  `json:"command"`
 	TasksToLaunch int     `json:"tasks_to_launch"`
+	TaskID        string  `json:"-"`
 }
