@@ -20,7 +20,7 @@ func IsTerminal(state *mesos.TaskState) bool {
 // it is terminal or not.
 func IsTerminalString(state string) bool {
 	switch state {
-	case "TASK_LOST", "TASK_KILLED", "TAKS_FAILED", "TASK_FINISHED":
+	case "TASK_LOST", "TASK_KILLED", "TASK_FAILED", "TASK_FINISHED":
 		return true
 	default:
 		return false

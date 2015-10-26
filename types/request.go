@@ -1,6 +1,8 @@
 package types
 
-type volume struct {
+// Volume is a mapping between ContainerPath and HostPath, to allow Docker
+// to mount volumes.
+type Volume struct {
 	ContainerPath string `json:"container_path"`
 	HostPath      string `json:"host_path"`
 }
@@ -12,6 +14,6 @@ type Request struct {
 	DockerImage string            `json:"docker_image"`
 	Command     string            `json:"command"`
 	TaskID      string            `json:"-"`
-	Volumes     []volume          `json:"volumes"`
+	Volumes     []Volume          `json:"volumes"`
 	Environment map[string]string `json:"env"`
 }
