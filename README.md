@@ -1,5 +1,4 @@
-# Eremetic
-
+# Eremetic [![Build Status][travis-image]](https://travis-ci.org/alde/eremetic)
 Eremetic is a Mesos Framework to run one-shot tasks.
 
 ## Planned usage
@@ -25,3 +24,5 @@ create /etc/eremetic/eremetic.yml with:
 
 ## Licensing
 Apache-2
+
+[travis-image]: https://travis-ci.org/alde/eremetic.svg
