@@ -38,11 +38,8 @@ func (s *eremeticScheduler) newTask(offer *mesos.Offer, spec *eremeticTask) *mes
 }
 
 // Registered is called when the Scheduler is Registered
-func (s *eremeticScheduler) Registered(
-	_ sched.SchedulerDriver,
-	frameworkID *mesos.FrameworkID,
-	masterInfo *mesos.MasterInfo) {
-	log.Debugf("Framework %s registered with master %s", frameworkID, masterInfo)
+func (s *eremeticScheduler) Registered(_ sched.SchedulerDriver, frameworkID *mesos.FrameworkID, masterInfo *mesos.MasterInfo) {
+	log.Debugf("Framework %s registered with master %s", frameworkID.GetValue(), masterInfo.GetHostname())
 }
 
 // Reregistered is called when the Scheduler is Reregistered
@@ -89,7 +86,7 @@ func updateStatusForTask(status *mesos.TaskStatus) {
 
 // StatusUpdate takes care of updating the status
 func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
-	log.Debugf("Received task status [%s] for task [%s]", types.NameFor(status.State), *status.TaskId.Value)
+	log.Debugf("Received task status [%s] for task [%s]", status.State.String(), *status.TaskId.Value)
 
 	updateStatusForTask(status)
 }

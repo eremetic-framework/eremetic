@@ -112,7 +112,9 @@ func createRequest(request types.Request, w http.ResponseWriter) {
 	w.Header().Set("Location", fmt.Sprintf("/task/%s", taskID))
 	defer writeJSON(http.StatusAccepted, taskID, w)
 	log.Debugf("Adding request for '%s' to queue.", request.DockerImage)
-	requests <- &request
+	go func() {
+		requests <- &request
+	}()
 }
 
 func writeJSON(status int, data interface{}, w http.ResponseWriter) error {
