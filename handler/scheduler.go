@@ -139,10 +139,7 @@ func createEremeticScheduler() *eremeticScheduler {
 	return s
 }
 
-func scheduleTasks(s *eremeticScheduler, request types.Request) {
-	for i := 0; i < request.TasksToLaunch; i++ {
-		log.Debug("Adding task to queue")
-		task := createEremeticTask(request)
-		s.tasks <- task
-	}
+func scheduleTask(s *eremeticScheduler, request types.Request) {
+	log.Debug("Adding task to queue")
+	s.tasks <- createEremeticTask(request)
 }

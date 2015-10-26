@@ -71,7 +71,7 @@ func Run() {
 		select {
 		case req := <-requests:
 			log.Debug("Found a request in the queue!")
-			scheduleTasks(scheduler, *req)
+			scheduleTask(scheduler, *req)
 		}
 	}
 }
