@@ -14,6 +14,7 @@ type Request struct {
 	DockerImage string            `json:"docker_image"`
 	Command     string            `json:"command"`
 	TaskID      string            `json:"-"`
+	Name        string            `json:"-"`
 	Volumes     []Volume          `json:"volumes"`
 	Environment map[string]string `json:"env"`
 }
