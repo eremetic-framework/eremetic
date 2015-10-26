@@ -89,7 +89,7 @@ func updateStatusForTask(status *mesos.TaskStatus) {
 
 // StatusUpdate takes care of updating the status
 func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
-	log.Debugf("Received task status [%s] for task [%s]", types.NameFor(status.State), *status.TaskId.Value)
+	log.Debugf("Received task status [%s] for task [%s]", status.State.String(), *status.TaskId.Value)
 
 	updateStatusForTask(status)
 }
