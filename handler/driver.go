@@ -14,7 +14,7 @@ func createDriver(scheduler *eremeticScheduler) (*sched.MesosSchedulerDriver, er
 	bindingPort := uint16(viper.GetInt("messenger_port"))
 
 	return sched.NewMesosSchedulerDriver(sched.DriverConfig{
-		Master: viper.GetString("zookeeper"),
+		Master: viper.GetString("master"),
 		Framework: &mesos.FrameworkInfo{
 			Name: proto.String("Eremetic"),
 			User: proto.String(""),
