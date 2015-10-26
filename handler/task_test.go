@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/alde/eremetic/types"
+	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -61,7 +62,15 @@ func TestTask(t *testing.T) {
 			Name:      "Eremetic task 17",
 			deleteAt:  time.Now(),
 		}
-		offer := mesos.Offer{}
+		offer := mesos.Offer{
+			FrameworkId: &mesos.FrameworkID{
+				Value: proto.String("framework-id"),
+			},
+			SlaveId: &mesos.SlaveID{
+				Value: proto.String("slave-id"),
+			},
+			Hostname: proto.String("hostname"),
+		}
 
 		taskInfo := createTaskInfo(&eremeticTask, &offer)
 		So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)

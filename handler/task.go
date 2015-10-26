@@ -10,14 +10,17 @@ import (
 )
 
 type eremeticTask struct {
-	TaskCPUs  float64              `json:"task_cpus"`
-	TaskMem   float64              `json:"task_mem"`
-	Command   *mesos.CommandInfo   `json:"command"`
-	Container *mesos.ContainerInfo `json:"container"`
-	Status    string               `json:"status"`
-	ID        string               `json:"id"`
-	Name      string               `json:"name"`
-	deleteAt  time.Time
+	TaskCPUs    float64              `json:"task_cpus"`
+	TaskMem     float64              `json:"task_mem"`
+	Command     *mesos.CommandInfo   `json:"command"`
+	Container   *mesos.ContainerInfo `json:"container"`
+	Status      string               `json:"status"`
+	ID          string               `json:"id"`
+	Name        string               `json:"name"`
+	FrameworkId string               `json:"framework_id"`
+	SlaveId     string               `json:"slave_id"`
+	Hostname    string               `json:"hostname"`
+	deleteAt    time.Time
 }
 
 var runningTasks map[string]eremeticTask
@@ -64,6 +67,9 @@ func createEremeticTask(request types.Request) eremeticTask {
 }
 
 func createTaskInfo(task *eremeticTask, offer *mesos.Offer) *mesos.TaskInfo {
+	task.FrameworkId = *offer.FrameworkId.Value
+	task.SlaveId = *offer.SlaveId.Value
+	task.Hostname = *offer.Hostname
 
 	return &mesos.TaskInfo{
 		TaskId: &mesos.TaskID{
