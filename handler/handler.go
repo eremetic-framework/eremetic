@@ -10,12 +10,12 @@ import (
 
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gorilla/mux"
-	"github.com/m4rw3r/uuid"
 
 	"github.com/alde/eremetic/types"
 )
 
 var requests = make(chan *types.Request)
+var scheduler *eremeticScheduler
 
 // AddTask handles adding a task to the queue
 func AddTask(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +27,14 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &request)
 	handleError(err, w)
 
-	createRequest(request, w)
+	taskId, err := scheduleTask(scheduler, request)
+	if err != nil {
+		writeJSON(500, err, w)
+		return
+	}
+
+	w.Header().Set("Location", fmt.Sprintf("/task/%s", taskId))
+	writeJSON(http.StatusAccepted, taskId, w)
 }
 
 // GetTaskInfo returns information about the given task.
@@ -48,7 +55,7 @@ func GetTaskInfo(w http.ResponseWriter, r *http.Request) {
 // Run the RequestChannel Listener
 func Run() {
 	runningTasks = make(map[string]eremeticTask)
-	scheduler := createEremeticScheduler()
+	scheduler = createEremeticScheduler()
 	driver, err := createDriver(scheduler)
 
 	if err != nil {
@@ -94,27 +101,6 @@ func handleError(err error, w http.ResponseWriter) {
 			panic(err)
 		}
 	}
-}
-
-func createID(taskID string) string {
-	return fmt.Sprintf("eremetic-task.%s", taskID)
-}
-
-func createRequest(request types.Request, w http.ResponseWriter) {
-	randID, err := uuid.V4()
-	if err != nil {
-		writeJSON(500, err, w)
-		return
-	}
-
-	taskID := createID(randID.String())
-	request.TaskID = taskID
-	w.Header().Set("Location", fmt.Sprintf("/task/%s", taskID))
-	defer writeJSON(http.StatusAccepted, taskID, w)
-	log.Debugf("Adding request for '%s' to queue.", request.DockerImage)
-	go func() {
-		requests <- &request
-	}()
 }
 
 func writeJSON(status int, data interface{}, w http.ResponseWriter) error {

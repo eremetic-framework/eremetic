@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/dmuth/google-go-log4go"
-
 	"github.com/alde/eremetic/types"
+	log "github.com/dmuth/google-go-log4go"
 	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
@@ -63,7 +62,6 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 		case t := <-s.tasks:
 			log.Debugf("Preparing to launch task %s with offer %s", t.ID, offer.Id.GetValue())
 			task := s.newTask(offer, &t)
-			runningTasks[t.ID] = t
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
 			continue
 		default:
@@ -135,10 +133,25 @@ func createEremeticScheduler() *eremeticScheduler {
 	return s
 }
 
-func scheduleTask(s *eremeticScheduler, request types.Request) {
-	log.Debug("Adding task to queue")
-	taskID := s.tasksCreated
+func nextId(s *eremeticScheduler) int {
+	id := s.tasksCreated
 	s.tasksCreated++
-	request.Name = fmt.Sprintf("Eremetic task %d", taskID)
-	s.tasks <- createEremeticTask(request)
+	return id
+}
+
+func scheduleTask(s *eremeticScheduler, request types.Request) (string, error) {
+	log.Debugf(
+		"Adding task running on %s to queue",
+		request.DockerImage)
+
+	request.Name = fmt.Sprintf("Eremetic task %d", nextId(s))
+
+	task, err := createEremeticTask(request)
+	if err != nil {
+		return "", err
+	}
+
+	runningTasks[task.ID] = task
+	s.tasks <- task
+	return task.ID, nil
 }

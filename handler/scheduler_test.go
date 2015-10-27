@@ -3,6 +3,7 @@ package handler
 import (
 	"testing"
 
+	"github.com/alde/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
@@ -129,6 +130,47 @@ func TestScheduler(t *testing.T) {
 
 			Convey("Error", func() {
 				s.Error(nil, "Error")
+			})
+		})
+	})
+
+	Convey("scheduleTask", t, func() {
+		runningTasks = make(map[string]eremeticTask)
+
+		Convey("Given a valid Request", func() {
+			scheduler := &eremeticScheduler{
+				tasks: make(chan eremeticTask, 100),
+			}
+
+			request := types.Request{
+				TaskCPUs:    0.5,
+				TaskMem:     22.0,
+				DockerImage: "busybox",
+				Command:     "echo hello",
+			}
+
+			Convey("It should put a task on the channel", func() {
+				scheduleTask(scheduler, request)
+
+				select {
+				case c := <-scheduler.tasks:
+					So(c.TaskCPUs, ShouldEqual, request.TaskCPUs)
+					So(c.TaskMem, ShouldEqual, request.TaskMem)
+					So(c.Command.GetValue(), ShouldEqual, request.Command)
+					So(*c.Container.Docker.Image, ShouldEqual, request.DockerImage)
+					So(c.ID, ShouldStartWith, "eremetic-task.")
+				}
+			})
+
+			Convey("It should add task to running tasks", func() {
+				taskId, err := scheduleTask(scheduler, request)
+
+				So(err, ShouldBeNil)
+
+				select {
+				case <-scheduler.tasks:
+					So(runningTasks[taskId].ID, ShouldEqual, taskId)
+				}
 			})
 		})
 	})

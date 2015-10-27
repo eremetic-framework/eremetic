@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alde/eremetic/types"
 	"github.com/gorilla/mux"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
@@ -23,14 +22,6 @@ func (m mockError) Error() string {
 }
 
 func TestHandling(t *testing.T) {
-	Convey("createID", t, func() {
-		Convey("Given a string", func() {
-			Convey("It should build the appropriate ID", func() {
-				So(createID("1234"), ShouldEqual, "eremetic-task.1234")
-			})
-		})
-	})
-
 	Convey("writeJSON", t, func() {
 		Convey("Should respond with a JSON and the appropriate status code", func() {
 			var wr = httptest.NewRecorder()
@@ -54,35 +45,6 @@ func TestHandling(t *testing.T) {
 
 			So(wr.Code, ShouldEqual, 422)
 			So(strings.TrimSpace(wr.Body.String()), ShouldEqual, "{}")
-		})
-	})
-
-	Convey("createRequest", t, func() {
-		wr := httptest.NewRecorder()
-		Convey("Given a valid Request", func() {
-			request := types.Request{
-				TaskCPUs:    0.5,
-				TaskMem:     22.0,
-				DockerImage: "busybox",
-				Command:     "echo hello",
-			}
-
-			Convey("It should put the request on the channel", func() {
-				createRequest(request, wr)
-
-				location := wr.HeaderMap["Location"][0]
-				So(location, ShouldStartWith, "/task/eremetic-task.")
-				So(wr.Code, ShouldEqual, http.StatusAccepted)
-
-				select {
-				case c := <-requests:
-					So(c.TaskCPUs, ShouldEqual, request.TaskCPUs)
-					So(c.TaskMem, ShouldEqual, request.TaskMem)
-					So(c.Command, ShouldEqual, request.Command)
-					So(c.DockerImage, ShouldEqual, request.DockerImage)
-					So(c.TaskID, ShouldStartWith, "eremetic-task.")
-				}
-			})
 		})
 	})
 
@@ -127,6 +89,10 @@ func TestHandling(t *testing.T) {
 	})
 
 	Convey("AddTask", t, func() {
+		scheduler = &eremeticScheduler{
+			tasks: make(chan eremeticTask, 100),
+		}
+
 		wr := httptest.NewRecorder()
 
 		Convey("It should respond with a location header", func() {

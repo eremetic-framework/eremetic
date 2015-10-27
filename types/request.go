@@ -13,7 +13,6 @@ type Request struct {
 	TaskMem     float64           `json:"task_mem"`
 	DockerImage string            `json:"docker_image"`
 	Command     string            `json:"command"`
-	TaskID      string            `json:"-"`
 	Name        string            `json:"-"`
 	Volumes     []Volume          `json:"volumes"`
 	Environment map[string]string `json:"env"`
