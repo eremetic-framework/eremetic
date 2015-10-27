@@ -23,7 +23,15 @@ func TestScheduler(t *testing.T) {
 			task := eremeticTask{
 				ID: "eremetic-task.1234",
 			}
-			offer := mesos.Offer{}
+			offer := mesos.Offer{
+				FrameworkId: &mesos.FrameworkID{
+					Value: proto.String("framework-id"),
+				},
+				SlaveId: &mesos.SlaveID{
+					Value: proto.String("slave-id"),
+				},
+				Hostname: proto.String("hostname"),
+			}
 			newTask := s.newTask(&offer, &task)
 
 			So(newTask.GetTaskId().GetValue(), ShouldEqual, task.ID)

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/alde/eremetic/types"
@@ -11,13 +10,17 @@ import (
 )
 
 type eremeticTask struct {
-	TaskCPUs  float64              `json:"task_cpus"`
-	TaskMem   float64              `json:"task_mem"`
-	Command   *mesos.CommandInfo   `json:"command"`
-	Container *mesos.ContainerInfo `json:"container"`
-	Status    string               `json:"status"`
-	ID        string               `json:"-"`
-	deleteAt  time.Time
+	TaskCPUs    float64              `json:"task_cpus"`
+	TaskMem     float64              `json:"task_mem"`
+	Command     *mesos.CommandInfo   `json:"command"`
+	Container   *mesos.ContainerInfo `json:"container"`
+	Status      string               `json:"status"`
+	ID          string               `json:"id"`
+	Name        string               `json:"name"`
+	FrameworkId string               `json:"framework_id"`
+	SlaveId     string               `json:"slave_id"`
+	Hostname    string               `json:"hostname"`
+	deleteAt    time.Time
 }
 
 var runningTasks map[string]eremeticTask
@@ -44,6 +47,7 @@ func createEremeticTask(request types.Request) eremeticTask {
 		TaskCPUs: request.TaskCPUs,
 		TaskMem:  request.TaskMem,
 		ID:       request.TaskID,
+		Name:     request.Name,
 		Command: &mesos.CommandInfo{
 			Value: proto.String(request.Command),
 			User:  proto.String("root"),
@@ -62,14 +66,17 @@ func createEremeticTask(request types.Request) eremeticTask {
 	return task
 }
 
-func createTaskInfo(task *eremeticTask, taskID int, offer *mesos.Offer) *mesos.TaskInfo {
+func createTaskInfo(task *eremeticTask, offer *mesos.Offer) *mesos.TaskInfo {
+	task.FrameworkId = *offer.FrameworkId.Value
+	task.SlaveId = *offer.SlaveId.Value
+	task.Hostname = *offer.Hostname
 
 	return &mesos.TaskInfo{
 		TaskId: &mesos.TaskID{
 			Value: proto.String(task.ID),
 		},
 		SlaveId:   offer.SlaveId,
-		Name:      proto.String(fmt.Sprintf("Eremetic task %d", taskID)),
+		Name:      proto.String(task.Name),
 		Command:   task.Command,
 		Container: task.Container,
 		Resources: []*mesos.Resource{

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/alde/eremetic/types"
+	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -58,13 +59,22 @@ func TestTask(t *testing.T) {
 			Container: &mesos.ContainerInfo{},
 			Status:    "TASK_RUNNING",
 			ID:        "eremetic-task.1234",
+			Name:      "Eremetic task 17",
 			deleteAt:  time.Now(),
 		}
-		offer := mesos.Offer{}
+		offer := mesos.Offer{
+			FrameworkId: &mesos.FrameworkID{
+				Value: proto.String("framework-id"),
+			},
+			SlaveId: &mesos.SlaveID{
+				Value: proto.String("slave-id"),
+			},
+			Hostname: proto.String("hostname"),
+		}
 
-		taskInfo := createTaskInfo(&eremeticTask, 0, &offer)
+		taskInfo := createTaskInfo(&eremeticTask, &offer)
 		So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
-		So(taskInfo.GetName(), ShouldEqual, "Eremetic task 0")
+		So(taskInfo.GetName(), ShouldEqual, eremeticTask.Name)
 		So(taskInfo.GetResources()[0].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskCPUs)
 		So(taskInfo.GetResources()[1].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskMem)
 	})

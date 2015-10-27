@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	log "github.com/dmuth/google-go-log4go"
@@ -32,9 +33,7 @@ type eremeticScheduler struct {
 }
 
 func (s *eremeticScheduler) newTask(offer *mesos.Offer, spec *eremeticTask) *mesos.TaskInfo {
-	taskID := s.tasksCreated
-	s.tasksCreated++
-	return createTaskInfo(spec, taskID, offer)
+	return createTaskInfo(spec, offer)
 }
 
 // Registered is called when the Scheduler is Registered
@@ -62,7 +61,7 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 			driver.DeclineOffer(offer.Id, defaultFilter)
 			continue
 		case t := <-s.tasks:
-			log.Debug("Preparing to launch task")
+			log.Debugf("Preparing to launch task %s with offer %s", t.ID, offer.Id.GetValue())
 			task := s.newTask(offer, &t)
 			runningTasks[t.ID] = t
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
@@ -138,5 +137,8 @@ func createEremeticScheduler() *eremeticScheduler {
 
 func scheduleTask(s *eremeticScheduler, request types.Request) {
 	log.Debug("Adding task to queue")
+	taskID := s.tasksCreated
+	s.tasksCreated++
+	request.Name = fmt.Sprintf("Eremetic task %d", taskID)
 	s.tasks <- createEremeticTask(request)
 }
