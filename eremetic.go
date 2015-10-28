@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -31,18 +30,11 @@ func setupLogging() {
 	log.SetDisplayTime(true)
 }
 
-func handleFlags() {
-	var printVersion bool
-	flag.BoolVar(&printVersion, "version", false, "Print version and exit.")
-	flag.Parse()
-	if printVersion {
+func main() {
+	if len(os.Args) == 2 && os.Args[1] == "--version" {
 		fmt.Println(version)
 		os.Exit(0)
 	}
-}
-
-func main() {
-	handleFlags()
 	readConfig()
 	setupLogging()
 	bind := fmt.Sprintf("%s:%d", viper.GetString("address"), viper.GetInt("port"))
