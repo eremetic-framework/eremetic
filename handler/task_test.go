@@ -11,6 +11,14 @@ import (
 )
 
 func TestTask(t *testing.T) {
+	Convey("createID", t, func() {
+		Convey("Given a string", func() {
+			Convey("It should build the appropriate ID", func() {
+				So(createID("1234"), ShouldEqual, "eremetic-task.1234")
+			})
+		})
+	})
+
 	Convey("createEremeticTask", t, func() {
 		request := types.Request{
 			TaskCPUs:    0.5,
@@ -20,8 +28,9 @@ func TestTask(t *testing.T) {
 		}
 
 		Convey("No volume or environment specified", func() {
-			task := createEremeticTask(request)
+			task, err := createEremeticTask(request)
 
+			So(err, ShouldBeNil)
 			So(task, ShouldNotBeNil)
 			So(task.Command.GetValue(), ShouldEqual, "echo hello")
 			So(task.deleteAt, ShouldBeZeroValue)
@@ -42,8 +51,9 @@ func TestTask(t *testing.T) {
 			request.Volumes = volumes
 			request.Environment = environment
 
-			task := createEremeticTask(request)
+			task, err := createEremeticTask(request)
 
+			So(err, ShouldBeNil)
 			So(task.Command.Environment.Variables[0].GetName(), ShouldEqual, "foo")
 			So(task.Command.Environment.Variables[0].GetValue(), ShouldEqual, environment["foo"])
 			So(task.Container.Volumes[0].GetContainerPath(), ShouldEqual, volumes[0].ContainerPath)

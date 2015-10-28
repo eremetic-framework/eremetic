@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/alde/eremetic/types"
 	"github.com/gogo/protobuf/proto"
+	"github.com/m4rw3r/uuid"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
 )
@@ -25,7 +27,17 @@ type eremeticTask struct {
 
 var runningTasks map[string]eremeticTask
 
-func createEremeticTask(request types.Request) eremeticTask {
+func createID(taskID string) string {
+	return fmt.Sprintf("eremetic-task.%s", taskID)
+}
+
+func createEremeticTask(request types.Request) (eremeticTask, error) {
+	randId, err := uuid.V4()
+	if err != nil {
+		return eremeticTask{}, err
+	}
+	taskId := createID(randId.String())
+
 	var volumes []*mesos.Volume
 	for _, v := range request.Volumes {
 		volumes = append(volumes, &mesos.Volume{
@@ -44,9 +56,9 @@ func createEremeticTask(request types.Request) eremeticTask {
 	}
 
 	task := eremeticTask{
+		ID:       taskId,
 		TaskCPUs: request.TaskCPUs,
 		TaskMem:  request.TaskMem,
-		ID:       request.TaskID,
 		Name:     request.Name,
 		Command: &mesos.CommandInfo{
 			Value: proto.String(request.Command),
@@ -63,7 +75,7 @@ func createEremeticTask(request types.Request) eremeticTask {
 			Volumes: volumes,
 		},
 	}
-	return task
+	return task, nil
 }
 
 func createTaskInfo(task *eremeticTask, offer *mesos.Offer) *mesos.TaskInfo {
