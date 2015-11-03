@@ -38,6 +38,7 @@ func TestTask(t *testing.T) {
 			So(task.Container.Docker.GetImage(), ShouldEqual, "busybox")
 			So(task.Command.Environment.GetVariables(), ShouldBeEmpty)
 			So(task.Container.Volumes, ShouldBeEmpty)
+			So(task.Status, ShouldEqual, "TASK_STAGING")
 		})
 
 		Convey("Given a volume and environment", func() {

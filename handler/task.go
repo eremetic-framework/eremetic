@@ -60,6 +60,7 @@ func createEremeticTask(request types.Request) (eremeticTask, error) {
 		TaskCPUs: request.TaskCPUs,
 		TaskMem:  request.TaskMem,
 		Name:     request.Name,
+		Status:   mesos.TaskState_TASK_STAGING.String(),
 		Command: &mesos.CommandInfo{
 			Value: proto.String(request.Command),
 			User:  proto.String("root"),
