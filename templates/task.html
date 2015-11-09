@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="/static/css/semantic.min.css" />
+        <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+        <script src="/static/js/jquery-2.1.4.min.js"></script>
+        <script src="/static/js/semantic.min.js"></script>
+        <title>Task {{.Name}} | Eremetic</title>
+    </head>
+    <body>
+        <div class="ui fixed inverted menu">
+            <div class="ui container">
+                <div class="header item">
+                    Eremetic
+                </div>
+            </div>
+        </div>
+        <div class="ui main container">
+            <h1 class="ui header center aligned">
+                {{.Name}}
+            </h1>
+            <div class="ui divider"></div>
+            <div class="ui stackable three column very relaxed grid">
+                <div class="column">
+                    <h2 class="ui header">
+                        <i class="purple circular archive icon"></i>
+                        <div class="content">Container</div>
+                    </h2>
+                    <div class="ui list big">
+                        <div class="item" title="container image">
+                            <i class="blue docker icon"></i>
+                            <div class="content">
+                                {{.ContainerImage}}
+                            </div>
+                        </div>
+                        <div class="item" title="user">
+                            <i class="spy icon"></i>
+                            <div class="content">
+                                {{.CommandUser}}
+                            </div>
+                        </div>
+                        <div class="item" title="command">
+                            <i class="play icon"></i>
+                            <div class="content">
+                                {{.Command}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <h2 class="ui header">
+                        <i class="blue circular tasks icon"></i>
+                        <div class="content">Task Info</div>
+                    </h2>
+                    <div class="ui list big">
+                        <div class="item" title="framework id">
+                            <i class="lab icon"></i>
+                            <div class="content">
+                                {{.FrameworkID}}
+                            </div>
+                        </div>
+                        <div class="item" title="hostname">
+                            <i class="server icon"></i>
+                            <div class="content">
+                                {{.Hostname}}
+                            </div>
+                        </div>
+                        <div class="item" title="slave id">
+                            <i class="child icon"></i>
+                            <div class="content">
+                                {{.SlaveID}}
+                            </div>
+                        </div>
+                        <div class="item" title="cpu">
+                            <i class="ui cpu icon svg"></i>
+                            <div class="content">
+                                {{.CPU}}
+                            </div>
+                        </div>
+                        <div class="item" title="memory">
+                            <i class="ui ram icon svg"></i>
+                            <div class="content">
+                                {{.Memory}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <h2 class="ui header">
+                        <i class="green circular list icon"></i>
+                        <div class="content">Status</div>
+                    </h2>
+                    <div class="ui text content">
+                        <div class="ui {{.Status | Label}} label">
+                            {{.Status}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

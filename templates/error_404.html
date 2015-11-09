@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="/static/css/semantic.min.css" />
+        <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+        <script src="/static/js/jquery-2.1.4.min.js"></script>
+        <script src="/static/js/semantic.min.js"></script>
+        <title>404 Not Found | Eremetic</title>
+    </head>
+    <body>
+        <div class="ui fixed inverted menu">
+            <div class="ui container">
+                <div class="header item">
+                    Eremetic
+                </div>
+            </div>
+        </div>
+        <div class="ui main container" style="padding-top: 50px;">
+            <div class="ui image content">
+                <img src="static/images/disappointed_minion.png">
+            </div>
+            <div class="ui floating message error_message">
+                {{if .TaskID}}
+                    Could not find {{.TaskID}}
+                {{else}}
+                    Whaaaa?
+                {{end}}
+            </div>
+        </div>
+    </body>
+</html>
