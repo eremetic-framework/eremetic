@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/alde/eremetic/types"
 	"github.com/gogo/protobuf/proto"
@@ -11,30 +10,14 @@ import (
 	"github.com/mesos/mesos-go/mesosutil"
 )
 
-type eremeticTask struct {
-	TaskCPUs    float64              `json:"task_cpus"`
-	TaskMem     float64              `json:"task_mem"`
-	Command     *mesos.CommandInfo   `json:"command"`
-	Container   *mesos.ContainerInfo `json:"container"`
-	Status      string               `json:"status"`
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	FrameworkId string               `json:"framework_id"`
-	SlaveId     string               `json:"slave_id"`
-	Hostname    string               `json:"hostname"`
-	deleteAt    time.Time
-}
-
-var runningTasks map[string]eremeticTask
-
 func createID(taskID string) string {
 	return fmt.Sprintf("eremetic-task.%s", taskID)
 }
 
-func createEremeticTask(request types.Request) (eremeticTask, error) {
+func createEremeticTask(request types.Request) (types.EremeticTask, error) {
 	randId, err := uuid.V4()
 	if err != nil {
-		return eremeticTask{}, err
+		return types.EremeticTask{}, err
 	}
 	taskId := createID(randId.String())
 
@@ -60,7 +43,7 @@ func createEremeticTask(request types.Request) (eremeticTask, error) {
 		Value: proto.String(taskId),
 	})
 
-	task := eremeticTask{
+	task := types.EremeticTask{
 		ID:       taskId,
 		TaskCPUs: request.TaskCPUs,
 		TaskMem:  request.TaskMem,
@@ -84,7 +67,7 @@ func createEremeticTask(request types.Request) (eremeticTask, error) {
 	return task, nil
 }
 
-func createTaskInfo(task *eremeticTask, offer *mesos.Offer) *mesos.TaskInfo {
+func createTaskInfo(task *types.EremeticTask, offer *mesos.Offer) *mesos.TaskInfo {
 	task.FrameworkId = *offer.FrameworkId.Value
 	task.SlaveId = *offer.SlaveId.Value
 	task.Hostname = *offer.Hostname

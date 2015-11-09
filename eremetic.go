@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/alde/eremetic/database"
 	"github.com/alde/eremetic/handler"
 	"github.com/alde/eremetic/routes"
 	log "github.com/dmuth/google-go-log4go"
@@ -20,6 +21,7 @@ func readConfig() {
 	viper.AutomaticEnv()
 	viper.SetConfigName("eremetic")
 	viper.SetDefault("loglevel", "debug")
+	viper.SetDefault("database", "db/eremetic.db")
 	viper.ReadInConfig()
 }
 
@@ -35,6 +37,8 @@ func main() {
 	}
 	readConfig()
 	setupLogging()
+	defer database.Close()
+
 	bind := fmt.Sprintf("%s:%d", viper.GetString("address"), viper.GetInt("port"))
 
 	// Catch interrupt
@@ -53,7 +57,6 @@ func main() {
 	router := routes.Create()
 	log.Infof("listening to %s", bind)
 	go handler.Run()
-	go handler.CleanupTasks()
 	err := http.ListenAndServe(bind, router)
 	if err != nil {
 		log.Error(err.Error())

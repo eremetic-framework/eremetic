@@ -1,4 +1,5 @@
 eremetic
 eremetic.yml
+db/*.db
 docker/static
 docker/templates

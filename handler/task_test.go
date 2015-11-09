@@ -2,7 +2,6 @@ package handler
 
 import (
 	"testing"
-	"time"
 
 	"github.com/alde/eremetic/types"
 	"github.com/gogo/protobuf/proto"
@@ -33,7 +32,6 @@ func TestTask(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(task, ShouldNotBeNil)
 			So(task.Command.GetValue(), ShouldEqual, "echo hello")
-			So(task.deleteAt, ShouldBeZeroValue)
 			So(task.Container.GetType().String(), ShouldEqual, "DOCKER")
 			So(task.Container.Docker.GetImage(), ShouldEqual, "busybox")
 			So(task.Command.Environment.GetVariables(), ShouldHaveLength, 1)
@@ -63,7 +61,7 @@ func TestTask(t *testing.T) {
 	})
 
 	Convey("createTaskInfo", t, func() {
-		eremeticTask := eremeticTask{
+		eremeticTask := types.EremeticTask{
 			TaskCPUs:  0.2,
 			TaskMem:   0.5,
 			Command:   &mesos.CommandInfo{},
@@ -71,7 +69,6 @@ func TestTask(t *testing.T) {
 			Status:    "TASK_RUNNING",
 			ID:        "eremetic-task.1234",
 			Name:      "Eremetic task 17",
-			deleteAt:  time.Now(),
 		}
 		offer := mesos.Offer{
 			FrameworkId: &mesos.FrameworkID{

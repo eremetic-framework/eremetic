@@ -8,11 +8,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gorilla/mux"
 
+	"github.com/alde/eremetic/database"
 	"github.com/alde/eremetic/types"
 )
 
@@ -43,12 +43,12 @@ func GetTaskInfo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["taskId"]
 	log.Debugf("Fetching task for id: %s", id)
-	task := runningTasks[id]
+	task, _ := database.ReadTask(id)
 
 	if strings.Contains(r.Header.Get("Accept"), "text/html") {
 		renderHTML(w, r, task, id)
 	} else {
-		if task == (eremeticTask{}) {
+		if task == (types.EremeticTask{}) {
 			writeJSON(http.StatusNotFound, nil, w)
 			return
 		}
@@ -58,7 +58,6 @@ func GetTaskInfo(w http.ResponseWriter, r *http.Request) {
 
 // Run the RequestChannel Listener
 func Run() {
-	runningTasks = make(map[string]eremeticTask)
 	scheduler = createEremeticScheduler()
 	driver, err := createDriver(scheduler)
 
@@ -76,18 +75,6 @@ func Run() {
 	log.Info("Exiting...")
 }
 
-// CleanupTasks is an infinite loop removing terminal Tasks that have stuck around too long.
-func CleanupTasks() {
-	for {
-		for i, t := range runningTasks {
-			if t.deleteAt.After(time.Now()) && types.IsTerminalString(t.Status) {
-				delete(runningTasks, i)
-			}
-		}
-		time.Sleep(time.Minute * 15)
-	}
-}
-
 func handleError(err error, w http.ResponseWriter) {
 	if err != nil {
 		if err = writeJSON(422, err, w); err != nil {
@@ -102,7 +89,7 @@ func writeJSON(status int, data interface{}, w http.ResponseWriter) error {
 	return json.NewEncoder(w).Encode(data)
 }
 
-func renderHTML(w http.ResponseWriter, r *http.Request, task eremeticTask, taskID string) {
+func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask, taskID string) {
 	var err error
 	var tpl *template.Template
 
@@ -111,7 +98,7 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task eremeticTask, taskI
 		"ToLower": strings.ToLower,
 	}
 
-	if task == (eremeticTask{}) {
+	if task == (types.EremeticTask{}) {
 		tpl, err = template.ParseFiles("templates/error_404.html")
 		data["TaskID"] = taskID
 	} else {
@@ -128,7 +115,7 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task eremeticTask, taskI
 	err = tpl.Execute(w, data)
 }
 
-func makeMap(task eremeticTask) map[string]interface{} {
+func makeMap(task types.EremeticTask) map[string]interface{} {
 	data := make(map[string]interface{})
 
 	data["TaskID"] = task.ID

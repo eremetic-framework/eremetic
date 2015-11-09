@@ -2,12 +2,15 @@ package handler
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
-	"time"
 
+	"github.com/alde/eremetic/database"
+	"github.com/alde/eremetic/types"
 	"github.com/gorilla/mux"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
@@ -22,6 +25,11 @@ func (m mockError) Error() string {
 }
 
 func TestHandling(t *testing.T) {
+	dir, _ := os.Getwd()
+	database.NewDB(fmt.Sprintf("%s/../db/test.db", dir))
+	database.Clean()
+	defer database.Close()
+
 	Convey("writeJSON", t, func() {
 		Convey("Should respond with a JSON and the appropriate status code", func() {
 			var wr = httptest.NewRecorder()
@@ -53,19 +61,18 @@ func TestHandling(t *testing.T) {
 		r, _ := http.NewRequest("GET", "/task/eremetic-task.1234", nil)
 		m := mux.NewRouter()
 		m.HandleFunc("/task/{taskId}", GetTaskInfo)
-		runningTasks = make(map[string]eremeticTask)
 
 		Convey("Not Found", func() {
 			id := "eremetic-task.5678"
-			runningTasks[id] = eremeticTask{
+			task := types.EremeticTask{
 				TaskCPUs:  0.2,
 				TaskMem:   0.5,
 				Command:   &mesos.CommandInfo{},
 				Container: &mesos.ContainerInfo{},
 				Status:    "TASK_RUNNING",
 				ID:        id,
-				deleteAt:  time.Now(),
 			}
+			database.PutTask(&task)
 			m.ServeHTTP(wr, r)
 
 			So(wr.Code, ShouldEqual, http.StatusNotFound)
@@ -73,15 +80,15 @@ func TestHandling(t *testing.T) {
 
 		Convey("Found", func() {
 			id := "eremetic-task.1234"
-			runningTasks[id] = eremeticTask{
+			task := types.EremeticTask{
 				TaskCPUs:  0.2,
 				TaskMem:   0.5,
 				Command:   &mesos.CommandInfo{},
 				Container: &mesos.ContainerInfo{},
 				Status:    "TASK_RUNNING",
 				ID:        id,
-				deleteAt:  time.Now(),
 			}
+			database.PutTask(&task)
 			m.ServeHTTP(wr, r)
 
 			So(wr.Code, ShouldEqual, http.StatusOK)
