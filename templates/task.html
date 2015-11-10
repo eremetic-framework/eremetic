@@ -54,24 +54,30 @@
                         <div class="content">Task Info</div>
                     </h2>
                     <div class="ui list big">
+                        {{if .FrameworkID}}
                         <div class="item" title="framework id">
                             <i class="lab icon"></i>
                             <div class="content">
                                 {{.FrameworkID}}
                             </div>
                         </div>
+                        {{end}}
+                        {{if .Hostname}}
                         <div class="item" title="hostname">
                             <i class="server icon"></i>
                             <div class="content">
                                 {{.Hostname}}
                             </div>
                         </div>
+                        {{end}}
+                        {{if .SlaveID}}
                         <div class="item" title="slave id">
                             <i class="child icon"></i>
                             <div class="content">
                                 {{.SlaveID}}
                             </div>
                         </div>
+                        {{end}}
                         <div class="item" title="cpu">
                             <i class="ui cpu icon svg"></i>
                             <div class="content">
