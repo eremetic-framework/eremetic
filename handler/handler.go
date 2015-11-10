@@ -120,7 +120,7 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task eremeticTask, taskI
 
 	data := make(map[string]interface{})
 	funcMap := template.FuncMap{
-		"Label": LabelColor,
+		"ToLower": strings.ToLower,
 	}
 
 	if task == (eremeticTask{}) {
@@ -158,20 +158,4 @@ func makeMap(task eremeticTask) map[string]interface{} {
 	data["Memory"] = fmt.Sprintf("%.2f", task.TaskMem)
 
 	return data
-}
-
-// LabelColor is used to map a status to a label color
-func LabelColor(status string) string {
-	switch status {
-	case "TASK_FAILED":
-		return "red"
-	case "TASK_LOST":
-		return "purple"
-	case "TASK_KILLED":
-		return "orange"
-	case "TASK_FINISHED":
-		return "green"
-	default:
-		return ""
-	}
 }
