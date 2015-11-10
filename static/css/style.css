@@ -29,6 +29,36 @@
     background-size: 100% 100%;
 }
 
+.label.task_staging {
+    background-color: #00b5ad !important;
+    border-color: #00b5ad !important;
+    color: #fff !important;
+}
+
+.label.task_failed {
+    background-color: #db2828 !important;
+    border-color: #db2828 !important;
+    color: #fff !important;
+}
+
+.label.task_lost {
+    background-color: #a333c8 !important;
+    border-color: #a333c8 !important;
+    color: #fff !important;
+}
+
+.label.task_killed {
+    background-color: #f2711c !important;
+    border-color: #f2711c !important;
+    color: #fff !important;
+}
+
+.label.task_finished {
+    background-color: #21ba45 !important;
+    border-color: #21ba45 !important;
+    color: #fff !important;
+}
+
 @font-face {
   font-family: "fontcustom";
   src: url("./themes/default/assets/fonts/fontcustom_cb066050d5b786186aa0e7f121427d8b.eot");
