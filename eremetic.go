@@ -44,11 +44,12 @@ func main() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt, os.Kill)
 		s := <-c
-		if s != os.Interrupt {
+		if s != os.Interrupt && s != os.Kill {
 			return
 		}
 
 		log.Info("Eremetic is shutting down")
+		os.Exit(0)
 	}()
 
 	router := routes.Create()
