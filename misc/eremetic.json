@@ -1,0 +1,26 @@
+{
+  "id": "/eremetic",
+  "cpus": 0.2,
+  "mem": 100.0,
+  "instances": 1,
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "alde/eremetic",
+      "network": "BRIDGE",
+      "forcePullImage": true,
+      "portMappings": [
+        { "containerPort": 8000, "hostPort": 0 },
+        { "containerPort": 0, "hostPort": 0 }
+      ]
+    }
+  },
+  "env": {
+    "MASTER": "zk://zoo1:2181,zoo2:2181/mesos",
+    "ADDRESS": "0.0.0.0",
+    "PORT": "8000"
+  },
+  "labels": {
+    "traefik.port": "8000"
+  }
+}

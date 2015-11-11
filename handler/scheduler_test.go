@@ -191,6 +191,11 @@ func (sched *MockScheduler) Abort() (stat mesos.Status, err error) {
 	return mesos.Status_DRIVER_ABORTED, nil
 }
 
+func (sched *MockScheduler) AcceptOffers(offerIds []*mesos.OfferID, operations []*mesos.Offer_Operation, filters *mesos.Filters) (mesos.Status, error) {
+	sched.Called()
+	return mesos.Status_DRIVER_RUNNING, nil
+}
+
 func (sched *MockScheduler) DeclineOffer(*mesos.OfferID, *mesos.Filters) (mesos.Status, error) {
 	sched.Called()
 	return mesos.Status_DRIVER_STOPPED, nil

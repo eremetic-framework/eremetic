@@ -18,6 +18,16 @@ create /etc/eremetic/eremetic.yml with:
     messenger_address: <callback address for mesos>
     messenger_port: <port for mesos to communicate on>
 
+## Running on mesos
+
+Eremetic can itself by run on mesos using e.g marathon. An
+[example configuration](misc/eremetic.json) for marathon is provided that is
+ready to be submitted through the api.
+
+```bash
+curl -X POST -H 'Content-Type: application/json' $MARATHON/v2/apps -d@misc/eremetic.json
+```
+
 ## Contributors
 - Rickard Dybeck
 - David Keijser
