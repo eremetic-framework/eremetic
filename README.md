@@ -1,4 +1,5 @@
-# Eremetic [![Build Status][travis-image]](https://travis-ci.org/alde/eremetic)
+# <img src="static/images/eremiteLOGO_02.png" width="400px" alt="Eremetic">[![Build Status][travis-image]](https://travis-ci.org/alde/eremetic)
+
 Eremetic is a Mesos Framework to run one-shot tasks.
 
 ## Planned usage
@@ -31,6 +32,9 @@ curl -X POST -H 'Content-Type: application/json' $MARATHON/v2/apps -d@misc/ereme
 ## Contributors
 - Rickard Dybeck
 - David Keijser
+
+## Acknowledgements
+Thanks to Sebastian Norde for the awesome logo!
 
 ## Licensing
 Apache-2
