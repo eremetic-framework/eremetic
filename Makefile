@@ -1,10 +1,17 @@
-.PHONY: all docker
+.PHONY: all deps test docker
 
 DOCKERTAG?=eremetic
 SRC=$(shell find . -name '*.go')
 
-all: eremetic
+all: test
 
+deps:
+	go get -t ./...
+
+test: eremetic
+	go test -v ./...
+
+eremetic: deps
 eremetic: ${SRC}
 	go build -o $@
 
