@@ -8,4 +8,4 @@ export MESSENGER_ADDRESS=`lookup_host ${HOST}${DOMAIN:+.$DOMAIN}`
 export MESSENGER_PORT=$PORT1
 
 
-exec /bin/eremetic
+exec /opt/eremetic/eremetic
