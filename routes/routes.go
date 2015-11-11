@@ -8,6 +8,7 @@ import (
 
 	"github.com/alde/eremetic/handler"
 	"github.com/alde/eremetic/types"
+	log "github.com/dmuth/google-go-log4go"
 	"github.com/gorilla/mux"
 )
 
@@ -35,9 +36,12 @@ func Create() *mux.Router {
 
 func notFound(w http.ResponseWriter, r *http.Request) {
 	if strings.Contains(r.Header.Get("Accept"), "text/html") {
-		tpl, _ := template.ParseFiles("templates/error_404.html")
-		tpl.Execute(w, nil)
-		return
+		tpl, err := template.ParseFiles("templates/error_404.html")
+		if err == nil {
+			tpl.Execute(w, nil)
+			return
+		}
+		log.Error(err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
