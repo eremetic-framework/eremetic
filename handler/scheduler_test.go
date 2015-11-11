@@ -139,7 +139,7 @@ func TestScheduler(t *testing.T) {
 
 		Convey("Given a valid Request", func() {
 			scheduler := &eremeticScheduler{
-				tasks: make(chan eremeticTask, 100),
+				tasks: make(chan string, 100),
 			}
 
 			request := types.Request{
@@ -149,27 +149,20 @@ func TestScheduler(t *testing.T) {
 				Command:     "echo hello",
 			}
 
-			Convey("It should put a task on the channel", func() {
-				scheduleTask(scheduler, request)
-
-				select {
-				case c := <-scheduler.tasks:
-					So(c.TaskCPUs, ShouldEqual, request.TaskCPUs)
-					So(c.TaskMem, ShouldEqual, request.TaskMem)
-					So(c.Command.GetValue(), ShouldEqual, request.Command)
-					So(*c.Container.Docker.Image, ShouldEqual, request.DockerImage)
-					So(c.ID, ShouldStartWith, "eremetic-task.")
-				}
-			})
-
-			Convey("It should add task to running tasks", func() {
+			Convey("It should put a task id on the channel", func() {
 				taskId, err := scheduleTask(scheduler, request)
 
 				So(err, ShouldBeNil)
 
 				select {
-				case <-scheduler.tasks:
-					So(runningTasks[taskId].ID, ShouldEqual, taskId)
+				case c := <-scheduler.tasks:
+					So(c, ShouldEqual, taskId)
+					task := runningTasks[taskId]
+					So(task.TaskCPUs, ShouldEqual, request.TaskCPUs)
+					So(task.TaskMem, ShouldEqual, request.TaskMem)
+					So(task.Command.GetValue(), ShouldEqual, request.Command)
+					So(*task.Container.Docker.Image, ShouldEqual, request.DockerImage)
+					So(task.ID, ShouldStartWith, "eremetic-task.")
 				}
 			})
 		})

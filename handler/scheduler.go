@@ -21,7 +21,7 @@ type eremeticScheduler struct {
 	tasksCreated int
 
 	// task to start
-	tasks chan eremeticTask
+	tasks chan string
 
 	// This channel is closed when the program receives an interrupt,
 	// signalling that the program should shut down.
@@ -59,9 +59,11 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 			log.Infof("Shutting down: declining offer on [%s]", offer.Hostname)
 			driver.DeclineOffer(offer.Id, defaultFilter)
 			continue
-		case t := <-s.tasks:
-			log.Debugf("Preparing to launch task %s with offer %s", t.ID, offer.Id.GetValue())
+		case tid := <-s.tasks:
+			log.Debugf("Preparing to launch task %s with offer %s", tid, offer.Id.GetValue())
+			t := runningTasks[tid]
 			task := s.newTask(offer, &t)
+			runningTasks[tid] = t
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
 			continue
 		default:
@@ -128,7 +130,7 @@ func createEremeticScheduler() *eremeticScheduler {
 	s := &eremeticScheduler{
 		shutdown: make(chan struct{}),
 		done:     make(chan struct{}),
-		tasks:    make(chan eremeticTask, 100),
+		tasks:    make(chan string, 100),
 	}
 	return s
 }
@@ -152,6 +154,6 @@ func scheduleTask(s *eremeticScheduler, request types.Request) (string, error) {
 	}
 
 	runningTasks[task.ID] = task
-	s.tasks <- task
+	s.tasks <- task.ID
 	return task.ID, nil
 }
