@@ -55,6 +55,11 @@ func createEremeticTask(request types.Request) (eremeticTask, error) {
 		})
 	}
 
+	environment = append(environment, &mesos.Environment_Variable{
+		Name:  proto.String("MESOS_TASK_ID"),
+		Value: proto.String(taskId),
+	})
+
 	task := eremeticTask{
 		ID:       taskId,
 		TaskCPUs: request.TaskCPUs,
