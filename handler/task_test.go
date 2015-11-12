@@ -36,7 +36,7 @@ func TestTask(t *testing.T) {
 			So(task.deleteAt, ShouldBeZeroValue)
 			So(task.Container.GetType().String(), ShouldEqual, "DOCKER")
 			So(task.Container.Docker.GetImage(), ShouldEqual, "busybox")
-			So(task.Command.Environment.GetVariables(), ShouldBeEmpty)
+			So(task.Command.Environment.GetVariables(), ShouldHaveLength, 1)
 			So(task.Container.Volumes, ShouldBeEmpty)
 			So(task.Status, ShouldEqual, "TASK_STAGING")
 		})
