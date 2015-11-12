@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-const version = "0.3.0"
-
 func readConfig() {
 	path, _ := osext.ExecutableFolder()
 	viper.AddConfigPath("/etc/eremetic")
@@ -32,7 +30,7 @@ func setupLogging() {
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
-		fmt.Println(version)
+		fmt.Println(Version)
 		os.Exit(0)
 	}
 	readConfig()
