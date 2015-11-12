@@ -90,7 +90,7 @@ func TestHandling(t *testing.T) {
 
 	Convey("AddTask", t, func() {
 		scheduler = &eremeticScheduler{
-			tasks: make(chan eremeticTask, 100),
+			tasks: make(chan string, 100),
 		}
 
 		wr := httptest.NewRecorder()
