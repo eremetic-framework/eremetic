@@ -1,4 +1,4 @@
-.PHONY: all deps test docker
+.PHONY: all deps test docker copy_templates
 
 DOCKERTAG?=eremetic
 SRC=$(shell find . -name '*.go')
@@ -18,5 +18,9 @@ eremetic: ${SRC}
 docker/eremetic: ${SRC}
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o $@
 
-docker: docker/eremetic
+copy_templates:
+	cp -r static docker
+	cp -r templates docker
+
+docker: docker/eremetic copy_templates
 	docker build -t ${DOCKERTAG} docker

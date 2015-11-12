@@ -3,9 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	log "github.com/dmuth/google-go-log4go"
@@ -27,14 +29,14 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &request)
 	handleError(err, w)
 
-	taskId, err := scheduleTask(scheduler, request)
+	taskID, err := scheduleTask(scheduler, request)
 	if err != nil {
 		writeJSON(500, err, w)
 		return
 	}
 
-	w.Header().Set("Location", fmt.Sprintf("/task/%s", taskId))
-	writeJSON(http.StatusAccepted, taskId, w)
+	w.Header().Set("Location", fmt.Sprintf("/task/%s", taskID))
+	writeJSON(http.StatusAccepted, taskID, w)
 }
 
 // GetTaskInfo returns information about the given task.
@@ -44,12 +46,15 @@ func GetTaskInfo(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("Fetching task for id: %s", id)
 	task := runningTasks[id]
 
-	if task == (eremeticTask{}) {
-		writeJSON(http.StatusNotFound, nil, w)
-		return
+	if strings.Contains(r.Header.Get("Accept"), "text/html") {
+		renderHTML(w, r, task, id)
+	} else {
+		if task == (eremeticTask{}) {
+			writeJSON(http.StatusNotFound, nil, w)
+			return
+		}
+		writeJSON(http.StatusOK, task, w)
 	}
-
-	writeJSON(http.StatusOK, task, w)
 }
 
 // Run the RequestChannel Listener
@@ -107,4 +112,50 @@ func writeJSON(status int, data interface{}, w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(status)
 	return json.NewEncoder(w).Encode(data)
+}
+
+func renderHTML(w http.ResponseWriter, r *http.Request, task eremeticTask, taskID string) {
+	var err error
+	var tpl *template.Template
+
+	data := make(map[string]interface{})
+	funcMap := template.FuncMap{
+		"ToLower": strings.ToLower,
+	}
+
+	if task == (eremeticTask{}) {
+		tpl, err = template.ParseFiles("templates/error_404.html")
+		data["TaskID"] = taskID
+	} else {
+		tpl, err = template.New("task.html").Funcs(funcMap).ParseFiles("templates/task.html")
+		data = makeMap(task)
+	}
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
+
+	err = tpl.Execute(w, data)
+}
+
+func makeMap(task eremeticTask) map[string]interface{} {
+	data := make(map[string]interface{})
+
+	data["TaskID"] = task.ID
+	data["CommandEnv"] = task.Command.GetEnvironment().GetVariables()
+	data["CommandUser"] = task.Command.GetUser()
+	data["Command"] = task.Command.GetValue()
+	// TODO: Support more than docker?
+	data["ContainerImage"] = task.Container.GetDocker().GetImage()
+	data["FrameworkID"] = task.FrameworkId
+	data["Hostname"] = task.Hostname
+	data["Name"] = task.Name
+	data["SlaveID"] = task.SlaveId
+	data["Status"] = task.Status
+	data["CPU"] = fmt.Sprintf("%.2f", task.TaskCPUs)
+	data["Memory"] = fmt.Sprintf("%.2f", task.TaskMem)
+
+	return data
 }
