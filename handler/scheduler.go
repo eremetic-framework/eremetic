@@ -3,8 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
+	"github.com/alde/eremetic/database"
 	"github.com/alde/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gogo/protobuf/proto"
@@ -31,7 +31,7 @@ type eremeticScheduler struct {
 	done chan struct{}
 }
 
-func (s *eremeticScheduler) newTask(offer *mesos.Offer, spec *eremeticTask) *mesos.TaskInfo {
+func (s *eremeticScheduler) newTask(offer *mesos.Offer, spec *types.EremeticTask) *mesos.TaskInfo {
 	return createTaskInfo(spec, offer)
 }
 
@@ -61,9 +61,9 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 			continue
 		case tid := <-s.tasks:
 			log.Debugf("Preparing to launch task %s with offer %s", tid, offer.Id.GetValue())
-			t := runningTasks[tid]
+			t, _ := database.ReadTask(tid)
 			task := s.newTask(offer, &t)
-			runningTasks[tid] = t
+			database.PutTask(&t)
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
 			continue
 		default:
@@ -77,10 +77,9 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 func updateStatusForTask(status *mesos.TaskStatus) {
 	id := status.TaskId.GetValue()
 	log.Debugf("TaskId [%s] status [%s]", id, status.State)
-	task := runningTasks[id]
-	task.deleteAt = time.Now().Add(time.Hour)
+	task, _ := database.ReadTask(id)
 	task.Status = status.State.String()
-	runningTasks[id] = task
+	database.PutTask(&task)
 }
 
 // StatusUpdate takes care of updating the status
@@ -153,7 +152,7 @@ func scheduleTask(s *eremeticScheduler, request types.Request) (string, error) {
 		return "", err
 	}
 
-	runningTasks[task.ID] = task
+	database.PutTask(&task)
 	s.tasks <- task.ID
 	return task.ID, nil
 }

@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
+	"github.com/alde/eremetic/database"
 	"github.com/alde/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gogo/protobuf/proto"
@@ -13,15 +16,18 @@ import (
 )
 
 func TestScheduler(t *testing.T) {
+	dir, _ := os.Getwd()
+	database.NewDB(fmt.Sprintf("%s/../db/test.db", dir))
+	database.Clean()
+	defer database.Close()
+
 	Convey("eremeticScheduler", t, func() {
 		s := eremeticScheduler{}
 		id := "eremetic-task.9999"
-		runningTasks[id] = eremeticTask{
-			ID: id,
-		}
+		database.PutTask(&types.EremeticTask{ID: id})
 
 		Convey("newTask", func() {
-			task := eremeticTask{
+			task := types.EremeticTask{
 				ID: "eremetic-task.1234",
 			}
 			offer := mesos.Offer{
@@ -84,8 +90,8 @@ func TestScheduler(t *testing.T) {
 					},
 					State: mesos.TaskState_TASK_FAILED.Enum(),
 				})
-
-				So(runningTasks[id].Status, ShouldEqual, "TASK_FAILED")
+				task, _ := database.ReadTask(id)
+				So(task.Status, ShouldEqual, "TASK_FAILED")
 			})
 
 			Convey("FrameworkMessage", func() {
@@ -135,8 +141,6 @@ func TestScheduler(t *testing.T) {
 	})
 
 	Convey("scheduleTask", t, func() {
-		runningTasks = make(map[string]eremeticTask)
-
 		Convey("Given a valid Request", func() {
 			scheduler := &eremeticScheduler{
 				tasks: make(chan string, 100),
@@ -150,14 +154,14 @@ func TestScheduler(t *testing.T) {
 			}
 
 			Convey("It should put a task id on the channel", func() {
-				taskId, err := scheduleTask(scheduler, request)
+				taskID, err := scheduleTask(scheduler, request)
 
 				So(err, ShouldBeNil)
 
 				select {
 				case c := <-scheduler.tasks:
-					So(c, ShouldEqual, taskId)
-					task := runningTasks[taskId]
+					So(c, ShouldEqual, taskID)
+					task, _ := database.ReadTask(taskID)
 					So(task.TaskCPUs, ShouldEqual, request.TaskCPUs)
 					So(task.TaskMem, ShouldEqual, request.TaskMem)
 					So(task.Command.GetValue(), ShouldEqual, request.Command)
