@@ -20,6 +20,8 @@ func NewDB(file string) error {
 		dir, _ := os.Getwd()
 		file = fmt.Sprintf("%s/../%s", dir, file)
 	}
+	os.MkdirAll(filepath.Dir(file), 0755)
+
 	db, err := bolt.Open(file, 0600, nil)
 	boltdb = db
 	return err
