@@ -16,7 +16,6 @@ import (
 	"github.com/alde/eremetic/types"
 )
 
-var requests = make(chan *types.Request)
 var scheduler *eremeticScheduler
 
 // AddTask handles adding a task to the queue
@@ -71,21 +70,10 @@ func Run() {
 	defer close(scheduler.shutdown)
 	defer driver.Stop(false)
 
-	go func() {
-		if status, err := driver.Run(); err != nil {
-			log.Errorf("Framework stopped with status %s and error: %s\n", status.String(), err.Error())
-		}
-		log.Info("Exiting...")
-	}()
-
-	log.Debug("Entering handler.Run loop")
-	for {
-		select {
-		case req := <-requests:
-			log.Debug("Found a request in the queue!")
-			scheduleTask(scheduler, *req)
-		}
+	if status, err := driver.Run(); err != nil {
+		log.Errorf("Framework stopped with status %s and error: %s\n", status.String(), err.Error())
 	}
+	log.Info("Exiting...")
 }
 
 // CleanupTasks is an infinite loop removing terminal Tasks that have stuck around too long.
