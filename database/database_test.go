@@ -66,11 +66,12 @@ func TestDatabase(t *testing.T) {
 
 		task1 := types.EremeticTask{ID: "1234"}
 		task2 := types.EremeticTask{
-			ID:       "12345",
-			TaskCPUs: 2.5,
-			TaskMem:  15.3,
-			Name:     "request Name",
-			Status:   mesos.TaskState_TASK_STAGING.String(),
+			ID:          "12345",
+			TaskCPUs:    2.5,
+			TaskMem:     15.3,
+			Name:        "request Name",
+			Status:      mesos.TaskState_TASK_STAGING.String(),
+			FrameworkId: "1234",
 			Command: &mesos.CommandInfo{
 				Value: proto.String("echo date"),
 				User:  proto.String("root"),

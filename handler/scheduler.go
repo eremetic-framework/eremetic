@@ -63,6 +63,7 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 			log.Debugf("Preparing to launch task %s with offer %s", tid, offer.Id.GetValue())
 			t, _ := database.ReadTask(tid)
 			task := s.newTask(offer, &t)
+			database.PutTask(&t)
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
 			continue
 		default:
