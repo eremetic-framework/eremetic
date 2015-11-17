@@ -24,6 +24,13 @@ func (m mockError) Error() string {
 	return m.message
 }
 
+type mockScheduler struct {
+}
+
+func (s *mockScheduler) ScheduleTask(request types.Request) (string, error) {
+	return "eremetic-task.mock", nil
+}
+
 func TestHandling(t *testing.T) {
 	dir, _ := os.Getwd()
 	database.NewDB(fmt.Sprintf("%s/../db/test.db", dir))
@@ -96,9 +103,7 @@ func TestHandling(t *testing.T) {
 	})
 
 	Convey("AddTask", t, func() {
-		scheduler = &eremeticScheduler{
-			tasks: make(chan string, 100),
-		}
+		scheduler = &mockScheduler{}
 
 		wr := httptest.NewRecorder()
 

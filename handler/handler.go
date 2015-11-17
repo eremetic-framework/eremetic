@@ -13,10 +13,11 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/alde/eremetic/database"
+	sched "github.com/alde/eremetic/scheduler"
 	"github.com/alde/eremetic/types"
 )
 
-var scheduler *eremeticScheduler
+var scheduler types.Scheduler = sched.Scheduler
 
 // AddTask handles adding a task to the queue
 func AddTask(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +29,7 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &request)
 	handleError(err, w)
 
-	taskID, err := scheduleTask(scheduler, request)
+	taskID, err := scheduler.ScheduleTask(request)
 	if err != nil {
 		writeJSON(500, err, w)
 		return
@@ -54,25 +55,6 @@ func GetTaskInfo(w http.ResponseWriter, r *http.Request) {
 		}
 		writeJSON(http.StatusOK, task, w)
 	}
-}
-
-// Run the RequestChannel Listener
-func Run() {
-	scheduler = createEremeticScheduler()
-	driver, err := createDriver(scheduler)
-
-	if err != nil {
-		log.Errorf("Unable to create scheduler driver: %s", err)
-		return
-	}
-
-	defer close(scheduler.shutdown)
-	defer driver.Stop(false)
-
-	if status, err := driver.Run(); err != nil {
-		log.Errorf("Framework stopped with status %s and error: %s\n", status.String(), err.Error())
-	}
-	log.Info("Exiting...")
 }
 
 func handleError(err error, w http.ResponseWriter) {
