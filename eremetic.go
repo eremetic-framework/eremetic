@@ -6,12 +6,13 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/alde/eremetic/database"
-	"github.com/alde/eremetic/handler"
-	"github.com/alde/eremetic/routes"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/kardianos/osext"
 	"github.com/spf13/viper"
+
+	"github.com/alde/eremetic/database"
+	"github.com/alde/eremetic/routes"
+	"github.com/alde/eremetic/scheduler"
 )
 
 func readConfig() {
@@ -54,9 +55,10 @@ func main() {
 		os.Exit(0)
 	}()
 
-	router := routes.Create()
+	sched := scheduler.Create()
+	router := routes.Create(sched)
 	log.Infof("listening to %s", bind)
-	go handler.Run()
+	go scheduler.Run(sched)
 	err := http.ListenAndServe(bind, router)
 	if err != nil {
 		log.Error(err.Error())

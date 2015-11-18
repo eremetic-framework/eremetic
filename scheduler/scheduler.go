@@ -1,4 +1,4 @@
-package handler
+package scheduler
 
 import (
 	"encoding/json"
@@ -140,7 +140,7 @@ func nextId(s *eremeticScheduler) int {
 	return id
 }
 
-func scheduleTask(s *eremeticScheduler, request types.Request) (string, error) {
+func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) {
 	log.Debugf(
 		"Adding task running on %s to queue",
 		request.DockerImage)

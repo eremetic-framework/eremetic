@@ -16,63 +16,46 @@ import (
 	"github.com/alde/eremetic/types"
 )
 
-var scheduler *eremeticScheduler
-
 // AddTask handles adding a task to the queue
-func AddTask(w http.ResponseWriter, r *http.Request) {
-	var request types.Request
+func AddTask(scheduler types.Scheduler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request types.Request
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-	handleError(err, w)
+		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+		handleError(err, w)
 
-	err = json.Unmarshal(body, &request)
-	handleError(err, w)
+		err = json.Unmarshal(body, &request)
+		handleError(err, w)
 
-	taskID, err := scheduleTask(scheduler, request)
-	if err != nil {
-		writeJSON(500, err, w)
-		return
+		taskID, err := scheduler.ScheduleTask(request)
+		if err != nil {
+			writeJSON(500, err, w)
+			return
+		}
+
+		w.Header().Set("Location", fmt.Sprintf("/task/%s", taskID))
+		writeJSON(http.StatusAccepted, taskID, w)
 	}
-
-	w.Header().Set("Location", fmt.Sprintf("/task/%s", taskID))
-	writeJSON(http.StatusAccepted, taskID, w)
 }
 
 // GetTaskInfo returns information about the given task.
-func GetTaskInfo(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["taskId"]
-	log.Debugf("Fetching task for id: %s", id)
-	task, _ := database.ReadTask(id)
+func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["taskId"]
+		log.Debugf("Fetching task for id: %s", id)
+		task, _ := database.ReadTask(id)
 
-	if strings.Contains(r.Header.Get("Accept"), "text/html") {
-		renderHTML(w, r, task, id)
-	} else {
-		if task == (types.EremeticTask{}) {
-			writeJSON(http.StatusNotFound, nil, w)
-			return
+		if strings.Contains(r.Header.Get("Accept"), "text/html") {
+			renderHTML(w, r, task, id)
+		} else {
+			if task == (types.EremeticTask{}) {
+				writeJSON(http.StatusNotFound, nil, w)
+				return
+			}
+			writeJSON(http.StatusOK, task, w)
 		}
-		writeJSON(http.StatusOK, task, w)
 	}
-}
-
-// Run the RequestChannel Listener
-func Run() {
-	scheduler = createEremeticScheduler()
-	driver, err := createDriver(scheduler)
-
-	if err != nil {
-		log.Errorf("Unable to create scheduler driver: %s", err)
-		return
-	}
-
-	defer close(scheduler.shutdown)
-	defer driver.Stop(false)
-
-	if status, err := driver.Run(); err != nil {
-		log.Errorf("Framework stopped with status %s and error: %s\n", status.String(), err.Error())
-	}
-	log.Info("Exiting...")
 }
 
 func handleError(err error, w http.ResponseWriter) {

@@ -1,4 +1,4 @@
-package handler
+package scheduler
 
 import (
 	"fmt"
@@ -140,7 +140,7 @@ func TestScheduler(t *testing.T) {
 		})
 	})
 
-	Convey("scheduleTask", t, func() {
+	Convey("ScheduleTask", t, func() {
 		Convey("Given a valid Request", func() {
 			scheduler := &eremeticScheduler{
 				tasks: make(chan string, 100),
@@ -154,7 +154,7 @@ func TestScheduler(t *testing.T) {
 			}
 
 			Convey("It should put a task id on the channel", func() {
-				taskID, err := scheduleTask(scheduler, request)
+				taskID, err := scheduler.ScheduleTask(request)
 
 				So(err, ShouldBeNil)
 

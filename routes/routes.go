@@ -13,7 +13,21 @@ import (
 )
 
 // Create is used to create a new router
-func Create() *mux.Router {
+func Create(scheduler types.Scheduler) *mux.Router {
+	routes := types.Routes{
+		types.Route{
+			Name:        "AddTask",
+			Method:      "POST",
+			Pattern:     "/task",
+			HandlerFunc: handler.AddTask(scheduler),
+		},
+		types.Route{
+			Name:        "Status",
+			Method:      "GET",
+			Pattern:     "/task/{taskId}",
+			HandlerFunc: handler.GetTaskInfo(scheduler),
+		},
+	}
 
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
@@ -47,19 +61,4 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusNotFound)
 	json.NewEncoder(w).Encode(nil)
-}
-
-var routes = types.Routes{
-	types.Route{
-		Name:        "AddTask",
-		Method:      "POST",
-		Pattern:     "/task",
-		HandlerFunc: handler.AddTask,
-	},
-	types.Route{
-		Name:        "Status",
-		Method:      "GET",
-		Pattern:     "/task/{taskId}",
-		HandlerFunc: handler.GetTaskInfo,
-	},
 }
