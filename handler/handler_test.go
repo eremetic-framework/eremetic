@@ -32,6 +32,7 @@ func (s *mockScheduler) ScheduleTask(request types.Request) (string, error) {
 }
 
 func TestHandling(t *testing.T) {
+	scheduler := &mockScheduler{}
 	dir, _ := os.Getwd()
 	database.NewDB(fmt.Sprintf("%s/../db/test.db", dir))
 	database.Clean()
@@ -67,7 +68,7 @@ func TestHandling(t *testing.T) {
 		wr := httptest.NewRecorder()
 		r, _ := http.NewRequest("GET", "/task/eremetic-task.1234", nil)
 		m := mux.NewRouter()
-		m.HandleFunc("/task/{taskId}", GetTaskInfo)
+		m.HandleFunc("/task/{taskId}", GetTaskInfo(scheduler))
 
 		Convey("Not Found", func() {
 			id := "eremetic-task.5678"
@@ -103,15 +104,14 @@ func TestHandling(t *testing.T) {
 	})
 
 	Convey("AddTask", t, func() {
-		scheduler = &mockScheduler{}
-
 		wr := httptest.NewRecorder()
 
 		Convey("It should respond with a location header", func() {
 			data := []byte(`{"task_mem":22.0, "docker_image": "busybox", "command": "echo hello", "task_cpus":0.5, "tasks_to_launch": 1}`)
 			r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
 
-			AddTask(wr, r)
+			handler := AddTask(scheduler)
+			handler(wr, r)
 
 			location := wr.HeaderMap["Location"][0]
 			So(location, ShouldStartWith, "/task/eremetic-task.")

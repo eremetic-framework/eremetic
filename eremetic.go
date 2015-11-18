@@ -55,9 +55,10 @@ func main() {
 		os.Exit(0)
 	}()
 
-	router := routes.Create()
+	sched := scheduler.Create()
+	router := routes.Create(sched)
 	log.Infof("listening to %s", bind)
-	go scheduler.Run()
+	go scheduler.Run(sched)
 	err := http.ListenAndServe(bind, router)
 	if err != nil {
 		log.Error(err.Error())
