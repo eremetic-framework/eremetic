@@ -1,8 +1,8 @@
-.PHONY: all deps test docker copy_templates
+.PHONY: all deps test docker copy_templates publish-docker
 
 VERSION?=$(shell git describe HEAD | sed s/^v//)
 DATE?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
-DOCKERTAG?=eremetic:${VERSION}
+DOCKERTAG?=dkeis/eremetic:${VERSION}
 LDFLAGS=-X main.Version '${VERSION}' -X main.BuildDate '${DATE}'
 SRC=$(shell find . -name '*.go')
 
@@ -27,3 +27,6 @@ docker/eremetic: ${SRC}
 
 docker: docker/eremetic
 	docker build -t ${DOCKERTAG} docker
+
+publish-docker: docker
+	docker push ${DOCKERTAG}
