@@ -12,7 +12,7 @@
         <div class="ui fixed inverted menu">
             <div class="ui container">
                 <div class="header item">
-                    Eremetic
+                    <img class="logo eremetic" src="/static/images/eremiteLOGO_02.png">
                 </div>
             </div>
         </div>
@@ -97,10 +97,17 @@
                         <i class="green circular list icon"></i>
                         <div class="content">Status</div>
                     </h2>
-                    <div class="ui text content">
-                        <div class="ui {{.Status | ToLower}} label">
-                            {{.Status}}
-                        </div>
+                    <div class="ui list big">
+                        {{range .Status}}
+                            <div class="item content">
+                                <div class="ui {{.Status | ToLower}} label">
+                                    {{.Status}}
+                                </div>
+                                <div class="content">
+                                    {{.Time | FormatTime}}
+                                </div>
+                            </div>
+                        {{end}}
                     </div>
                 </div>
             </div>

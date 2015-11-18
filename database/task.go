@@ -40,6 +40,9 @@ func ReadTask(id string) (types.EremeticTask, error) {
 
 	err = boltdb.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("tasks"))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
 		v := b.Get([]byte(id))
 		json.Unmarshal(v, &task)
 		return nil

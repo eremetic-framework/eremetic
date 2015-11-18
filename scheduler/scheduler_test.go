@@ -91,7 +91,20 @@ func TestScheduler(t *testing.T) {
 					State: mesos.TaskState_TASK_FAILED.Enum(),
 				})
 				task, _ := database.ReadTask(id)
-				So(task.Status, ShouldEqual, "TASK_FAILED")
+				So(len(task.Status), ShouldEqual, 1)
+				So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
+
+				s.StatusUpdate(nil, &mesos.TaskStatus{
+					TaskId: &mesos.TaskID{
+						Value: proto.String(id),
+					},
+					State: mesos.TaskState_TASK_RUNNING.Enum(),
+				})
+				task, _ = database.ReadTask(id)
+
+				So(len(task.Status), ShouldEqual, 2)
+				So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
+				So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
 			})
 
 			Convey("FrameworkMessage", func() {

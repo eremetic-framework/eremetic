@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"testing"
+	"time"
 
 	"github.com/alde/eremetic/types"
 	"github.com/gogo/protobuf/proto"
@@ -10,6 +11,14 @@ import (
 )
 
 func TestTask(t *testing.T) {
+
+	status := []types.Status{
+		types.Status{
+			Status: mesos.TaskState_TASK_RUNNING.String(),
+			Time:   time.Now().Unix(),
+		},
+	}
+
 	Convey("createID", t, func() {
 		Convey("Given a string", func() {
 			Convey("It should build the appropriate ID", func() {
@@ -36,7 +45,7 @@ func TestTask(t *testing.T) {
 			So(task.Container.Docker.GetImage(), ShouldEqual, "busybox")
 			So(task.Command.Environment.GetVariables(), ShouldHaveLength, 1)
 			So(task.Container.Volumes, ShouldBeEmpty)
-			So(task.Status, ShouldEqual, "TASK_STAGING")
+			So(task.Status[0].Status, ShouldEqual, "TASK_STAGING")
 		})
 
 		Convey("Given a volume and environment", func() {
@@ -66,7 +75,7 @@ func TestTask(t *testing.T) {
 			TaskMem:   0.5,
 			Command:   &mesos.CommandInfo{},
 			Container: &mesos.ContainerInfo{},
-			Status:    "TASK_RUNNING",
+			Status:    status,
 			ID:        "eremetic-task.1234",
 			Name:      "Eremetic task 17",
 		}

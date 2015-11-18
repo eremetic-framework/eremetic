@@ -7,13 +7,14 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strings"
 
+	"github.com/alde/eremetic/database"
+	"github.com/alde/eremetic/formatter"
+	"github.com/alde/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gorilla/mux"
-
-	"github.com/alde/eremetic/database"
-	"github.com/alde/eremetic/types"
 )
 
 // AddTask handles adding a task to the queue
@@ -49,7 +50,7 @@ func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
 		if strings.Contains(r.Header.Get("Accept"), "text/html") {
 			renderHTML(w, r, task, id)
 		} else {
-			if task == (types.EremeticTask{}) {
+			if reflect.DeepEqual(task, (types.EremeticTask{})) {
 				writeJSON(http.StatusNotFound, nil, w)
 				return
 			}
@@ -78,10 +79,11 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask,
 
 	data := make(map[string]interface{})
 	funcMap := template.FuncMap{
-		"ToLower": strings.ToLower,
+		"ToLower":    strings.ToLower,
+		"FormatTime": formatter.FormatTime,
 	}
 
-	if task == (types.EremeticTask{}) {
+	if reflect.DeepEqual(task, (types.EremeticTask{})) {
 		tpl, err = template.ParseFiles("templates/error_404.html")
 		data["TaskID"] = taskID
 	} else {

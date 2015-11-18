@@ -3,6 +3,7 @@ package scheduler
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/alde/eremetic/database"
 	"github.com/alde/eremetic/types"
@@ -74,14 +75,6 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 	}
 }
 
-func updateStatusForTask(status *mesos.TaskStatus) {
-	id := status.TaskId.GetValue()
-	log.Debugf("TaskId [%s] status [%s]", id, status.State)
-	task, _ := database.ReadTask(id)
-	task.Status = status.State.String()
-	database.PutTask(&task)
-}
-
 // StatusUpdate takes care of updating the status
 func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
 	log.Debugf("Received task status [%s] for task [%s]", status.State.String(), *status.TaskId.Value)
@@ -134,7 +127,7 @@ func createEremeticScheduler() *eremeticScheduler {
 	return s
 }
 
-func nextId(s *eremeticScheduler) int {
+func nextID(s *eremeticScheduler) int {
 	id := s.tasksCreated
 	s.tasksCreated++
 	return id
@@ -145,7 +138,7 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 		"Adding task running on %s to queue",
 		request.DockerImage)
 
-	request.Name = fmt.Sprintf("Eremetic task %d", nextId(s))
+	request.Name = fmt.Sprintf("Eremetic task %d", nextID(s))
 
 	task, err := createEremeticTask(request)
 	if err != nil {
@@ -155,4 +148,17 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 	database.PutTask(&task)
 	s.tasks <- task.ID
 	return task.ID, nil
+}
+
+func updateStatusForTask(status *mesos.TaskStatus) {
+	id := status.TaskId.GetValue()
+	log.Debugf("TaskId [%s] status [%s]", id, status.State)
+	task, _ := database.ReadTask(id)
+	newStatus := types.Status{
+		Status: status.State.String(),
+		Time:   time.Now().Unix(),
+	}
+	task.Status = append([]types.Status{newStatus}, task.Status...)
+
+	database.PutTask(&task)
 }
