@@ -158,7 +158,7 @@ func updateStatusForTask(status *mesos.TaskStatus) {
 		Status: status.State.String(),
 		Time:   time.Now().Unix(),
 	}
-	task.Status = append([]types.Status{newStatus}, task.Status...)
+	task.Status = append(task.Status, newStatus)
 
 	database.PutTask(&task)
 }

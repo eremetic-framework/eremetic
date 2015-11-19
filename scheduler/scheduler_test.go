@@ -103,8 +103,8 @@ func TestScheduler(t *testing.T) {
 				task, _ = database.ReadTask(id)
 
 				So(len(task.Status), ShouldEqual, 2)
-				So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
-				So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
+				So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
+				So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
 			})
 
 			Convey("FrameworkMessage", func() {
