@@ -84,27 +84,48 @@ func TestScheduler(t *testing.T) {
 			})
 
 			Convey("StatusUpdate", func() {
-				s.StatusUpdate(nil, &mesos.TaskStatus{
-					TaskId: &mesos.TaskID{
-						Value: proto.String(id),
-					},
-					State: mesos.TaskState_TASK_FAILED.Enum(),
-				})
-				task, _ := database.ReadTask(id)
-				So(len(task.Status), ShouldEqual, 1)
-				So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
+				Convey("Running then failing", func() {
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						State: mesos.TaskState_TASK_RUNNING.Enum(),
+					})
+					task, _ := database.ReadTask(id)
+					So(len(task.Status), ShouldEqual, 1)
+					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
 
-				s.StatusUpdate(nil, &mesos.TaskStatus{
-					TaskId: &mesos.TaskID{
-						Value: proto.String(id),
-					},
-					State: mesos.TaskState_TASK_RUNNING.Enum(),
-				})
-				task, _ = database.ReadTask(id)
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						State: mesos.TaskState_TASK_FAILED.Enum(),
+					})
+					task, _ = database.ReadTask(id)
 
-				So(len(task.Status), ShouldEqual, 2)
-				So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
-				So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
+					So(len(task.Status), ShouldEqual, 2)
+					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
+					So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
+				})
+
+				Convey("Failing immediatly", func() {
+					s.tasks = make(chan string, 100)
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						State: mesos.TaskState_TASK_FAILED.Enum(),
+					})
+					task, _ := database.ReadTask(id)
+					So(len(task.Status), ShouldEqual, 2)
+					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
+					So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_STAGING.String())
+
+					select {
+					case c := <-s.tasks:
+						So(c, ShouldEqual, id)
+					}
+				})
 			})
 
 			Convey("FrameworkMessage", func() {
