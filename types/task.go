@@ -31,3 +31,7 @@ func (task *EremeticTask) WasRunning() bool {
 	}
 	return false
 }
+
+func (task *EremeticTask) UpdateStatus(status Status) {
+	task.Status = append(task.Status, status)
+}

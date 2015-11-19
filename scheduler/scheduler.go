@@ -83,7 +83,11 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 	log.Debugf("Received task status [%s] for task [%s]", status.State.String(), id)
 
 	task, _ := database.ReadTask(id)
-	task = updateStatusForTask(task, status)
+
+	task.UpdateStatus(types.Status{
+		Status: status.State.String(),
+		Time:   time.Now().Unix(),
+	})
 
 	if *status.State == mesos.TaskState_TASK_FAILED && !task.WasRunning() {
 		if task.Retry >= maxRetries {
@@ -168,13 +172,4 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 	database.PutTask(&task)
 	s.tasks <- task.ID
 	return task.ID, nil
-}
-
-func updateStatusForTask(task types.EremeticTask, status *mesos.TaskStatus) types.EremeticTask {
-	newStatus := types.Status{
-		Status: status.State.String(),
-		Time:   time.Now().Unix(),
-	}
-	task.Status = append(task.Status, newStatus)
-	return task
 }
