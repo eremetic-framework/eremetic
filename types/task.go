@@ -21,3 +21,12 @@ type EremeticTask struct {
 	SlaveId     string               `json:"slave_id"`
 	Hostname    string               `json:"hostname"`
 }
+
+func (task *EremeticTask) WasRunning() bool {
+	for _, s := range task.Status {
+		if s.Status == mesos.TaskState_TASK_RUNNING.String() {
+			return true
+		}
+	}
+	return false
+}
