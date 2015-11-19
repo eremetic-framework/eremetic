@@ -2,7 +2,7 @@
 
 VERSION?=$(shell git describe HEAD | sed s/^v//)
 DATE?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
-DOCKERTAG?=dkeis/eremetic:${VERSION}
+DOCKERTAG?=alde/eremetic:${VERSION}
 LDFLAGS=-X main.Version '${VERSION}' -X main.BuildDate '${DATE}'
 SRC=$(shell find . -name '*.go')
 
