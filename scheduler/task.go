@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/alde/eremetic/types"
 	"github.com/gogo/protobuf/proto"
@@ -43,12 +44,18 @@ func createEremeticTask(request types.Request) (types.EremeticTask, error) {
 		Value: proto.String(taskId),
 	})
 
+	status := []types.Status{
+		types.Status{
+			Status: mesos.TaskState_TASK_STAGING.String(),
+			Time:   time.Now().Unix(),
+		},
+	}
 	task := types.EremeticTask{
 		ID:       taskId,
 		TaskCPUs: request.TaskCPUs,
 		TaskMem:  request.TaskMem,
 		Name:     request.Name,
-		Status:   mesos.TaskState_TASK_STAGING.String(),
+		Status:   status,
 		Command: &mesos.CommandInfo{
 			Value: proto.String(request.Command),
 			User:  proto.String("root"),

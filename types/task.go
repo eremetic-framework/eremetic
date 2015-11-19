@@ -4,12 +4,17 @@ import (
 	mesos "github.com/mesos/mesos-go/mesosproto"
 )
 
+type Status struct {
+	Time   int64  `json:"time"`
+	Status string `json:"status"`
+}
+
 type EremeticTask struct {
 	TaskCPUs    float64              `json:"task_cpus"`
 	TaskMem     float64              `json:"task_mem"`
 	Command     *mesos.CommandInfo   `json:"command"`
 	Container   *mesos.ContainerInfo `json:"container"`
-	Status      string               `json:"status"`
+	Status      []Status             `json:"status"`
 	ID          string               `json:"id"`
 	Name        string               `json:"name"`
 	FrameworkId string               `json:"framework_id"`

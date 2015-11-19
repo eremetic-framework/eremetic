@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/alde/eremetic/database"
 	"github.com/alde/eremetic/types"
@@ -33,6 +34,13 @@ func (s *mockScheduler) ScheduleTask(request types.Request) (string, error) {
 
 func TestHandling(t *testing.T) {
 	scheduler := &mockScheduler{}
+	status := []types.Status{
+		types.Status{
+			Status: mesos.TaskState_TASK_RUNNING.String(),
+			Time:   time.Now().Unix(),
+		},
+	}
+
 	dir, _ := os.Getwd()
 	database.NewDB(fmt.Sprintf("%s/../db/test.db", dir))
 	database.Clean()
@@ -77,7 +85,7 @@ func TestHandling(t *testing.T) {
 				TaskMem:   0.5,
 				Command:   &mesos.CommandInfo{},
 				Container: &mesos.ContainerInfo{},
-				Status:    "TASK_RUNNING",
+				Status:    status,
 				ID:        id,
 			}
 			database.PutTask(&task)
@@ -93,7 +101,7 @@ func TestHandling(t *testing.T) {
 				TaskMem:   0.5,
 				Command:   &mesos.CommandInfo{},
 				Container: &mesos.ContainerInfo{},
-				Status:    "TASK_RUNNING",
+				Status:    status,
 				ID:        id,
 			}
 			database.PutTask(&task)

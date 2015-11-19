@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/alde/eremetic/types"
 	"github.com/gogo/protobuf/proto"
@@ -18,6 +19,13 @@ func setup() error {
 }
 
 func TestDatabase(t *testing.T) {
+	status := []types.Status{
+		types.Status{
+			Status: mesos.TaskState_TASK_RUNNING.String(),
+			Time:   time.Now().Unix(),
+		},
+	}
+
 	Convey("NewDB", t, func() {
 		Convey("With an absolute path", func() {
 			err := setup()
@@ -70,7 +78,7 @@ func TestDatabase(t *testing.T) {
 			TaskCPUs:    2.5,
 			TaskMem:     15.3,
 			Name:        "request Name",
-			Status:      mesos.TaskState_TASK_STAGING.String(),
+			Status:      status,
 			FrameworkId: "1234",
 			Command: &mesos.CommandInfo{
 				Value: proto.String("echo date"),
