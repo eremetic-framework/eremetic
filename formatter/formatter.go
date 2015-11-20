@@ -11,5 +11,5 @@ func FormatTime(unixTime int64) string {
 
 	year, month, day := t.Date()
 
-	return fmt.Sprintf("%d-%d-%d %d:%02d:%d", year, month, day, t.Hour(), t.Minute(), t.Second())
+	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d", year, month, day, t.Hour(), t.Minute(), t.Second())
 }

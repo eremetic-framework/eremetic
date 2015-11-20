@@ -15,6 +15,7 @@ import (
 
 var (
 	defaultFilter = &mesos.Filters{RefuseSeconds: proto.Float64(1)}
+	maxRetries    = 5
 )
 
 // eremeticScheduler holds the structure of the Eremetic Scheduler
@@ -77,9 +78,32 @@ func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers 
 
 // StatusUpdate takes care of updating the status
 func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
-	log.Debugf("Received task status [%s] for task [%s]", status.State.String(), *status.TaskId.Value)
+	id := status.TaskId.GetValue()
 
-	updateStatusForTask(status)
+	log.Debugf("Received task status [%s] for task [%s]", status.State.String(), id)
+
+	task, _ := database.ReadTask(id)
+
+	task.UpdateStatus(types.Status{
+		Status: status.State.String(),
+		Time:   time.Now().Unix(),
+	})
+
+	if *status.State == mesos.TaskState_TASK_FAILED && !task.WasRunning() {
+		if task.Retry >= maxRetries {
+			log.Warnf("giving up on %s after %d retry attempts", id, task.Retry)
+		} else {
+			log.Infof("task %s was never running. re-scheduling", id)
+			task.UpdateStatus(types.Status{
+				Status: mesos.TaskState_TASK_STAGING.String(),
+				Time:   time.Now().Unix(),
+			})
+			task.Retry += 1
+			go func() { s.tasks <- id }()
+		}
+	}
+
+	database.PutTask(&task)
 }
 
 func (s *eremeticScheduler) FrameworkMessage(
@@ -148,17 +172,4 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 	database.PutTask(&task)
 	s.tasks <- task.ID
 	return task.ID, nil
-}
-
-func updateStatusForTask(status *mesos.TaskStatus) {
-	id := status.TaskId.GetValue()
-	log.Debugf("TaskId [%s] status [%s]", id, status.State)
-	task, _ := database.ReadTask(id)
-	newStatus := types.Status{
-		Status: status.State.String(),
-		Time:   time.Now().Unix(),
-	}
-	task.Status = append(task.Status, newStatus)
-
-	database.PutTask(&task)
 }

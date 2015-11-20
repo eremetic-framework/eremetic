@@ -20,4 +20,18 @@ type EremeticTask struct {
 	FrameworkId string               `json:"framework_id"`
 	SlaveId     string               `json:"slave_id"`
 	Hostname    string               `json:"hostname"`
+	Retry       int                  `json:"retry"`
+}
+
+func (task *EremeticTask) WasRunning() bool {
+	for _, s := range task.Status {
+		if s.Status == mesos.TaskState_TASK_RUNNING.String() {
+			return true
+		}
+	}
+	return false
+}
+
+func (task *EremeticTask) UpdateStatus(status Status) {
+	task.Status = append(task.Status, status)
 }
