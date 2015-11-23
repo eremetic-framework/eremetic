@@ -9,6 +9,9 @@ SRC=$(shell find . -name '*.go')
 all: test
 
 deps:
+	go get github.com/jteeuwen/go-bindata/...
+	go get github.com/elazarl/go-bindata-assetfs/...
+	go generate
 	go get -t ./...
 
 test: eremetic
@@ -19,11 +22,8 @@ eremetic: ${SRC}
 	go build -ldflags "${LDFLAGS}" -o $@
 
 docker/eremetic: ${SRC}
+	go generate
 	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@
 
-copy_templates:
-	cp -r static docker
-	cp -r templates docker
-
-docker: docker/eremetic copy_templates
+docker: docker/eremetic
 	docker build -t ${DOCKERTAG} docker

@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/alde/eremetic/assets"
 	"github.com/alde/eremetic/database"
 	"github.com/alde/eremetic/formatter"
 	"github.com/alde/eremetic/types"
@@ -74,8 +75,7 @@ func writeJSON(status int, data interface{}, w http.ResponseWriter) error {
 }
 
 func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask, taskID string) {
-	var err error
-	var tpl *template.Template
+	var templateFile string
 
 	data := make(map[string]interface{})
 	funcMap := template.FuncMap{
@@ -84,12 +84,15 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask,
 	}
 
 	if reflect.DeepEqual(task, (types.EremeticTask{})) {
-		tpl, err = template.ParseFiles("templates/error_404.html")
+		templateFile = "error_404.html"
 		data["TaskID"] = taskID
 	} else {
-		tpl, err = template.New("task.html").Funcs(funcMap).ParseFiles("templates/task.html")
+		templateFile = "task.html"
 		data = makeMap(task)
 	}
+
+	source, _ := assets.Asset(fmt.Sprintf("templates/%s", templateFile))
+	tpl, err := template.New(templateFile).Funcs(funcMap).Parse(string(source))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
