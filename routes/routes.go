@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/alde/eremetic/assets"
 	"github.com/alde/eremetic/handler"
 	"github.com/alde/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 )
 
@@ -41,7 +43,8 @@ func Create(scheduler types.Scheduler) *mux.Router {
 	router.PathPrefix("/static/").
 		Handler(
 		http.StripPrefix(
-			"/static/", http.FileServer(http.Dir("./static/"))))
+			"/static/", http.FileServer(
+				&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, Prefix: "static"})))
 
 	router.NotFoundHandler = http.HandlerFunc(notFound)
 
@@ -50,7 +53,8 @@ func Create(scheduler types.Scheduler) *mux.Router {
 
 func notFound(w http.ResponseWriter, r *http.Request) {
 	if strings.Contains(r.Header.Get("Accept"), "text/html") {
-		tpl, err := template.ParseFiles("templates/error_404.html")
+		src, _ := assets.Asset("templates/error_404.html")
+		tpl, err := template.New("404").Parse(string(src))
 		if err == nil {
 			tpl.Execute(w, nil)
 			return
