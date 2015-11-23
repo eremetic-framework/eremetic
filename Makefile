@@ -21,8 +21,8 @@ eremetic: deps
 eremetic: ${SRC}
 	go build -ldflags "${LDFLAGS}" -o $@
 
+docker/eremetic: deps
 docker/eremetic: ${SRC}
-	go generate
 	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@
 
 docker: docker/eremetic
