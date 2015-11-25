@@ -55,23 +55,38 @@ func (s *eremeticScheduler) Disconnected(sched.SchedulerDriver) {
 // ResourceOffers handles the Resource Offers
 func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers []*mesos.Offer) {
 	log.Tracef("Received %d resource offers", len(offers))
-	for _, offer := range offers {
+	var offer *mesos.Offer
+
+loop:
+	for len(offers) > 0 {
 		select {
 		case <-s.shutdown:
-			log.Infof("Shutting down: declining offer on [%s]", offer.Hostname)
-			driver.DeclineOffer(offer.Id, defaultFilter)
-			continue
+			log.Info("Shutting down: declining offers")
+			break loop
 		case tid := <-s.tasks:
-			log.Debugf("Preparing to launch task %s with offer %s", tid, offer.Id.GetValue())
+			log.Debugf("Trying to find offer to launch %s with", tid)
 			t, _ := database.ReadTask(tid)
+			offer, offers = matchOffer(t, offers)
+
+			if offer == nil {
+				log.Warnf("Could not find a matching offer for %s", tid)
+				go func() { s.tasks <- tid }()
+				break loop
+			}
+
+			log.Debugf("Preparing to launch task %s with offer %s", tid, offer.Id.GetValue())
 			task := s.newTask(offer, &t)
 			database.PutTask(&t)
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
+
 			continue
 		default:
+			break loop
 		}
+	}
 
-		log.Trace("No tasks to launch. Declining offer.")
+	log.Trace("No tasks to launch. Declining offers.")
+	for _, offer := range offers {
 		driver.DeclineOffer(offer.Id, defaultFilter)
 	}
 }
