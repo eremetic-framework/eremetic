@@ -89,10 +89,11 @@ func TestTask(t *testing.T) {
 			Hostname: proto.String("hostname"),
 		}
 
-		taskInfo := createTaskInfo(&eremeticTask, &offer)
+		net, taskInfo := createTaskInfo(eremeticTask, &offer)
 		So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 		So(taskInfo.GetName(), ShouldEqual, eremeticTask.Name)
 		So(taskInfo.GetResources()[0].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskCPUs)
 		So(taskInfo.GetResources()[1].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskMem)
+		So(net.SlaveId, ShouldEqual, "slave-id")
 	})
 }
