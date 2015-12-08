@@ -20,6 +20,11 @@ create /etc/eremetic/eremetic.yml with:
     messenger_port: <port for mesos to communicate on>
 
 ## Building
+
+### Environment
+Clone the repository into `$GOCODE/src/github.com/alde/eremetic`.
+This is needed because of internal package dependencies.
+
 ### Install dependencies
 First you need to install dependencies. Parts of the eremetic code is auto-generated (assets and templates for the HTML view are compiled). In order for go generate to work, `go-bindata` and `go-bindata-assetfs` needs to be manually installed.
 
