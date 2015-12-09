@@ -32,6 +32,14 @@ func (task *EremeticTask) WasRunning() bool {
 	return false
 }
 
+func (task *EremeticTask) IsTerminated() bool {
+	if len(task.Status) == 0 {
+		return true
+	}
+	st := task.Status[len(task.Status)-1]
+	return IsTerminalString(st.Status)
+}
+
 func (task *EremeticTask) UpdateStatus(status Status) {
 	task.Status = append(task.Status, status)
 }
