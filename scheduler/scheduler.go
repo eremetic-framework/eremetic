@@ -33,7 +33,7 @@ type eremeticScheduler struct {
 	done chan struct{}
 }
 
-func (s *eremeticScheduler) newTask(offer *mesos.Offer, spec *types.EremeticTask) *mesos.TaskInfo {
+func (s *eremeticScheduler) newTask(spec types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
 	return createTaskInfo(spec, offer)
 }
 
@@ -75,7 +75,7 @@ loop:
 			}
 
 			log.Debugf("Preparing to launch task %s with offer %s", tid, offer.Id.GetValue())
-			task := s.newTask(offer, &t)
+			t, task := s.newTask(t, offer)
 			database.PutTask(&t)
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
 

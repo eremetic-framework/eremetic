@@ -39,9 +39,10 @@ func TestScheduler(t *testing.T) {
 				},
 				Hostname: proto.String("hostname"),
 			}
-			newTask := s.newTask(&offer, &task)
+			taskData, mesosTask := s.newTask(task, &offer)
 
-			So(newTask.GetTaskId().GetValue(), ShouldEqual, task.ID)
+			So(mesosTask.GetTaskId().GetValue(), ShouldEqual, task.ID)
+			So(taskData.SlaveId, ShouldEqual, "slave-id")
 		})
 
 		Convey("createEremeticScheduler", func() {

@@ -74,12 +74,12 @@ func createEremeticTask(request types.Request) (types.EremeticTask, error) {
 	return task, nil
 }
 
-func createTaskInfo(task *types.EremeticTask, offer *mesos.Offer) *mesos.TaskInfo {
+func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
 	task.FrameworkId = *offer.FrameworkId.Value
 	task.SlaveId = *offer.SlaveId.Value
 	task.Hostname = *offer.Hostname
 
-	return &mesos.TaskInfo{
+	return task, &mesos.TaskInfo{
 		TaskId: &mesos.TaskID{
 			Value: proto.String(task.ID),
 		},
