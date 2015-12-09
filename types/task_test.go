@@ -84,4 +84,27 @@ func TestTask(t *testing.T) {
 			So(task.IsTerminated(), ShouldBeTrue)
 		})
 	})
+
+	Convey("LastUpdated", t, func() {
+		Convey("A task that is running", func() {
+			task := EremeticTask{
+				Status: []Status{
+					Status{1449682262, "TASK_STAGING"},
+					Status{1449682265, "TASK_RUNNING"},
+				},
+			}
+
+			s := task.LastUpdated()
+
+			So(s.Unix(), ShouldEqual, 1449682265)
+		})
+
+		Convey("A empty task", func() {
+			task := EremeticTask{}
+
+			s := task.LastUpdated()
+
+			So(s.Unix(), ShouldEqual, 0)
+		})
+	})
 }
