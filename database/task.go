@@ -50,3 +50,30 @@ func ReadTask(id string) (types.EremeticTask, error) {
 
 	return task, err
 }
+
+func ListNonTerminalTasks() ([]*types.EremeticTask, error) {
+	var tasks []*types.EremeticTask
+
+	err := ensureDB()
+	if err != nil {
+		return tasks, err
+	}
+
+	err = boltdb.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("tasks"))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
+		b.ForEach(func(_, v []byte) error {
+			var task types.EremeticTask
+			json.Unmarshal(v, &task)
+			if !task.IsTerminated() {
+				tasks = append(tasks, &task)
+			}
+			return nil
+		})
+		return nil
+	})
+
+	return tasks, err
+}
