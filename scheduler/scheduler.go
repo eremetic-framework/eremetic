@@ -31,6 +31,16 @@ type eremeticScheduler struct {
 	// This channel is closed after shutdown is closed, and only when all
 	// outstanding tasks have been cleaned up
 	done chan struct{}
+
+	// Handle for current reconciliation job
+	reconcile *Reconcile
+}
+
+func (s *eremeticScheduler) Reconcile(driver sched.SchedulerDriver) {
+	if s.reconcile != nil {
+		s.reconcile.Cancel()
+	}
+	s.reconcile = ReconcileTasks(driver)
 }
 
 func (s *eremeticScheduler) newTask(spec types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
@@ -38,13 +48,15 @@ func (s *eremeticScheduler) newTask(spec types.EremeticTask, offer *mesos.Offer)
 }
 
 // Registered is called when the Scheduler is Registered
-func (s *eremeticScheduler) Registered(_ sched.SchedulerDriver, frameworkID *mesos.FrameworkID, masterInfo *mesos.MasterInfo) {
+func (s *eremeticScheduler) Registered(driver sched.SchedulerDriver, frameworkID *mesos.FrameworkID, masterInfo *mesos.MasterInfo) {
 	log.Debugf("Framework %s registered with master %s", frameworkID.GetValue(), masterInfo.GetHostname())
+	s.Reconcile(driver)
 }
 
 // Reregistered is called when the Scheduler is Reregistered
-func (s *eremeticScheduler) Reregistered(_ sched.SchedulerDriver, masterInfo *mesos.MasterInfo) {
+func (s *eremeticScheduler) Reregistered(driver sched.SchedulerDriver, masterInfo *mesos.MasterInfo) {
 	log.Debugf("Framework re-registered with master %s", masterInfo)
+	s.Reconcile(driver)
 }
 
 // Disconnected is called when the Scheduler is Disconnected

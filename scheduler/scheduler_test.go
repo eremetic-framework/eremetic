@@ -58,7 +58,9 @@ func TestScheduler(t *testing.T) {
 			})
 
 			Convey("Reregistered", func() {
-				s.Reregistered(nil, &mesos.MasterInfo{})
+				driver := NewMockScheduler()
+				database.Clean()
+				s.Reregistered(driver, &mesos.MasterInfo{})
 			})
 
 			Convey("Disconnected", func() {
