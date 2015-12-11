@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	defaultFilter = &mesos.Filters{RefuseSeconds: proto.Float64(1)}
+	defaultFilter = &mesos.Filters{RefuseSeconds: proto.Float64(10)}
 	maxRetries    = 5
 )
 
