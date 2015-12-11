@@ -17,6 +17,7 @@ var (
 
 type Reconcile struct {
 	cancel chan struct{}
+	done   chan struct{}
 }
 
 func (r *Reconcile) Cancel() {
@@ -25,6 +26,7 @@ func (r *Reconcile) Cancel() {
 
 func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 	cancel := make(chan struct{})
+	done := make(chan struct{})
 
 	go func() {
 		var (
@@ -35,6 +37,7 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 		tasks, err := database.ListNonTerminalTasks()
 		if err != nil {
 			log.Errorf("Failed to list non-terminal tasks: %s", err)
+			close(done)
 			return
 		}
 
@@ -45,6 +48,7 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 			select {
 			case <-cancel:
 				log.Info("Cancelling reconciliation job")
+				close(done)
 				return
 			case <-time.After(time.Duration(delay) * time.Second):
 				// Filter tasks that has received a status update
@@ -85,10 +89,13 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 				c += 1
 			}
 		}
+
 		log.Info("Reconciliation done")
+		close(done)
 	}()
 
 	return &Reconcile{
 		cancel: cancel,
+		done:   done,
 	}
 }
