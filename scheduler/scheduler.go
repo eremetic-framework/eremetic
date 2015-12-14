@@ -21,6 +21,7 @@ var (
 // eremeticScheduler holds the structure of the Eremetic Scheduler
 type eremeticScheduler struct {
 	tasksCreated int
+	initialised  bool
 
 	// task to start
 	tasks chan string
@@ -50,13 +51,23 @@ func (s *eremeticScheduler) newTask(spec types.EremeticTask, offer *mesos.Offer)
 // Registered is called when the Scheduler is Registered
 func (s *eremeticScheduler) Registered(driver sched.SchedulerDriver, frameworkID *mesos.FrameworkID, masterInfo *mesos.MasterInfo) {
 	log.Debugf("Framework %s registered with master %s", frameworkID.GetValue(), masterInfo.GetHostname())
-	s.Reconcile(driver)
+	if !s.initialised {
+		driver.ReconcileTasks([]*mesos.TaskStatus{})
+		s.initialised = true
+	} else {
+		s.Reconcile(driver)
+	}
 }
 
 // Reregistered is called when the Scheduler is Reregistered
 func (s *eremeticScheduler) Reregistered(driver sched.SchedulerDriver, masterInfo *mesos.MasterInfo) {
 	log.Debugf("Framework re-registered with master %s", masterInfo)
-	s.Reconcile(driver)
+	if !s.initialised {
+		driver.ReconcileTasks([]*mesos.TaskStatus{})
+		s.initialised = true
+	} else {
+		s.Reconcile(driver)
+	}
 }
 
 // Disconnected is called when the Scheduler is Disconnected
@@ -109,7 +120,17 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 
 	log.Debugf("Received task status [%s] for task [%s]", status.State.String(), id)
 
-	task, _ := database.ReadTask(id)
+	task, err := database.ReadTask(id)
+	if err != nil {
+		log.Debugf("Error reading task from database: %s", err)
+	}
+
+	if task.ID == "" {
+		task = types.EremeticTask{
+			ID:      id,
+			SlaveId: status.SlaveId.GetValue(),
+		}
+	}
 
 	task.UpdateStatus(types.Status{
 		Status: status.State.String(),
