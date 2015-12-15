@@ -11,5 +11,4 @@ services:
  - docker
 
 after_success:
- - test "$TRAVIS_BRANCH" == "master" -a -n "$DOCKER_USERNAME" -a "$PUBLISH_VERSION" == "$TRAVIS_GO_VERSION" && docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
- - test "$TRAVIS_BRANCH" == "master" -a -n "$DOCKER_USERNAME" -a "$PUBLISH_VERSION" == "$TRAVIS_GO_VERSION" && make publish-docker
+ - misc/docker.sh
