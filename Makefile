@@ -2,7 +2,8 @@
 
 VERSION?=$(shell git describe HEAD | sed s/^v//)
 DATE?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
-DOCKERTAG?=alde/eremetic:${VERSION}
+DOCKERNAME?=alde/eremetic
+DOCKERTAG?=${DOCKERNAME}:${VERSION}
 LDFLAGS=-X main.Version '${VERSION}' -X main.BuildDate '${DATE}'
 SRC=$(shell find . -name '*.go')
 
@@ -30,3 +31,6 @@ docker: docker/eremetic
 
 publish-docker: docker
 	docker push ${DOCKERTAG}
+	git describe HEAD --exact 2>/dev/null && \
+		docker tag ${DOCKERTAG} ${DOCKERNAME}:latest && \
+		docker push ${DOCKERNAME}:latest || true
