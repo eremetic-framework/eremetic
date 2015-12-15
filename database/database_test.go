@@ -106,4 +106,51 @@ func TestDatabase(t *testing.T) {
 		So(t2, ShouldResemble, task2)
 		So(err, ShouldBeNil)
 	})
+
+	Convey("List non-terminal tasks", t, func() {
+		setup()
+		defer Close()
+
+		Clean()
+
+		// A terminated task
+		PutTask(&types.EremeticTask{
+			ID: "1234",
+			Status: []types.Status{
+				types.Status{
+					Status: mesos.TaskState_TASK_STAGING.String(),
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: mesos.TaskState_TASK_RUNNING.String(),
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: mesos.TaskState_TASK_FINISHED.String(),
+					Time:   time.Now().Unix(),
+				},
+			},
+		})
+
+		// A running task
+		PutTask(&types.EremeticTask{
+			ID: "2345",
+			Status: []types.Status{
+				types.Status{
+					Status: mesos.TaskState_TASK_STAGING.String(),
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: mesos.TaskState_TASK_RUNNING.String(),
+					Time:   time.Now().Unix(),
+				},
+			},
+		})
+
+		tasks, err := ListNonTerminalTasks()
+		So(err, ShouldBeNil)
+		So(tasks, ShouldHaveLength, 1)
+		task := tasks[0]
+		So(task.ID, ShouldEqual, "2345")
+	})
 }

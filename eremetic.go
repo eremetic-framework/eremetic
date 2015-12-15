@@ -21,8 +21,12 @@ func readConfig() {
 	viper.AddConfigPath(path)
 	viper.AutomaticEnv()
 	viper.SetConfigName("eremetic")
+	viper.SetDefault("name", "Eremetic")
+	viper.SetDefault("user", "root")
 	viper.SetDefault("loglevel", "debug")
 	viper.SetDefault("database", "db/eremetic.db")
+	viper.SetDefault("checkpoint", "true")
+	viper.SetDefault("failover_timeout", 2592000.0)
 	viper.ReadInConfig()
 }
 

@@ -9,6 +9,16 @@ import (
 	"github.com/spf13/viper"
 )
 
+func getFrameworkID() *mesos.FrameworkID {
+	id := viper.GetString("framework_id")
+	if id != "" {
+		return &mesos.FrameworkID{
+			Value: proto.String(id),
+		}
+	}
+	return nil
+}
+
 func createDriver(scheduler *eremeticScheduler) (*sched.MesosSchedulerDriver, error) {
 	publishedAddr := net.ParseIP(viper.GetString("messenger_address"))
 	bindingPort := uint16(viper.GetInt("messenger_port"))
@@ -16,8 +26,11 @@ func createDriver(scheduler *eremeticScheduler) (*sched.MesosSchedulerDriver, er
 	return sched.NewMesosSchedulerDriver(sched.DriverConfig{
 		Master: viper.GetString("master"),
 		Framework: &mesos.FrameworkInfo{
-			Name: proto.String("Eremetic"),
-			User: proto.String(""),
+			Id:              getFrameworkID(),
+			Name:            proto.String(viper.GetString("name")),
+			User:            proto.String(viper.GetString("user")),
+			Checkpoint:      proto.Bool(viper.GetBool("checkpoint")),
+			FailoverTimeout: proto.Float64(viper.GetFloat64("failover_timeout")),
 		},
 		Scheduler:        scheduler,
 		BindingAddress:   net.ParseIP("0.0.0.0"),

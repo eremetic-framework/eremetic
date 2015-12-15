@@ -2,6 +2,7 @@ package types
 
 import (
 	mesos "github.com/mesos/mesos-go/mesosproto"
+	"time"
 )
 
 type Status struct {
@@ -30,6 +31,22 @@ func (task *EremeticTask) WasRunning() bool {
 		}
 	}
 	return false
+}
+
+func (task *EremeticTask) IsTerminated() bool {
+	if len(task.Status) == 0 {
+		return true
+	}
+	st := task.Status[len(task.Status)-1]
+	return IsTerminalString(st.Status)
+}
+
+func (task *EremeticTask) LastUpdated() time.Time {
+	if len(task.Status) == 0 {
+		return time.Unix(0, 0)
+	}
+	st := task.Status[len(task.Status)-1]
+	return time.Unix(st.Time, 0)
 }
 
 func (task *EremeticTask) UpdateStatus(status Status) {

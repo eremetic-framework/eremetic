@@ -52,13 +52,20 @@ func TestScheduler(t *testing.T) {
 
 		Convey("API", func() {
 			Convey("Registered", func() {
+				driver := NewMockScheduler()
+				driver.On("ReconcileTasks").Return("ok").Once()
 				fID := mesos.FrameworkID{Value: proto.String("1234")}
 				mInfo := mesos.MasterInfo{}
-				s.Registered(nil, &fID, &mInfo)
+				s.Registered(driver, &fID, &mInfo)
+				So(driver.AssertCalled(t, "ReconcileTasks"), ShouldBeTrue)
 			})
 
 			Convey("Reregistered", func() {
-				s.Reregistered(nil, &mesos.MasterInfo{})
+				driver := NewMockScheduler()
+				driver.On("ReconcileTasks").Return("ok").Once()
+				database.Clean()
+				s.Reregistered(driver, &mesos.MasterInfo{})
+				So(driver.AssertCalled(t, "ReconcileTasks"), ShouldBeTrue)
 			})
 
 			Convey("Disconnected", func() {
