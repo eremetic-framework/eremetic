@@ -61,4 +61,4 @@ Thanks to Sebastian Norde for the awesome logo!
 ## Licensing
 Apache-2
 
-[travis-image]: https://travis-ci.org/alde/eremetic.svg
+[travis-image]: https://travis-ci.org/klarna/eremetic.svg
