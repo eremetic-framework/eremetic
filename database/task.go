@@ -3,7 +3,7 @@ package database
 import (
 	"encoding/json"
 
-	"github.com/alde/eremetic/types"
+	"github.com/klarna/eremetic/types"
 	"github.com/boltdb/bolt"
 )
 

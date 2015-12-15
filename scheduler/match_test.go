@@ -3,7 +3,7 @@ package scheduler
 import (
 	"testing"
 
-	"github.com/alde/eremetic/types"
+	"github.com/klarna/eremetic/types"
 	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"

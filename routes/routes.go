@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/alde/eremetic/assets"
-	"github.com/alde/eremetic/handler"
-	"github.com/alde/eremetic/types"
+	"github.com/klarna/eremetic/assets"
+	"github.com/klarna/eremetic/handler"
+	"github.com/klarna/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/alde/eremetic/types"
+	"github.com/klarna/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	ogle "github.com/jacobsa/oglematchers"
 	mesos "github.com/mesos/mesos-go/mesosproto"

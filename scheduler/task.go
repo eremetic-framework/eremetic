@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alde/eremetic/types"
+	"github.com/klarna/eremetic/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/m4rw3r/uuid"
 	mesos "github.com/mesos/mesos-go/mesosproto"

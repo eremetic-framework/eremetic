@@ -10,10 +10,10 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/alde/eremetic/assets"
-	"github.com/alde/eremetic/database"
-	"github.com/alde/eremetic/formatter"
-	"github.com/alde/eremetic/types"
+	"github.com/klarna/eremetic/assets"
+	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/formatter"
+	"github.com/klarna/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gorilla/mux"
 )

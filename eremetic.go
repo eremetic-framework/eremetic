@@ -10,9 +10,9 @@ import (
 	"github.com/kardianos/osext"
 	"github.com/spf13/viper"
 
-	"github.com/alde/eremetic/database"
-	"github.com/alde/eremetic/routes"
-	"github.com/alde/eremetic/scheduler"
+	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/routes"
+	"github.com/klarna/eremetic/scheduler"
 )
 
 func readConfig() {

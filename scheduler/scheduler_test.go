@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/alde/eremetic/database"
-	"github.com/alde/eremetic/types"
+	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"

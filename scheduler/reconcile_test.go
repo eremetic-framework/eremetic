@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alde/eremetic/database"
-	"github.com/alde/eremetic/types"
+	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
