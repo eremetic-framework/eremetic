@@ -1,4 +1,4 @@
-# <img src="static/images/eremiteLOGO_02.png" width="400px" alt="Eremetic">[![Build Status][travis-image]](https://travis-ci.org/alde/eremetic)
+# <img src="static/images/eremiteLOGO_02.png" width="400px" alt="Eremetic">[![Build Status][travis-image]](https://travis-ci.org/klarna/eremetic)
 
 Eremetic is a Mesos Framework to run one-shot tasks.
 
