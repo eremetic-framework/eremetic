@@ -5,17 +5,44 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/types"
 )
 
 var (
 	defaultFilter = &mesos.Filters{RefuseSeconds: proto.Float64(10)}
 	maxRetries    = 5
+	TasksCreated  = prometheus.NewCounter(prometheus.CounterOpts{
+		Subsystem: "scheduler",
+		Name:      "tasks_created",
+		Help:      "Number of tasks submitted to eremetic",
+	})
+	TasksLaunched = prometheus.NewCounter(prometheus.CounterOpts{
+		Subsystem: "scheduler",
+		Name:      "tasks_launched",
+		Help:      "Number of tasks launched by eremetic",
+	})
+	TasksTerminated = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Subsystem: "scheduler",
+		Name:      "tasks_terminated",
+		Help:      "Number of terminated tasks by terminal status",
+	}, []string{"status"})
+	TasksDelayed = prometheus.NewCounter(prometheus.CounterOpts{
+		Subsystem: "scheduler",
+		Name:      "tasks_delayed",
+		Help:      "Number of times the launch of a task has been delayed",
+	})
+	QueueSize = prometheus.NewGauge(prometheus.GaugeOpts{
+		Subsystem: "scheduler",
+		Name:      "queue_size",
+		Help:      "Number of tasks in the queue",
+	})
 )
 
 // eremeticScheduler holds the structure of the Eremetic Scheduler
@@ -93,6 +120,7 @@ loop:
 
 			if offer == nil {
 				log.Warnf("Could not find a matching offer for %s", tid)
+				TasksDelayed.Inc()
 				go func() { s.tasks <- tid }()
 				break loop
 			}
@@ -101,6 +129,8 @@ loop:
 			t, task := s.newTask(t, offer)
 			database.PutTask(&t)
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
+			TasksLaunched.Inc()
+			QueueSize.Dec()
 
 			continue
 		default:
@@ -137,6 +167,10 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		Time:   time.Now().Unix(),
 	})
 
+	if types.IsTerminal(status.State) {
+		TasksTerminated.With(prometheus.Labels{"status": status.State.String()}).Inc()
+	}
+
 	if *status.State == mesos.TaskState_TASK_FAILED && !task.WasRunning() {
 		if task.Retry >= maxRetries {
 			log.Warnf("giving up on %s after %d retry attempts", id, task.Retry)
@@ -147,7 +181,10 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 				Time:   time.Now().Unix(),
 			})
 			task.Retry += 1
-			go func() { s.tasks <- id }()
+			go func() {
+				QueueSize.Inc()
+				s.tasks <- id
+			}()
 		}
 	}
 
@@ -217,6 +254,8 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 		return "", err
 	}
 
+	TasksCreated.Inc()
+	QueueSize.Inc()
 	database.PutTask(&task)
 	s.tasks <- task.ID
 	return task.ID, nil
