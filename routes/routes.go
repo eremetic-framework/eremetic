@@ -6,28 +6,29 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/klarna/eremetic/assets"
-	"github.com/klarna/eremetic/handler"
-	"github.com/klarna/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
+	"github.com/klarna/eremetic/assets"
+	"github.com/klarna/eremetic/handler"
+	"github.com/klarna/eremetic/types"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Create is used to create a new router
 func Create(scheduler types.Scheduler) *mux.Router {
 	routes := types.Routes{
 		types.Route{
-			Name:        "AddTask",
-			Method:      "POST",
-			Pattern:     "/task",
-			HandlerFunc: handler.AddTask(scheduler),
+			Name:    "AddTask",
+			Method:  "POST",
+			Pattern: "/task",
+			Handler: handler.AddTask(scheduler),
 		},
 		types.Route{
-			Name:        "Status",
-			Method:      "GET",
-			Pattern:     "/task/{taskId}",
-			HandlerFunc: handler.GetTaskInfo(scheduler),
+			Name:    "Status",
+			Method:  "GET",
+			Pattern: "/task/{taskId}",
+			Handler: handler.GetTaskInfo(scheduler),
 		},
 	}
 
@@ -37,8 +38,14 @@ func Create(scheduler types.Scheduler) *mux.Router {
 			Methods(route.Method).
 			Path(route.Pattern).
 			Name(route.Name).
-			Handler(route.HandlerFunc)
+			Handler(prometheus.InstrumentHandler(route.Name, route.Handler))
 	}
+
+	router.
+		Methods("GET").
+		Path("/metrics").
+		Name("Metrics").
+		Handler(prometheus.Handler())
 
 	router.PathPrefix("/static/").
 		Handler(

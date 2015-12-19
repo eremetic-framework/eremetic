@@ -8,6 +8,7 @@ import (
 
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/kardianos/osext"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 
 	"github.com/klarna/eremetic/database"
@@ -35,6 +36,14 @@ func setupLogging() {
 	log.SetDisplayTime(true)
 }
 
+func setupMetrics() {
+	prometheus.MustRegister(scheduler.TasksCreated)
+	prometheus.MustRegister(scheduler.TasksLaunched)
+	prometheus.MustRegister(scheduler.TasksTerminated)
+	prometheus.MustRegister(scheduler.TasksDelayed)
+	prometheus.MustRegister(scheduler.QueueSize)
+}
+
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
 		fmt.Println(Version)
@@ -42,6 +51,7 @@ func main() {
 	}
 	readConfig()
 	setupLogging()
+	setupMetrics()
 	defer database.Close()
 
 	bind := fmt.Sprintf("%s:%d", viper.GetString("address"), viper.GetInt("port"))
