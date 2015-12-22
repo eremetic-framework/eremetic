@@ -85,6 +85,31 @@ func TestTask(t *testing.T) {
 		})
 	})
 
+	Convey("IsRunning", t, func() {
+		Convey("A task that was running", func() {
+			task := EremeticTask{
+				Status: []Status{
+					Status{0, "TASK_STAGING"},
+					Status{1, "TASK_RUNNING"},
+					Status{2, "TASK_FINISHED"},
+				},
+			}
+
+			So(task.IsRunning(), ShouldBeFalse)
+		})
+
+		Convey("A task that is running", func() {
+			task := EremeticTask{
+				Status: []Status{
+					Status{0, "TASK_STAGING"},
+					Status{1, "TASK_RUNNING"},
+				},
+			}
+
+			So(task.IsRunning(), ShouldBeTrue)
+		})
+	})
+
 	Convey("LastUpdated", t, func() {
 		Convey("A task that is running", func() {
 			task := EremeticTask{

@@ -41,6 +41,14 @@ func (task *EremeticTask) IsTerminated() bool {
 	return IsTerminalString(st.Status)
 }
 
+func (task *EremeticTask) IsRunning() bool {
+	if len(task.Status) == 0 {
+		return false
+	}
+	st := task.Status[len(task.Status)-1]
+	return st.Status == mesos.TaskState_TASK_RUNNING.String()
+}
+
 func (task *EremeticTask) LastUpdated() time.Time {
 	if len(task.Status) == 0 {
 		return time.Unix(0, 0)

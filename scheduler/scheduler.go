@@ -18,31 +18,6 @@ import (
 var (
 	defaultFilter = &mesos.Filters{RefuseSeconds: proto.Float64(10)}
 	maxRetries    = 5
-	TasksCreated  = prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: "scheduler",
-		Name:      "tasks_created",
-		Help:      "Number of tasks submitted to eremetic",
-	})
-	TasksLaunched = prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: "scheduler",
-		Name:      "tasks_launched",
-		Help:      "Number of tasks launched by eremetic",
-	})
-	TasksTerminated = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Subsystem: "scheduler",
-		Name:      "tasks_terminated",
-		Help:      "Number of terminated tasks by terminal status",
-	}, []string{"status"})
-	TasksDelayed = prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: "scheduler",
-		Name:      "tasks_delayed",
-		Help:      "Number of times the launch of a task has been delayed",
-	})
-	QueueSize = prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: "scheduler",
-		Name:      "queue_size",
-		Help:      "Number of tasks in the queue",
-	})
 )
 
 // eremeticScheduler holds the structure of the Eremetic Scheduler
@@ -162,14 +137,19 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		}
 	}
 
+	if !task.IsRunning() && *status.State == mesos.TaskState_TASK_RUNNING {
+		TasksRunning.Inc()
+	}
+
+	if types.IsTerminal(status.State) {
+		TasksTerminated.With(prometheus.Labels{"status": status.State.String()}).Inc()
+		TasksRunning.Dec()
+	}
+
 	task.UpdateStatus(types.Status{
 		Status: status.State.String(),
 		Time:   time.Now().Unix(),
 	})
-
-	if types.IsTerminal(status.State) {
-		TasksTerminated.With(prometheus.Labels{"status": status.State.String()}).Inc()
-	}
 
 	if *status.State == mesos.TaskState_TASK_FAILED && !task.WasRunning() {
 		if task.Retry >= maxRetries {
