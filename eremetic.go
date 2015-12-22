@@ -41,6 +41,7 @@ func setupMetrics() {
 	prometheus.MustRegister(scheduler.TasksLaunched)
 	prometheus.MustRegister(scheduler.TasksTerminated)
 	prometheus.MustRegister(scheduler.TasksDelayed)
+	prometheus.MustRegister(scheduler.TasksRunning)
 	prometheus.MustRegister(scheduler.QueueSize)
 }
 
