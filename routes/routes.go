@@ -51,7 +51,7 @@ func Create(scheduler types.Scheduler) *mux.Router {
 		Handler(
 		http.StripPrefix(
 			"/static/", http.FileServer(
-				&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, Prefix: "static"})))
+				&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, AssetInfo: assets.AssetInfo, Prefix: "static"})))
 
 	router.NotFoundHandler = http.HandlerFunc(notFound)
 
