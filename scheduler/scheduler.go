@@ -143,7 +143,9 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 
 	if types.IsTerminal(status.State) {
 		TasksTerminated.With(prometheus.Labels{"status": status.State.String()}).Inc()
-		TasksRunning.Dec()
+		if task.WasRunning() {
+			TasksRunning.Dec()
+		}
 	}
 
 	task.UpdateStatus(types.Status{
