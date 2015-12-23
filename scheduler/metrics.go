@@ -24,7 +24,7 @@ var (
 		Help:      "Number of times the launch of a task has been delayed",
 	})
 	TasksRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: "schedelure",
+		Subsystem: "scheduler",
 		Name:      "tasks_running",
 		Help:      "Number of tasks currently running",
 	})
