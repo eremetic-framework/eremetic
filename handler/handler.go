@@ -61,13 +61,23 @@ func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
 	}
 }
 
+type callbackData struct {
+	Time   int64  `json:"time"`
+	Status string `json:"status"`
+	TaskID string `json:"task_id"`
+}
+
 // NotifyCallback handles posting a JSON back to the URI given with the task.
 func NotifyCallback(task *types.EremeticTask) {
 	if len(task.CallbackURI) == 0 {
 		return
 	}
 
-	cbData := task.Status[len(task.Status)-1]
+	cbData := callbackData{
+		Time:   task.Status[len(task.Status)-1].Time,
+		Status: task.Status[len(task.Status)-1].Status,
+		TaskID: task.ID,
+	}
 
 	body, err := json.Marshal(cbData)
 	if err != nil {
