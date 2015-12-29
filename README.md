@@ -10,6 +10,37 @@ Send a cURL to the eremetic framework with how much cpu and memory you need, wha
          -d '{"task_mem":22.0, "task_cpus":1.0, "docker_image": "a_docker_container", "command": "rails"}' \
          http://eremetic_server:8080/task
 
+JSON format:
+
+    {
+      // Float64, fractions of a CPU to request
+      "task_cpus":      1.0,
+      // Float64, memory to use (MiB)
+      "task_mem":       22.0,
+      // String, full tag or hash of container to run
+      "docker_image":   "busybox",
+      // String, command to run in the docker container
+      "command": "echo date",
+      // Array of Objects, volumes to mount in the container
+      "volumes": [
+        {
+          "container_path": "/var/run/docker.sock",
+          "host_path": "/var/run/docker.sock"
+        }
+      ],
+      // Object, Environment variables to pass to the container
+      "env": {
+        "KEY": "value"
+      },
+      // String, URL to post a callback to. Callback message has format: 
+      // {"time":1451398320,"status":"TASK_FAILED","task_id":"eremetic-task.79feb50d-3d36-47cf-98ff-a52ef2bc0eb5"}
+      "callback_uri": "http://callback.local"
+    }
+
+### Note
+Most of this meta-data will not remain after a full restart of Eremetic.
+
+
 ## Configuration
 create /etc/eremetic/eremetic.yml with:
 

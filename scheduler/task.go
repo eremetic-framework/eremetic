@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/klarna/eremetic/types"
 	"github.com/gogo/protobuf/proto"
+	"github.com/klarna/eremetic/types"
 	"github.com/m4rw3r/uuid"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
@@ -70,6 +70,7 @@ func createEremeticTask(request types.Request) (types.EremeticTask, error) {
 			},
 			Volumes: volumes,
 		},
+		CallbackURI: request.CallbackURI,
 	}
 	return task, nil
 }
