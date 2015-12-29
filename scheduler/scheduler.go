@@ -12,6 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/handler"
 	"github.com/klarna/eremetic/types"
 )
 
@@ -162,12 +163,16 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 				Status: mesos.TaskState_TASK_STAGING.String(),
 				Time:   time.Now().Unix(),
 			})
-			task.Retry += 1
+			task.Retry++
 			go func() {
 				QueueSize.Inc()
 				s.tasks <- id
 			}()
 		}
+	}
+
+	if types.IsTerminal(status.State) {
+		handler.NotifyCallback(&task)
 	}
 
 	database.PutTask(&task)
@@ -233,6 +238,7 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 
 	task, err := createEremeticTask(request)
 	if err != nil {
+		log.Error(err.Error())
 		return "", err
 	}
 

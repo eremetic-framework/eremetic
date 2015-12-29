@@ -16,4 +16,5 @@ type Request struct {
 	Name        string            `json:"-"`
 	Volumes     []Volume          `json:"volumes"`
 	Environment map[string]string `json:"env"`
+	CallbackURI string            `json:"callback_uri"`
 }

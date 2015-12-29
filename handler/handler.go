@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -10,12 +11,12 @@ import (
 	"reflect"
 	"strings"
 
+	log "github.com/dmuth/google-go-log4go"
+	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/assets"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/formatter"
 	"github.com/klarna/eremetic/types"
-	log "github.com/dmuth/google-go-log4go"
-	"github.com/gorilla/mux"
 )
 
 // AddTask handles adding a task to the queue
@@ -58,6 +59,29 @@ func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
 			writeJSON(http.StatusOK, task, w)
 		}
 	}
+}
+
+// NotifyCallback handles posting a JSON back to the URI given with the task.
+func NotifyCallback(task *types.EremeticTask) {
+	if len(task.CallbackURI) == 0 {
+		return
+	}
+
+	cbData := task.Status[len(task.Status)-1]
+
+	body, err := json.Marshal(cbData)
+	if err != nil {
+		log.Errorf("Unable to create message for task %s, target uri %s", task.ID, task.CallbackURI)
+	}
+
+	_, err = http.Post(task.CallbackURI, "application/json", bytes.NewBuffer(body))
+
+	if err != nil {
+		log.Error(err.Error())
+	} else {
+		log.Debugf("Sent callback to %s", task.CallbackURI)
+	}
+
 }
 
 func handleError(err error, w http.ResponseWriter) {

@@ -1,8 +1,9 @@
 package types
 
 import (
-	mesos "github.com/mesos/mesos-go/mesosproto"
 	"time"
+
+	mesos "github.com/mesos/mesos-go/mesosproto"
 )
 
 type Status struct {
@@ -22,6 +23,7 @@ type EremeticTask struct {
 	SlaveId     string               `json:"slave_id"`
 	Hostname    string               `json:"hostname"`
 	Retry       int                  `json:"retry"`
+	CallbackURI string               `json:"callback_uri"`
 }
 
 func (task *EremeticTask) WasRunning() bool {
