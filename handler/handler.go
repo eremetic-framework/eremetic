@@ -72,15 +72,18 @@ func NotifyCallback(task *types.EremeticTask) {
 	body, err := json.Marshal(cbData)
 	if err != nil {
 		log.Errorf("Unable to create message for task %s, target uri %s", task.ID, task.CallbackURI)
+		return
 	}
 
-	_, err = http.Post(task.CallbackURI, "application/json", bytes.NewBuffer(body))
+	go func() {
+		_, err = http.Post(task.CallbackURI, "application/json", bytes.NewBuffer(body))
 
-	if err != nil {
-		log.Error(err.Error())
-	} else {
-		log.Debugf("Sent callback to %s", task.CallbackURI)
-	}
+		if err != nil {
+			log.Error(err.Error())
+		} else {
+			log.Debugf("Sent callback to %s", task.CallbackURI)
+		}
+	}()
 
 }
 
