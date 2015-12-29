@@ -32,9 +32,14 @@ JSON format:
       "env": {
         "KEY": "value"
       },
-      // String, URL to post a callback to. Callback has format: {"time":1451394641,"status":"TASK_FAILED"}
+      // String, URL to post a callback to. Callback message has format: 
+      // {"time":1451398320,"status":"TASK_FAILED","task_id":"eremetic-task.79feb50d-3d36-47cf-98ff-a52ef2bc0eb5"}
       "callback_uri": "http://callback.local"
     }
+
+### Note
+Most of this meta-data will not remain after a full restart of Eremetic.
+
 
 ## Configuration
 create /etc/eremetic/eremetic.yml with:
