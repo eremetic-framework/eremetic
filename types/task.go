@@ -12,18 +12,21 @@ type Status struct {
 }
 
 type EremeticTask struct {
-	TaskCPUs    float64              `json:"task_cpus"`
-	TaskMem     float64              `json:"task_mem"`
-	Command     *mesos.CommandInfo   `json:"command"`
-	Container   *mesos.ContainerInfo `json:"container"`
-	Status      []Status             `json:"status"`
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	FrameworkId string               `json:"framework_id"`
-	SlaveId     string               `json:"slave_id"`
-	Hostname    string               `json:"hostname"`
-	Retry       int                  `json:"retry"`
-	CallbackURI string               `json:"callback_uri"`
+	TaskCPUs    float64           `json:"task_cpus"`
+	TaskMem     float64           `json:"task_mem"`
+	Command     string            `json:"command"`
+	User        string            `json:"user"`
+	Environment map[string]string `json:"env"`
+	Image       string            `json:"image"`
+	Volumes     []Volume          `json:"volumes"`
+	Status      []Status          `json:"status"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	FrameworkId string            `json:"framework_id"`
+	SlaveId     string            `json:"slave_id"`
+	Hostname    string            `json:"hostname"`
+	Retry       int               `json:"retry"`
+	CallbackURI string            `json:"callback_uri"`
 }
 
 func (task *EremeticTask) WasRunning() bool {

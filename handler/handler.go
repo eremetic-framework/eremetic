@@ -144,11 +144,11 @@ func makeMap(task types.EremeticTask) map[string]interface{} {
 	data := make(map[string]interface{})
 
 	data["TaskID"] = task.ID
-	data["CommandEnv"] = task.Command.GetEnvironment().GetVariables()
-	data["CommandUser"] = task.Command.GetUser()
-	data["Command"] = task.Command.GetValue()
+	data["CommandEnv"] = task.Environment
+	data["CommandUser"] = task.User
+	data["Command"] = task.Command
 	// TODO: Support more than docker?
-	data["ContainerImage"] = task.Container.GetDocker().GetImage()
+	data["ContainerImage"] = task.Image
 	data["FrameworkID"] = task.FrameworkId
 	data["Hostname"] = task.Hostname
 	data["Name"] = task.Name
