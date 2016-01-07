@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/types"
 	log "github.com/dmuth/google-go-log4go"
 	"github.com/gogo/protobuf/proto"
+	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 	. "github.com/smartystreets/goconvey/convey"
@@ -206,8 +206,10 @@ func TestScheduler(t *testing.T) {
 					task, _ := database.ReadTask(taskID)
 					So(task.TaskCPUs, ShouldEqual, request.TaskCPUs)
 					So(task.TaskMem, ShouldEqual, request.TaskMem)
-					So(task.Command.GetValue(), ShouldEqual, request.Command)
-					So(*task.Container.Docker.Image, ShouldEqual, request.DockerImage)
+					So(task.Command, ShouldEqual, request.Command)
+					So(task.User, ShouldEqual, "root")
+					So(task.Environment, ShouldBeEmpty)
+					So(task.Image, ShouldEqual, request.DockerImage)
 					So(task.ID, ShouldStartWith, "eremetic-task.")
 				}
 			})

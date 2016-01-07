@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/klarna/eremetic/types"
-	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -80,20 +79,9 @@ func TestDatabase(t *testing.T) {
 			Name:        "request Name",
 			Status:      status,
 			FrameworkId: "1234",
-			Command: &mesos.CommandInfo{
-				Value: proto.String("echo date"),
-				User:  proto.String("root"),
-				Environment: &mesos.Environment{
-					Variables: nil,
-				},
-			},
-			Container: &mesos.ContainerInfo{
-				Type: mesos.ContainerInfo_DOCKER.Enum(),
-				Docker: &mesos.ContainerInfo_DockerInfo{
-					Image: proto.String("busybox"),
-				},
-				Volumes: nil,
-			},
+			Command:     "echo date",
+			User:        "root",
+			Image:       "busybox",
 		}
 
 		PutTask(&task1)

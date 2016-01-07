@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
-	"github.com/gorilla/mux"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -81,12 +81,12 @@ func TestHandling(t *testing.T) {
 		Convey("Not Found", func() {
 			id := "eremetic-task.5678"
 			task := types.EremeticTask{
-				TaskCPUs:  0.2,
-				TaskMem:   0.5,
-				Command:   &mesos.CommandInfo{},
-				Container: &mesos.ContainerInfo{},
-				Status:    status,
-				ID:        id,
+				TaskCPUs: 0.2,
+				TaskMem:  0.5,
+				Command:  "test",
+				Image:    "test",
+				Status:   status,
+				ID:       id,
 			}
 			database.PutTask(&task)
 			m.ServeHTTP(wr, r)
@@ -97,12 +97,12 @@ func TestHandling(t *testing.T) {
 		Convey("Found", func() {
 			id := "eremetic-task.1234"
 			task := types.EremeticTask{
-				TaskCPUs:  0.2,
-				TaskMem:   0.5,
-				Command:   &mesos.CommandInfo{},
-				Container: &mesos.ContainerInfo{},
-				Status:    status,
-				ID:        id,
+				TaskCPUs: 0.2,
+				TaskMem:  0.5,
+				Command:  "test",
+				Image:    "test",
+				Status:   status,
+				ID:       id,
 			}
 			database.PutTask(&task)
 			m.ServeHTTP(wr, r)
