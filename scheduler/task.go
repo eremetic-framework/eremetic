@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -11,8 +12,21 @@ import (
 	"github.com/mesos/mesos-go/mesosutil"
 )
 
+var (
+	archiveSfx = []string{".tgz", ".tar.gz", ".tbz2", ".tar.bz2", ".txz", ".tar.xz", ".zip"}
+)
+
 func createID(taskID string) string {
 	return fmt.Sprintf("eremetic-task.%s", taskID)
+}
+
+func isArchive(url string) bool {
+	for _, s := range archiveSfx {
+		if strings.HasSuffix(url, s) {
+			return true
+		}
+	}
+	return false
 }
 
 func createEremeticTask(request types.Request) (types.EremeticTask, error) {
@@ -41,6 +55,7 @@ func createEremeticTask(request types.Request) (types.EremeticTask, error) {
 		Image:       request.DockerImage,
 		Volumes:     request.Volumes,
 		CallbackURI: request.CallbackURI,
+		URIs:        request.URIs,
 	}
 	return task, nil
 }
@@ -72,6 +87,14 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 		})
 	}
 
+	var uris []*mesos.CommandInfo_URI
+	for _, v := range task.URIs {
+		uris = append(uris, &mesos.CommandInfo_URI{
+			Value:   proto.String(v),
+			Extract: proto.Bool(isArchive(v)),
+		})
+	}
+
 	return task, &mesos.TaskInfo{
 		TaskId: &mesos.TaskID{
 			Value: proto.String(task.ID),
@@ -84,6 +107,7 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 			Environment: &mesos.Environment{
 				Variables: environment,
 			},
+			Uris: uris,
 		},
 		Container: &mesos.ContainerInfo{
 			Type: mesos.ContainerInfo_DOCKER.Enum(),

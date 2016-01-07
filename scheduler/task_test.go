@@ -67,27 +67,27 @@ func TestTask(t *testing.T) {
 			So(task.Volumes[0].ContainerPath, ShouldEqual, volumes[0].ContainerPath)
 			So(task.Volumes[0].HostPath, ShouldEqual, volumes[0].HostPath)
 		})
+
+		Convey("Given uri to download", func() {
+			request.URIs = []string{"http://foobar.local/kitten.jpg"}
+
+			task, err := createEremeticTask(request)
+
+			So(err, ShouldBeNil)
+			So(task.URIs, ShouldHaveLength, 1)
+			So(task.URIs, ShouldContain, request.URIs[0])
+		})
 	})
 
 	Convey("createTaskInfo", t, func() {
-		volumes := []types.Volume{types.Volume{
-			ContainerPath: "/var/www",
-			HostPath:      "/var/www",
-		}}
-
-		environment := make(map[string]string)
-		environment["foo"] = "bar"
-
 		eremeticTask := types.EremeticTask{
-			TaskCPUs:    0.2,
-			TaskMem:     0.5,
-			Command:     "echo hello",
-			Environment: environment,
-			Image:       "busybox",
-			Volumes:     volumes,
-			Status:      status,
-			ID:          "eremetic-task.1234",
-			Name:        "Eremetic task 17",
+			TaskCPUs: 0.2,
+			TaskMem:  0.5,
+			Command:  "echo hello",
+			Image:    "busybox",
+			Status:   status,
+			ID:       "eremetic-task.1234",
+			Name:     "Eremetic task 17",
 		}
 
 		offer := mesos.Offer{
@@ -133,6 +133,32 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.Environment.Variables[0].GetValue(), ShouldEqual, "bar")
 			So(taskInfo.Command.Environment.Variables[1].GetName(), ShouldEqual, "MESOS_TASK_ID")
 			So(taskInfo.Command.Environment.Variables[1].GetValue(), ShouldEqual, eremeticTask.ID)
+		})
+
+		Convey("Given picture to download", func() {
+			eremeticTask.URIs = []string{"http://foobar.local/kitten.jpg"}
+
+			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
+			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
+			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.URIs[0])
+			So(taskInfo.Command.Uris[0].GetExecutable(), ShouldBeFalse)
+			So(taskInfo.Command.Uris[0].GetExtract(), ShouldBeFalse)
+			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeFalse)
+		})
+
+		Convey("Given archive to download", func() {
+			eremeticTask.URIs = []string{"http://foobar.local/cats.zip"}
+
+			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
+			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
+			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.URIs[0])
+			So(taskInfo.Command.Uris[0].GetExecutable(), ShouldBeFalse)
+			So(taskInfo.Command.Uris[0].GetExtract(), ShouldBeTrue)
+			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeFalse)
 		})
 	})
 }

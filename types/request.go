@@ -17,4 +17,5 @@ type Request struct {
 	Volumes     []Volume          `json:"volumes"`
 	Environment map[string]string `json:"env"`
 	CallbackURI string            `json:"callback_uri"`
+	URIs        []string          `json:"uris"`
 }

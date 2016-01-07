@@ -27,6 +27,7 @@ type EremeticTask struct {
 	Hostname    string            `json:"hostname"`
 	Retry       int               `json:"retry"`
 	CallbackURI string            `json:"callback_uri"`
+	URIs        []string          `json:"uris"`
 }
 
 func (task *EremeticTask) WasRunning() bool {
