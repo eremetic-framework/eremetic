@@ -100,19 +100,39 @@ func TestTask(t *testing.T) {
 			Hostname: proto.String("hostname"),
 		}
 
-		net, taskInfo := createTaskInfo(eremeticTask, &offer)
-		So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
-		So(taskInfo.GetName(), ShouldEqual, eremeticTask.Name)
-		So(taskInfo.GetResources()[0].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskCPUs)
-		So(taskInfo.GetResources()[1].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskMem)
-		So(taskInfo.Container.GetType().String(), ShouldEqual, "DOCKER")
-		So(taskInfo.Container.Docker.GetImage(), ShouldEqual, "busybox")
-		So(taskInfo.Container.Volumes[0].GetContainerPath(), ShouldEqual, volumes[0].ContainerPath)
-		So(taskInfo.Container.Volumes[0].GetHostPath(), ShouldEqual, volumes[0].HostPath)
-		So(taskInfo.Command.Environment.Variables[0].GetName(), ShouldEqual, "foo")
-		So(taskInfo.Command.Environment.Variables[0].GetValue(), ShouldEqual, "bar")
-		So(taskInfo.Command.Environment.Variables[1].GetName(), ShouldEqual, "MESOS_TASK_ID")
-		So(taskInfo.Command.Environment.Variables[1].GetValue(), ShouldEqual, eremeticTask.ID)
-		So(net.SlaveId, ShouldEqual, "slave-id")
+		Convey("No volume or environment specified", func() {
+			net, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
+			So(taskInfo.GetName(), ShouldEqual, eremeticTask.Name)
+			So(taskInfo.GetResources()[0].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskCPUs)
+			So(taskInfo.GetResources()[1].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskMem)
+			So(taskInfo.Container.GetType().String(), ShouldEqual, "DOCKER")
+			So(taskInfo.Container.Docker.GetImage(), ShouldEqual, "busybox")
+			So(net.SlaveId, ShouldEqual, "slave-id")
+		})
+
+		Convey("Given a volume and environment", func() {
+			volumes := []types.Volume{types.Volume{
+				ContainerPath: "/var/www",
+				HostPath:      "/var/www",
+			}}
+
+			environment := make(map[string]string)
+			environment["foo"] = "bar"
+
+			eremeticTask.Environment = environment
+			eremeticTask.Volumes = volumes
+
+			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
+			So(taskInfo.Container.Volumes[0].GetContainerPath(), ShouldEqual, volumes[0].ContainerPath)
+			So(taskInfo.Container.Volumes[0].GetHostPath(), ShouldEqual, volumes[0].HostPath)
+			So(taskInfo.Command.Environment.Variables[0].GetName(), ShouldEqual, "foo")
+			So(taskInfo.Command.Environment.Variables[0].GetValue(), ShouldEqual, "bar")
+			So(taskInfo.Command.Environment.Variables[1].GetName(), ShouldEqual, "MESOS_TASK_ID")
+			So(taskInfo.Command.Environment.Variables[1].GetValue(), ShouldEqual, eremeticTask.ID)
+		})
 	})
 }
