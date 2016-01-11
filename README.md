@@ -5,37 +5,47 @@ Eremetic is a Mesos Framework to run one-shot tasks.
 ## Usage
 Send a cURL to the eremetic framework with how much cpu and memory you need, what docker image to run and which command to run with that image.
 
-    curl -H "Content-Type: application/json" \
-         -X POST \
-         -d '{"task_mem":22.0, "task_cpus":1.0, "docker_image": "a_docker_container", "command": "rails"}' \
-         http://eremetic_server:8080/task
+```bash
+curl -H "Content-Type: application/json" \
+     -X POST \
+     -d '{"task_mem":22.0, "task_cpus":1.0, "docker_image": "a_docker_container", "command": "rails"}' \
+     http://eremetic_server:8080/task
+```
+
+These basic fields are required but you can also specify volumes, environment variables and URIs for the mesos fetcher to download.
 
 JSON format:
 
+```javascript
+{
+  // Float64, fractions of a CPU to request
+  "task_cpus":      1.0,
+  // Float64, memory to use (MiB)
+  "task_mem":       22.0,
+  // String, full tag or hash of container to run
+  "docker_image":   "busybox",
+  // String, command to run in the docker container
+  "command": "echo date",
+  // Array of Objects, volumes to mount in the container
+  "volumes": [
     {
-      // Float64, fractions of a CPU to request
-      "task_cpus":      1.0,
-      // Float64, memory to use (MiB)
-      "task_mem":       22.0,
-      // String, full tag or hash of container to run
-      "docker_image":   "busybox",
-      // String, command to run in the docker container
-      "command": "echo date",
-      // Array of Objects, volumes to mount in the container
-      "volumes": [
-        {
-          "container_path": "/var/run/docker.sock",
-          "host_path": "/var/run/docker.sock"
-        }
-      ],
-      // Object, Environment variables to pass to the container
-      "env": {
-        "KEY": "value"
-      },
-      // String, URL to post a callback to. Callback message has format: 
-      // {"time":1451398320,"status":"TASK_FAILED","task_id":"eremetic-task.79feb50d-3d36-47cf-98ff-a52ef2bc0eb5"}
-      "callback_uri": "http://callback.local"
+      "container_path": "/var/run/docker.sock",
+      "host_path": "/var/run/docker.sock"
     }
+  ],
+  // Object, Environment variables to pass to the container
+  "env": {
+    "KEY": "value"
+  },
+  // URIs of resource to download
+  "uris": [
+    "http://server.local/resource"
+  ],
+  // String, URL to post a callback to. Callback message has format:
+  // {"time":1451398320,"status":"TASK_FAILED","task_id":"eremetic-task.79feb50d-3d36-47cf-98ff-a52ef2bc0eb5"}
+  "callback_uri": "http://callback.local"
+}
+```
 
 ### Note
 Most of this meta-data will not remain after a full restart of Eremetic.
