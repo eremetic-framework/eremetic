@@ -1,0 +1,138 @@
+swagger: '2.0'
+info:
+  title: Eremetic
+  description: Run one-off tasks on mesos
+  version: "1.0.0"
+schemes:
+  - https
+basePath: /
+produces:
+  - application/json
+paths:
+  /task:
+    post:
+      summary: Launch a task
+      consumes:
+        - application/json
+      description: |
+        The task endpoint lets you launch a task on mesos by submitting a payload describing the task to be run.
+      parameters:
+        - name: Task definition
+          in: body
+          description: Details of task to launch
+          required: true
+          schema:
+            $ref: '#/definitions/Task'
+      responses:
+        202:
+          description: Task ID
+          schema:
+            type: string
+        default:
+          description: Unexpected error
+  /task/{taskId}:
+    get:
+      summary: Get status of task
+      description: |
+        Check the status of task previously launched.
+      parameters:
+        - name: taskId
+          in: path
+          description: Task identifier
+          required: true
+          type: string
+      responses:
+        200:
+          description: Task details
+          schema:
+            $ref: '#/definitions/Task'
+        404:
+          description: Task not found
+        default:
+          description: Unexpected error
+definitions:
+  Task:
+    type: object
+    required:
+      - docker_image
+      - command
+      - task_cpu
+      - task_mem
+    properties:
+      id:
+        type: string
+        readOnly: true
+        description: ID of task
+      name:
+        type: string
+        readOnly: true
+        description: Name of task
+      docker_image:
+        type: string
+        description: Full tag or hash of container to run
+      command:
+        type: string
+        description: Command to run in the docker container
+      task_cpu:
+        type: number
+        description: Fractions of a CPU to request
+      task_mem:
+        type: number
+        description: memory to use (MiB)
+      volumes:
+        type: array
+        items:
+          type: object
+          properties:
+            container_path:
+              type: string
+              description: Path in container to mount at
+            host_path:
+              type: string
+              description: Path on host to mount
+      env:
+        type: object
+        description: Environment variables to set
+      uris:
+        type: array
+        items:
+          type: string
+          description: URI of resource to download
+      callback_uri:
+        type: string
+        description: URL to post a callback to
+      framework_id:
+        type: string
+        readOnly: true
+        description: Framework ID used when launching task
+      slave_id:
+        type: string
+        readOnly: true
+        description: Id of slave where task is running
+      hostname:
+        type: string
+        readOnly: true
+        description: Name of host where task is launched
+      retry:
+        type: number
+        readOnly: true
+        description: Number of times a retry have been attempted
+      status:
+        type: array
+        readOnly: true
+        items:
+          type: object
+          properties:
+            status:
+              type: string
+              description: Status identifier
+              enum:
+                - TASK_STAGING
+                - TASK_RUNNING
+                - TASK_FINISHED
+                - TASK_FAILED
+                - TASK_LOST
+                - TASK_ERROR
+            time: 
+              type: number
+              description: Unix timestamp of status change
