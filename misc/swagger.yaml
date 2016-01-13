@@ -51,6 +51,15 @@ paths:
         default:
           description: Unexpected error
 definitions:
+  Volume:
+    type: object
+    properties:
+      container_path:
+        type: string
+        description: Path in container to mount at
+      host_path:
+        type: string
+        description: Path on host to mount
   Task:
     type: object
     required:
@@ -82,14 +91,7 @@ definitions:
       volumes:
         type: array
         items:
-          type: object
-          properties:
-            container_path:
-              type: string
-              description: Path in container to mount at
-            host_path:
-              type: string
-              description: Path on host to mount
+          $ref: '#/definitions/Volume'
       env:
         type: object
         description: Environment variables to set
