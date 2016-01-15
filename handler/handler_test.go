@@ -65,10 +65,10 @@ func TestHandling(t *testing.T) {
 				message: "Error",
 			}
 
-			handleError(err, wr)
+			handleError(err, wr, "A test error")
 
 			So(wr.Code, ShouldEqual, 422)
-			So(strings.TrimSpace(wr.Body.String()), ShouldEqual, "{}")
+			So(strings.TrimSpace(wr.Body.String()), ShouldEqual, "{\"error\":\"Error\",\"message\":\"A test error\"}")
 		})
 	})
 
