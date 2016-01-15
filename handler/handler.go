@@ -25,10 +25,16 @@ func AddTask(scheduler types.Scheduler) http.HandlerFunc {
 		var request types.Request
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-		handleError(err, w)
+		if err != nil {
+			handleError(err, w, "Unable to read payload.")
+			return
+		}
 
 		err = json.Unmarshal(body, &request)
-		handleError(err, w)
+		if err != nil {
+			handleError(err, w, "Unable to parse body into a valid request.")
+			return
+		}
 
 		taskID, err := scheduler.ScheduleTask(request)
 		if err != nil {
@@ -97,11 +103,24 @@ func NotifyCallback(task *types.EremeticTask) {
 
 }
 
-func handleError(err error, w http.ResponseWriter) {
-	if err != nil {
-		if err = writeJSON(422, err, w); err != nil {
-			panic(err)
-		}
+func handleError(err error, w http.ResponseWriter, message string) {
+	if err == nil {
+		return
+	}
+
+	log.Debugf("%v", err.Error())
+
+	var errorMessage = struct {
+		Error   string `json:"error"`
+		Message string `json:"message"`
+	}{
+		err.Error(),
+		message,
+	}
+
+	if err = writeJSON(422, errorMessage, w); err != nil {
+		log.Errorf("%v", err.Error())
+		panic(err)
 	}
 }
 
