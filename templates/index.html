@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="icon" href="/static/images/favicon.ico">
+        <link rel="stylesheet" type="text/css" href="/static/css/semantic.min.css" />
+        <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+        <script src="/static/js/jquery-2.1.4.min.js"></script>
+        <script src="/static/js/semantic.min.js"></script>
+        <script src="/static/js/serialize_object.min.js"></script>
+        <script src="/static/js/eremetic.js"></script>
+        <title>Eremetic</title>
+    </head>
+    <body>
+        <div class="ui fixed inverted menu">
+            <div class="ui container">
+                <div class="header item">
+                    <img class="logo eremetic" src="/static/images/eremiteLOGO_02.png">
+                </div>
+            </div>
+        </div>
+        <div class="ui main container">
+            <form id="new_task" autocomplete="off" name="new_task">
+              <div class="ui ignored bottom attached error message hidden"></div>
+              <div class="ui form">
+                <h4 class="ui dividing header">Required</h4>
+                <div class="field">
+                  <div class="two fields">
+                    <div class="ui icon input field labeled">
+                      <div class="ui label">Container</div>
+                      <input name="docker_image" required="required" type="text" placeholder="busybox" autofocus="autofocus">
+                      <i class="docker blue icon"></i>
+                    </div>
+                    <div class="ui icon input field labeled">
+                      <div class="ui label">Command</div>
+                      <input name="command" required="required" type="text" placeholder="echo 'date'">
+                      <i class="play icon"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="two fields">
+                    <div class="ui icon input field labeled">
+                      <div class="ui label">CPUs</div>
+                      <input name="task_cpus" required="required" type="number" placeholder="0" value="1.0" min="0.0" step="0.1">
+                      <i class="ui cpu icon svg"></i>
+                    </div>
+                    <div class="ui icon input field labeled">
+                      <div class="ui label">Memory (MiB)</div>
+                      <input name="task_mem" required="required" type="number" placeholder="0" value="100" min="0.0" step="1">
+                      <i class="ui ram icon svg"></i>
+                    </div>
+                  </div>
+                </div>
+                <h4 class="ui dividing header">Optional</h4>
+                <div class="field">
+                  <div class="ui icon input field labeled">
+                    <div class="ui label">
+                      Callback URL
+                    </div>
+                    <input name="callback_uri" type="text" placeholder="http://localhost/callback">
+                    <i class="reply icon"></i>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="two fields">
+                    <div class="field" id="volumes" data-count=0>
+                      <label>
+                        Volumes
+                        <i class="plus icon green add"></i>
+                      </label>
+                    </div>
+                    <div class="field" id="env" data-count=0>
+                      <label>
+                        Environment Variables
+                        <i class="plus icon green add"></i>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field" id="uris" data-count=0>
+                    <label>
+                      URIs
+                      <i class="plus icon green add"></i>
+                    </label>
+                  </div>
+                </div>
+                <div class="ui buttons right floated">
+                  <button class="ui button" id="cancel">Cancel</button>
+                  <div class="or"></div>
+                  <input type='submit' class="ui eremetic_teal button" id="submit">
+                </div>
+              </div>
+            </form>
+        </div>
+    </body>
+</html>

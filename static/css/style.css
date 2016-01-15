@@ -33,6 +33,13 @@
     background-size: 100% 100%;
 }
 
+.ui.icon.input>i.icon.svg {
+    width: 20px;
+    height: 20px;
+    top: 10px;
+    right: 10px;
+}
+
 .list .item .label {
     margin-right: 1em;
     text-align: center;
@@ -112,3 +119,19 @@
 }
 
 .docker:before { content: "\f100"; }
+
+.ui.button.eremetic_teal {
+  background-color: #0199c8;
+}
+.volumes .two.fields .field input,
+.env .two.fields .field input {
+  width: auto !important;
+}
+
+.icon.add {
+  cursor: pointer;
+}
+
+.optional {
+  font-style: italic;
+}
