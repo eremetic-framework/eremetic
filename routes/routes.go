@@ -47,6 +47,12 @@ func Create(scheduler types.Scheduler) *mux.Router {
 		Name("Metrics").
 		Handler(prometheus.Handler())
 
+	router.
+		Methods("GET").
+		Path("/").
+		Name("Index").
+		HandlerFunc(indexHandler)
+
 	router.PathPrefix("/static/").
 		Handler(
 		http.StripPrefix(
@@ -71,5 +77,21 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusNotFound)
+	json.NewEncoder(w).Encode(nil)
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	if strings.Contains(r.Header.Get("Accept"), "text/html") {
+		src, _ := assets.Asset("templates/index.html")
+		tpl, err := template.New("index").Parse(string(src))
+		if err == nil {
+			tpl.Execute(w, nil)
+			return
+		}
+		log.Error(err.Error())
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusNoContent)
 	json.NewEncoder(w).Encode(nil)
 }
