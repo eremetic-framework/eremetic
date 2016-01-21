@@ -21,6 +21,6 @@
     "PORT": "8000"
   },
   "labels": {
-    "traefik.port": "8000"
+    "traefik.portIndex": "0"
   }
 }
