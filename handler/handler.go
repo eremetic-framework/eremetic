@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -18,6 +19,20 @@ import (
 	"github.com/klarna/eremetic/formatter"
 	"github.com/klarna/eremetic/types"
 )
+
+func absURL(r *http.Request, path string) string {
+	scheme := r.Header.Get("X-Forwarded-Proto")
+	if scheme == "" {
+		scheme = "http"
+	}
+
+	url := url.URL{
+		Scheme: scheme,
+		Host:   r.Host,
+		Path:   path,
+	}
+	return url.String()
+}
 
 // AddTask handles adding a task to the queue
 func AddTask(scheduler types.Scheduler) http.HandlerFunc {
@@ -42,7 +57,7 @@ func AddTask(scheduler types.Scheduler) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Location", fmt.Sprintf("/task/%s", taskID))
+		w.Header().Set("Location", absURL(r, fmt.Sprintf("/task/%s", taskID)))
 		writeJSON(http.StatusAccepted, taskID, w)
 	}
 }

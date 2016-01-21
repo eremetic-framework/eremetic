@@ -117,12 +117,13 @@ func TestHandling(t *testing.T) {
 		Convey("It should respond with a location header", func() {
 			data := []byte(`{"task_mem":22.0, "docker_image": "busybox", "command": "echo hello", "task_cpus":0.5, "tasks_to_launch": 1}`)
 			r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
+			r.Host = "localhost"
 
 			handler := AddTask(scheduler)
 			handler(wr, r)
 
 			location := wr.HeaderMap["Location"][0]
-			So(location, ShouldStartWith, "/task/eremetic-task.")
+			So(location, ShouldStartWith, "http://localhost/task/eremetic-task.")
 			So(wr.Code, ShouldEqual, http.StatusAccepted)
 		})
 	})
