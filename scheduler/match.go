@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/klarna/eremetic/types"
-	log "github.com/dmuth/google-go-log4go"
+	"github.com/Sirupsen/logrus"
 	ogle "github.com/jacobsa/oglematchers"
+	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 )
 
@@ -66,7 +66,7 @@ func matchOffer(task types.EremeticTask, offers []*mesos.Offer) (*mesos.Offer, [
 			offers = offers[:len(offers)-1]
 			return off, offers
 		} else {
-			log.Debugf("%s does not match: %s", off.Id.GetValue(), matcher.Description())
+			logrus.Debugf("%s does not match: %s", off.Id.GetValue(), matcher.Description())
 		}
 	}
 	return nil, offers

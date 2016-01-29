@@ -59,6 +59,9 @@ create /etc/eremetic/eremetic.yml with:
     master: zk://<zookeeper_node1:port>,<zookeeper_node2:port>,(...)/mesos
     messenger_address: <callback address for mesos>
     messenger_port: <port for mesos to communicate on>
+    loglevel: DEBUG
+    logformat: json
+
 
 ## Building
 

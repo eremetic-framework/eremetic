@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	log "github.com/dmuth/google-go-log4go"
 	"github.com/gogo/protobuf/proto"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
@@ -328,7 +327,6 @@ func (sched *MockScheduler) ExecutorLost(sched.SchedulerDriver, *mesos.ExecutorI
 	sched.Called()
 }
 
-func (sched *MockScheduler) Error(d sched.SchedulerDriver, msg string) {
-	log.Error(msg)
+func (sched *MockScheduler) Error(d sched.SchedulerDriver, _msg string) {
 	sched.Called()
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	log "github.com/dmuth/google-go-log4go"
+	"github.com/Sirupsen/logrus"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/assets"
@@ -72,7 +72,10 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 			tpl.Execute(w, nil)
 			return
 		}
-		log.Error(err.Error())
+		logrus.WithFields(logrus.Fields{
+			"err":      err,
+			"template": "error_404.html",
+		}).Error("Unable to load template")
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -88,7 +91,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 			tpl.Execute(w, nil)
 			return
 		}
-		log.Error(err.Error())
+		logrus.WithError(err).WithFields(logrus.Fields{
+			"err":      err,
+			"template": "index.html",
+		}).Error("Unable to load template")
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")

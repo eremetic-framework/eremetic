@@ -6,14 +6,13 @@ import (
 	"os"
 	"os/signal"
 
-	log "github.com/dmuth/google-go-log4go"
+	"github.com/Sirupsen/logrus"
 	"github.com/kardianos/osext"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spf13/viper"
-
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/routes"
 	"github.com/klarna/eremetic/scheduler"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/spf13/viper"
 )
 
 func readConfig() {
@@ -25,6 +24,7 @@ func readConfig() {
 	viper.SetDefault("name", "Eremetic")
 	viper.SetDefault("user", "root")
 	viper.SetDefault("loglevel", "debug")
+	viper.SetDefault("logformat", "text")
 	viper.SetDefault("database", "db/eremetic.db")
 	viper.SetDefault("checkpoint", "true")
 	viper.SetDefault("failover_timeout", 2592000.0)
@@ -32,8 +32,14 @@ func readConfig() {
 }
 
 func setupLogging() {
-	log.SetLevelString(viper.GetString("loglevel"))
-	log.SetDisplayTime(true)
+	if viper.GetString("logformat") == "json" {
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+	}
+	level, err := logrus.ParseLevel(viper.GetString("loglevel"))
+	if err != nil {
+		level = logrus.InfoLevel
+	}
+	logrus.SetLevel(level)
 }
 
 func setupMetrics() {
@@ -66,17 +72,19 @@ func main() {
 			return
 		}
 
-		log.Info("Eremetic is shutting down")
+		logrus.Info("Eremetic is shutting down")
 		os.Exit(0)
 	}()
 
 	sched := scheduler.Create()
 	router := routes.Create(sched)
-	log.Infof("listening to %s", bind)
+	logrus.WithFields(logrus.Fields{
+		"address": viper.GetString("address"),
+		"port":    viper.GetInt("port"),
+	}).Infof("listening to %s", bind)
 	go scheduler.Run(sched)
 	err := http.ListenAndServe(bind, router)
 	if err != nil {
-		log.Error(err.Error())
-		os.Exit(1)
+		logrus.WithError(err).Fatal("Unrecoverable error")
 	}
 }

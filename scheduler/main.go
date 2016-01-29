@@ -1,9 +1,10 @@
 package scheduler
 
 import (
-	log "github.com/dmuth/google-go-log4go"
+	"github.com/Sirupsen/logrus"
 )
 
+// Create is used to build a new scheduler
 func Create() *eremeticScheduler {
 	return createEremeticScheduler()
 }
@@ -13,7 +14,7 @@ func Run(s *eremeticScheduler) {
 	driver, err := createDriver(s)
 
 	if err != nil {
-		log.Errorf("Unable to create scheduler driver: %s", err)
+		logrus.WithError(err).Error("Unable to create scheduler driver")
 		return
 	}
 
@@ -21,7 +22,7 @@ func Run(s *eremeticScheduler) {
 	defer driver.Stop(false)
 
 	if status, err := driver.Run(); err != nil {
-		log.Errorf("Framework stopped with status %s and error: %s\n", status.String(), err.Error())
+		logrus.WithError(err).WithField("status", status.String()).Error("Framework stopped")
 	}
-	log.Info("Exiting...")
+	logrus.Info("Exiting...")
 }
