@@ -56,7 +56,7 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 				for _, t := range tasks {
 					nt, err := database.ReadTask(t.ID)
 					if err != nil {
-						logrus.WithField("task", t.ID).Warn("Task not found in database")
+						logrus.WithField("task_id", t.ID).Warn("Task not found in database")
 						continue
 					}
 					if nt.LastUpdated().Before(start) {
@@ -75,7 +75,7 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 							SlaveId: &mesos.SlaveID{Value: proto.String(t.SlaveId)},
 						})
 					}
-					logrus.WithField("reconciliation_request_number", c).Debug("Sending reconciliation request")
+					logrus.WithField("reconciliation_request_count", c).Debug("Sending reconciliation request")
 					driver.ReconcileTasks(statuses)
 				}
 

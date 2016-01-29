@@ -65,9 +65,12 @@ func matchOffer(task types.EremeticTask, offers []*mesos.Offer) (*mesos.Offer, [
 			offers[i] = offers[len(offers)-1]
 			offers = offers[:len(offers)-1]
 			return off, offers
-		} else {
-			logrus.Debugf("%s does not match: %s", off.Id.GetValue(), matcher.Description())
 		}
+		logrus.WithFields(logrus.Fields{
+			"offer_id": off.Id.GetValue(),
+			"matcher":  matcher.Description(),
+			"task_id":  task.ID,
+		}).Debug("Unable to match offer")
 	}
 	return nil, offers
 }

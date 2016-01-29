@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -54,8 +55,9 @@ func (s *eremeticScheduler) newTask(spec types.EremeticTask, offer *mesos.Offer)
 // Registered is called when the Scheduler is Registered
 func (s *eremeticScheduler) Registered(driver sched.SchedulerDriver, frameworkID *mesos.FrameworkID, masterInfo *mesos.MasterInfo) {
 	logrus.WithFields(logrus.Fields{
-		"framework": frameworkID.GetValue(),
-		"master":    masterInfo.GetHostname(),
+		"framework_id": frameworkID.GetValue(),
+		"master_id":    masterInfo.GetId(),
+		"master":       masterInfo.GetHostname(),
 	}).Debug("Framework registered with master.")
 
 	if !s.initialised {
@@ -68,7 +70,10 @@ func (s *eremeticScheduler) Registered(driver sched.SchedulerDriver, frameworkID
 
 // Reregistered is called when the Scheduler is Reregistered
 func (s *eremeticScheduler) Reregistered(driver sched.SchedulerDriver, masterInfo *mesos.MasterInfo) {
-	logrus.WithField("master", masterInfo).Debug("Framework re-registered with master.")
+	logrus.WithFields(logrus.Fields{
+		"master_id": masterInfo.GetId(),
+		"master":    masterInfo.GetHostname(),
+	}).Debug("Framework re-registered with master.")
 	if !s.initialised {
 		driver.ReconcileTasks([]*mesos.TaskStatus{})
 		s.initialised = true
@@ -94,20 +99,20 @@ loop:
 			logrus.Info("Shutting down: declining offers")
 			break loop
 		case tid := <-s.tasks:
-			logrus.WithField("task", tid).Debug("Trying to find offer to launch task with")
+			logrus.WithField("task_id", tid).Debug("Trying to find offer to launch task with")
 			t, _ := database.ReadTask(tid)
 			offer, offers = matchOffer(t, offers)
 
 			if offer == nil {
-				logrus.WithField("task", tid).Warn("Unable to find a matching offer")
+				logrus.WithField("task_id", tid).Warn("Unable to find a matching offer")
 				TasksDelayed.Inc()
 				go func() { s.tasks <- tid }()
 				break loop
 			}
 
 			logrus.WithFields(logrus.Fields{
-				"task":  tid,
-				"offer": offer.Id.GetValue(),
+				"task_id":  tid,
+				"offer_id": offer.Id.GetValue(),
 			}).Debug("Preparing to launch task")
 
 			t, task := s.newTask(t, offer)
@@ -133,16 +138,13 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 	id := status.TaskId.GetValue()
 
 	logrus.WithFields(logrus.Fields{
-		"task":   id,
-		"status": status.State.String(),
+		"task_id": id,
+		"status":  status.State.String(),
 	}).Debug("Received task status update")
 
 	task, err := database.ReadTask(id)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"err":  err,
-			"task": id,
-		}).Debug("Unable to read task from database")
+		logrus.WithError(err).WithField("task_id", id).Debug("Unable to read task from database")
 	}
 
 	if task.ID == "" {
@@ -171,11 +173,11 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 	if *status.State == mesos.TaskState_TASK_FAILED && !task.WasRunning() {
 		if task.Retry >= maxRetries {
 			logrus.WithFields(logrus.Fields{
-				"task":    id,
+				"task_id": id,
 				"retries": task.Retry,
 			}).Warn("Giving up on launching task")
 		} else {
-			logrus.WithField("task", id).Info("Re-scheduling task that never ran.")
+			logrus.WithField("task_id", id).Info("Re-scheduling task that never ran.")
 			task.UpdateStatus(types.Status{
 				Status: mesos.TaskState_TASK_STAGING.String(),
 				Time:   time.Now().Unix(),
@@ -202,7 +204,7 @@ func (s *eremeticScheduler) FrameworkMessage(
 	message string) {
 
 	logrus.Debug("Getting a framework message")
-	switch *executorID.Value {
+	switch executorID.GetValue() {
 	case "eremetic-executor":
 		var result interface{}
 		err := json.Unmarshal([]byte(message), &result)
@@ -213,25 +215,25 @@ func (s *eremeticScheduler) FrameworkMessage(
 		logrus.Debug(message)
 
 	default:
-		logrus.WithField("framework", executorID.GetValue()).Debug("Received a message from an unknown framework.")
+		logrus.WithField("executor_id", executorID.GetValue()).Debug("Received a message from an unknown executor.")
 	}
 }
 
 func (s *eremeticScheduler) OfferRescinded(_ sched.SchedulerDriver, offerID *mesos.OfferID) {
-	logrus.WithField("offer", offerID).Debug("Offer Rescinded")
+	logrus.WithField("offer_id", offerID).Debug("Offer Rescinded")
 }
 func (s *eremeticScheduler) SlaveLost(_ sched.SchedulerDriver, slaveID *mesos.SlaveID) {
-	logrus.WithField("slave", slaveID).Debug("Slave lost")
+	logrus.WithField("slave_id", slaveID).Debug("Slave lost")
 }
 func (s *eremeticScheduler) ExecutorLost(_ sched.SchedulerDriver, executorID *mesos.ExecutorID, slaveID *mesos.SlaveID, status int) {
 	logrus.WithFields(logrus.Fields{
-		"slave":    slaveID,
-		"executor": executorID,
+		"slave_id":    slaveID,
+		"executor_id": executorID,
 	}).Debug("Executor on slave was lost")
 }
 
 func (s *eremeticScheduler) Error(_ sched.SchedulerDriver, err string) {
-	logrus.WithField("err", err).Debug("Received an error")
+	logrus.WithError(errors.New(err)).Debug("Received an error")
 }
 
 func createEremeticScheduler() *eremeticScheduler {
@@ -250,13 +252,16 @@ func nextID(s *eremeticScheduler) int {
 }
 
 func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) {
-	logrus.WithField("docker_image", request.DockerImage).Debug("Adding task to queue")
+	logrus.WithFields(logrus.Fields{
+		"docker_image": request.DockerImage,
+		"command":      request.Command,
+	}).Debug("Adding task to queue")
 
 	request.Name = fmt.Sprintf("Eremetic task %d", nextID(s))
 
 	task, err := createEremeticTask(request)
 	if err != nil {
-		logrus.Error(err.Error())
+		logrus.WithError(err).Error("Unable to create task.")
 		return "", err
 	}
 

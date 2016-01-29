@@ -67,7 +67,7 @@ func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["taskId"]
-		logrus.WithField("task", id).Debug("Fetching task")
+		logrus.WithField("task_id", id).Debug("Fetching task")
 		task, _ := database.ReadTask(id)
 
 		if strings.Contains(r.Header.Get("Accept"), "text/html") {
@@ -102,8 +102,7 @@ func NotifyCallback(task *types.EremeticTask) {
 
 	body, err := json.Marshal(cbData)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"err":          err,
+		logrus.WithError(err).WithFields(logrus.Fields{
 			"task_id":      task.ID,
 			"callback_uri": task.CallbackURI,
 		}).Error("Unable to create callback message")
@@ -114,12 +113,15 @@ func NotifyCallback(task *types.EremeticTask) {
 		_, err = http.Post(task.CallbackURI, "application/json", bytes.NewBuffer(body))
 
 		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"err":          err,
+			logrus.WithError(err).WithFields(logrus.Fields{
+				"task_id":      task.ID,
 				"callback_uri": task.CallbackURI,
 			}).Error("Unable to POST to Callback URI")
 		} else {
-			logrus.WithField("callback_uri", task.CallbackURI).Debug("Sent callback")
+			logrus.WithFields(logrus.Fields{
+				"task_id":      task.ID,
+				"callback_uri": task.CallbackURI,
+			}).Debug("Sent callback")
 		}
 	}()
 
@@ -139,11 +141,7 @@ func handleError(err error, w http.ResponseWriter, message string) {
 	}
 
 	if err = writeJSON(422, errorMessage, w); err != nil {
-		logrus.WithFields(logrus.Fields{
-			"err":     err,
-			"message": message,
-		}).Error("Unable to respond")
-		panic(err)
+		logrus.WithError(err).WithField("message", message).Panic("Unable to respond")
 	}
 }
 
@@ -175,10 +173,7 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask,
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		logrus.WithFields(logrus.Fields{
-			"err":      err,
-			"template": templateFile,
-		}).Error("Unable to render template")
+		logrus.WithError(err).WithField("template", templateFile).Error("Unable to render template")
 		return
 	}
 

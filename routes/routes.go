@@ -72,10 +72,7 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 			tpl.Execute(w, nil)
 			return
 		}
-		logrus.WithFields(logrus.Fields{
-			"err":      err,
-			"template": "error_404.html",
-		}).Error("Unable to load template")
+		logrus.WithError(err).WithField("template", "error_404.html").Error("Unable to load template")
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -91,10 +88,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 			tpl.Execute(w, nil)
 			return
 		}
-		logrus.WithError(err).WithFields(logrus.Fields{
-			"err":      err,
-			"template": "index.html",
-		}).Error("Unable to load template")
+		logrus.WithError(err).WithField("template", "index.html").Error("Unable to load template")
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
