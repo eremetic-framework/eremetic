@@ -3,10 +3,10 @@ package scheduler
 import (
 	"time"
 
+	"github.com/Sirupsen/logrus"
+	"github.com/gogo/protobuf/proto"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
-	log "github.com/dmuth/google-go-log4go"
-	"github.com/gogo/protobuf/proto"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 )
@@ -36,18 +36,18 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 
 		tasks, err := database.ListNonTerminalTasks()
 		if err != nil {
-			log.Errorf("Failed to list non-terminal tasks: %s", err)
+			logrus.WithError(err).Error("Failed to list non-terminal tasks")
 			close(done)
 			return
 		}
 
-		log.Infof("Trying to reconcile with %d task(s)", len(tasks))
+		logrus.Infof("Trying to reconcile with %d task(s)", len(tasks))
 		start := time.Now()
 
 		for len(tasks) > 0 {
 			select {
 			case <-cancel:
-				log.Info("Cancelling reconciliation job")
+				logrus.Info("Cancelling reconciliation job")
 				close(done)
 				return
 			case <-time.After(time.Duration(delay) * time.Second):
@@ -56,7 +56,7 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 				for _, t := range tasks {
 					nt, err := database.ReadTask(t.ID)
 					if err != nil {
-						log.Warnf("Task %s not found in database", t.ID)
+						logrus.WithField("task_id", t.ID).Warn("Task not found in database")
 						continue
 					}
 					if nt.LastUpdated().Before(start) {
@@ -75,7 +75,7 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 							SlaveId: &mesos.SlaveID{Value: proto.String(t.SlaveId)},
 						})
 					}
-					log.Debugf("Sending reconciliation request #%d", c)
+					logrus.WithField("reconciliation_request_count", c).Debug("Sending reconciliation request")
 					driver.ReconcileTasks(statuses)
 				}
 
@@ -86,11 +86,11 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 					}
 				}
 
-				c += 1
+				c++
 			}
 		}
 
-		log.Info("Reconciliation done")
+		logrus.Info("Reconciliation done")
 		close(done)
 	}()
 

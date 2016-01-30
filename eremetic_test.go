@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	log "github.com/dmuth/google-go-log4go"
+	"github.com/Sirupsen/logrus"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/spf13/viper"
 )
@@ -16,7 +16,6 @@ func TestMain(t *testing.T) {
 
 	Convey("setupLogging", t, func() {
 		setupLogging()
-		So(log.DisplayTime(), ShouldBeTrue)
-		So(log.Level(), ShouldEqual, log.DebugLevel)
+		So(logrus.GetLevel(), ShouldEqual, logrus.DebugLevel)
 	})
 }

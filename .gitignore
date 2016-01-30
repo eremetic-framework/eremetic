@@ -4,3 +4,5 @@ db/*.db
 docker/static
 docker/templates
 assets/assets.go
+.DS_Store
+._*

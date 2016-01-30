@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"strings"
 
-	log "github.com/dmuth/google-go-log4go"
+	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/assets"
 	"github.com/klarna/eremetic/database"
@@ -67,7 +67,7 @@ func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["taskId"]
-		log.Debugf("Fetching task for id: %s", id)
+		logrus.WithField("task_id", id).Debug("Fetching task")
 		task, _ := database.ReadTask(id)
 
 		if strings.Contains(r.Header.Get("Accept"), "text/html") {
@@ -102,7 +102,10 @@ func NotifyCallback(task *types.EremeticTask) {
 
 	body, err := json.Marshal(cbData)
 	if err != nil {
-		log.Errorf("Unable to create message for task %s, target uri %s", task.ID, task.CallbackURI)
+		logrus.WithError(err).WithFields(logrus.Fields{
+			"task_id":      task.ID,
+			"callback_uri": task.CallbackURI,
+		}).Error("Unable to create callback message")
 		return
 	}
 
@@ -110,9 +113,15 @@ func NotifyCallback(task *types.EremeticTask) {
 		_, err = http.Post(task.CallbackURI, "application/json", bytes.NewBuffer(body))
 
 		if err != nil {
-			log.Error(err.Error())
+			logrus.WithError(err).WithFields(logrus.Fields{
+				"task_id":      task.ID,
+				"callback_uri": task.CallbackURI,
+			}).Error("Unable to POST to Callback URI")
 		} else {
-			log.Debugf("Sent callback to %s", task.CallbackURI)
+			logrus.WithFields(logrus.Fields{
+				"task_id":      task.ID,
+				"callback_uri": task.CallbackURI,
+			}).Debug("Sent callback")
 		}
 	}()
 
@@ -123,8 +132,6 @@ func handleError(err error, w http.ResponseWriter, message string) {
 		return
 	}
 
-	log.Debugf("%v", err.Error())
-
 	var errorMessage = struct {
 		Error   string `json:"error"`
 		Message string `json:"message"`
@@ -134,8 +141,7 @@ func handleError(err error, w http.ResponseWriter, message string) {
 	}
 
 	if err = writeJSON(422, errorMessage, w); err != nil {
-		log.Errorf("%v", err.Error())
-		panic(err)
+		logrus.WithError(err).WithField("message", message).Panic("Unable to respond")
 	}
 }
 
@@ -167,7 +173,7 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask,
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error(err.Error())
+		logrus.WithError(err).WithField("template", templateFile).Error("Unable to render template")
 		return
 	}
 
