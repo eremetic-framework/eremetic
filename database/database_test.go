@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,9 +13,16 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+var testDB string
+
 func setup() error {
-	dir, _ := os.Getwd()
-	return NewDB(fmt.Sprintf("%s/../db/test.db", dir))
+	dir, _ := ioutil.TempDir("", "eremetic")
+	testDB = fmt.Sprintf("%s/test.db", dir)
+	return NewDB(testDB)
+}
+
+func teardown() {
+	os.Remove(testDB)
 }
 
 func TestDatabase(t *testing.T) {
@@ -28,6 +36,7 @@ func TestDatabase(t *testing.T) {
 	Convey("NewDB", t, func() {
 		Convey("With an absolute path", func() {
 			err := setup()
+			defer teardown()
 			defer Close()
 
 			So(boltdb.Path(), ShouldNotBeEmpty)
@@ -47,6 +56,7 @@ func TestDatabase(t *testing.T) {
 
 	Convey("Close", t, func() {
 		setup()
+		defer teardown()
 		Close()
 
 		So(boltdb.Path(), ShouldBeEmpty)
@@ -54,6 +64,7 @@ func TestDatabase(t *testing.T) {
 
 	Convey("Clean", t, func() {
 		setup()
+		defer teardown()
 		defer Close()
 
 		PutTask(&types.EremeticTask{ID: "1234"})
@@ -69,6 +80,7 @@ func TestDatabase(t *testing.T) {
 
 	Convey("Put and Read Task", t, func() {
 		setup()
+		defer teardown()
 		defer Close()
 
 		task1 := types.EremeticTask{ID: "1234"}
@@ -97,6 +109,7 @@ func TestDatabase(t *testing.T) {
 
 	Convey("List non-terminal tasks", t, func() {
 		setup()
+		defer teardown()
 		defer Close()
 
 		Clean()
