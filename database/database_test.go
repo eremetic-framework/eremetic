@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"os"
+	"io/ioutil"
 	"path/filepath"
 	"testing"
 	"time"
@@ -13,8 +14,8 @@ import (
 )
 
 func setup() error {
-	dir, _ := os.Getwd()
-	return NewDB(fmt.Sprintf("%s/../db/test.db", dir))
+	dir, _ := ioutil.TempDir("", "eremetic")
+	return NewDB(fmt.Sprintf("%s/test.db", dir))
 }
 
 func TestDatabase(t *testing.T) {
