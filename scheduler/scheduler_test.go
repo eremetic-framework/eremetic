@@ -213,6 +213,26 @@ func TestScheduler(t *testing.T) {
 				}
 			})
 		})
+
+		Convey("When the queue channel is full", func() {
+			scheduler := &eremeticScheduler{
+				tasks: make(chan string, 1),
+			}
+			scheduler.tasks <- "dummy"
+
+			request := types.Request{
+				TaskCPUs:    0.5,
+				TaskMem:     22.0,
+				DockerImage: "busybox",
+				Command:     "echo hello",
+			}
+
+			Convey("It should return an error", func() {
+				_, err := scheduler.ScheduleTask(request)
+
+				So(err, ShouldNotBeNil)
+			})
+		})
 	})
 }
 

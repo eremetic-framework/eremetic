@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -17,8 +16,14 @@ import (
 	"github.com/klarna/eremetic/assets"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/formatter"
+	"github.com/klarna/eremetic/scheduler"
 	"github.com/klarna/eremetic/types"
 )
+
+type ErrorDocument struct {
+	Error   string `json:"error"`
+	Message string `json:"message"`
+}
 
 func absURL(r *http.Request, path string) string {
 	scheme := r.Header.Get("X-Forwarded-Proto")
@@ -35,7 +40,7 @@ func absURL(r *http.Request, path string) string {
 }
 
 // AddTask handles adding a task to the queue
-func AddTask(scheduler types.Scheduler) http.HandlerFunc {
+func AddTask(sched types.Scheduler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request types.Request
 
@@ -51,9 +56,18 @@ func AddTask(scheduler types.Scheduler) http.HandlerFunc {
 			return
 		}
 
-		taskID, err := scheduler.ScheduleTask(request)
+		taskID, err := sched.ScheduleTask(request)
 		if err != nil {
-			writeJSON(500, err, w)
+			logrus.WithError(err).Error("Unable to create task.")
+			httpStatus := 500
+			if err == scheduler.ErrQueueFull {
+				httpStatus = 503
+			}
+			errorMessage := ErrorDocument{
+				err.Error(),
+				"Unable to schedule task",
+			}
+			writeJSON(httpStatus, errorMessage, w)
 			return
 		}
 
@@ -82,60 +96,12 @@ func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
 	}
 }
 
-type callbackData struct {
-	Time   int64  `json:"time"`
-	Status string `json:"status"`
-	TaskID string `json:"task_id"`
-}
-
-// NotifyCallback handles posting a JSON back to the URI given with the task.
-func NotifyCallback(task *types.EremeticTask) {
-	if len(task.CallbackURI) == 0 {
-		return
-	}
-
-	cbData := callbackData{
-		Time:   task.Status[len(task.Status)-1].Time,
-		Status: task.Status[len(task.Status)-1].Status,
-		TaskID: task.ID,
-	}
-
-	body, err := json.Marshal(cbData)
-	if err != nil {
-		logrus.WithError(err).WithFields(logrus.Fields{
-			"task_id":      task.ID,
-			"callback_uri": task.CallbackURI,
-		}).Error("Unable to create callback message")
-		return
-	}
-
-	go func() {
-		_, err = http.Post(task.CallbackURI, "application/json", bytes.NewBuffer(body))
-
-		if err != nil {
-			logrus.WithError(err).WithFields(logrus.Fields{
-				"task_id":      task.ID,
-				"callback_uri": task.CallbackURI,
-			}).Error("Unable to POST to Callback URI")
-		} else {
-			logrus.WithFields(logrus.Fields{
-				"task_id":      task.ID,
-				"callback_uri": task.CallbackURI,
-			}).Debug("Sent callback")
-		}
-	}()
-
-}
-
 func handleError(err error, w http.ResponseWriter, message string) {
 	if err == nil {
 		return
 	}
 
-	var errorMessage = struct {
-		Error   string `json:"error"`
-		Message string `json:"message"`
-	}{
+	errorMessage := ErrorDocument{
 		err.Error(),
 		message,
 	}
