@@ -13,7 +13,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/handler"
 	"github.com/klarna/eremetic/types"
 )
 
@@ -191,7 +190,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 	}
 
 	if types.IsTerminal(status.State) {
-		handler.NotifyCallback(&task)
+		NotifyCallback(&task)
 	}
 
 	database.PutTask(&task)
