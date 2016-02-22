@@ -19,6 +19,7 @@ import (
 var (
 	defaultFilter = &mesos.Filters{RefuseSeconds: proto.Float64(10)}
 	maxRetries    = 5
+	ErrQueueFull  = errors.New("task queue is full")
 )
 
 // eremeticScheduler holds the structure of the Eremetic Scheduler
@@ -260,13 +261,16 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 
 	task, err := createEremeticTask(request)
 	if err != nil {
-		logrus.WithError(err).Error("Unable to create task.")
 		return "", err
 	}
 
-	TasksCreated.Inc()
-	QueueSize.Inc()
-	database.PutTask(&task)
-	s.tasks <- task.ID
-	return task.ID, nil
+	select {
+	case s.tasks <- task.ID:
+		database.PutTask(&task)
+		TasksCreated.Inc()
+		QueueSize.Inc()
+		return task.ID, nil
+	case <-time.After(time.Duration(1) * time.Second):
+		return "", ErrQueueFull
+	}
 }
