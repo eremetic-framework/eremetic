@@ -3,9 +3,10 @@ language: go
 go:
  - 1.4
  - 1.5
+ - 1.6
 
 env:
- - PUBLISH_VERSION=1.5
+ - PUBLISH_VERSION=1.6
 
 services:
  - docker

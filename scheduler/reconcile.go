@@ -31,7 +31,7 @@ func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
 	go func() {
 		var (
 			c     uint
-			delay int
+			delay = 1
 		)
 
 		tasks, err := database.ListNonTerminalTasks()
