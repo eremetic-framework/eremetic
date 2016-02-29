@@ -1,13 +1,10 @@
 package scheduler
 
 import (
-	"fmt"
 	"strings"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/klarna/eremetic/types"
-	"github.com/m4rw3r/uuid"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
 )
@@ -15,10 +12,6 @@ import (
 var (
 	archiveSfx = []string{".tgz", ".tar.gz", ".tbz2", ".tar.bz2", ".txz", ".tar.xz", ".zip"}
 )
-
-func createID(taskID string) string {
-	return fmt.Sprintf("eremetic-task.%s", taskID)
-}
 
 func isArchive(url string) bool {
 	for _, s := range archiveSfx {
@@ -30,34 +23,7 @@ func isArchive(url string) bool {
 }
 
 func createEremeticTask(request types.Request) (types.EremeticTask, error) {
-	randId, err := uuid.V4()
-	if err != nil {
-		return types.EremeticTask{}, err
-	}
-	taskId := createID(randId.String())
-
-	status := []types.Status{
-		types.Status{
-			Status: mesos.TaskState_TASK_STAGING.String(),
-			Time:   time.Now().Unix(),
-		},
-	}
-
-	task := types.EremeticTask{
-		ID:          taskId,
-		TaskCPUs:    request.TaskCPUs,
-		TaskMem:     request.TaskMem,
-		Name:        request.Name,
-		Status:      status,
-		Command:     request.Command,
-		User:        "root",
-		Environment: request.Environment,
-		Image:       request.DockerImage,
-		Volumes:     request.Volumes,
-		CallbackURI: request.CallbackURI,
-		URIs:        request.URIs,
-	}
-	return task, nil
+	return types.NewEremeticTask(request)
 }
 
 func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
@@ -95,20 +61,27 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 		})
 	}
 
-	return task, &mesos.TaskInfo{
+	commandInfo := &mesos.CommandInfo{
+		User: proto.String(task.User),
+		Environment: &mesos.Environment{
+			Variables: environment,
+		},
+		Uris: uris,
+	}
+
+	if task.Command != "" {
+		commandInfo.Value = &task.Command
+	} else {
+		commandInfo.Shell = proto.Bool(false)
+	}
+
+	taskInfo := &mesos.TaskInfo{
 		TaskId: &mesos.TaskID{
 			Value: proto.String(task.ID),
 		},
 		SlaveId: offer.SlaveId,
 		Name:    proto.String(task.Name),
-		Command: &mesos.CommandInfo{
-			Value: proto.String(task.Command),
-			User:  proto.String(task.User),
-			Environment: &mesos.Environment{
-				Variables: environment,
-			},
-			Uris: uris,
-		},
+		Command: commandInfo,
 		Container: &mesos.ContainerInfo{
 			Type: mesos.ContainerInfo_DOCKER.Enum(),
 			Docker: &mesos.ContainerInfo_DockerInfo{
@@ -121,4 +94,6 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 			mesosutil.NewScalarResource("mem", task.TaskMem),
 		},
 	}
+
+	return task, taskInfo
 }

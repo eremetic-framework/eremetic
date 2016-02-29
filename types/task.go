@@ -1,8 +1,10 @@
 package types
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/m4rw3r/uuid"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 )
 
@@ -28,6 +30,38 @@ type EremeticTask struct {
 	Retry       int               `json:"retry"`
 	CallbackURI string            `json:"callback_uri"`
 	URIs        []string          `json:"uris"`
+}
+
+func NewEremeticTask(request Request) (EremeticTask, error) {
+	uuid, err := uuid.V4()
+	if err != nil {
+		return EremeticTask{}, err
+	}
+
+	taskID := fmt.Sprintf("eremetic-task.%s", uuid)
+
+	status := []Status{
+		Status{
+			Status: mesos.TaskState_TASK_STAGING.String(),
+			Time:   time.Now().Unix(),
+		},
+	}
+
+	task := EremeticTask{
+		ID:          taskID,
+		TaskCPUs:    request.TaskCPUs,
+		TaskMem:     request.TaskMem,
+		Name:        request.Name,
+		Status:      status,
+		Command:     request.Command,
+		User:        "root",
+		Environment: request.Environment,
+		Image:       request.DockerImage,
+		Volumes:     request.Volumes,
+		CallbackURI: request.CallbackURI,
+		URIs:        request.URIs,
+	}
+	return task, nil
 }
 
 func (task *EremeticTask) WasRunning() bool {

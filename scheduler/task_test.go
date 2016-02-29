@@ -19,14 +19,6 @@ func TestTask(t *testing.T) {
 		},
 	}
 
-	Convey("createID", t, func() {
-		Convey("Given a string", func() {
-			Convey("It should build the appropriate ID", func() {
-				So(createID("1234"), ShouldEqual, "eremetic-task.1234")
-			})
-		})
-	})
-
 	Convey("createEremeticTask", t, func() {
 		request := types.Request{
 			TaskCPUs:    0.5,
@@ -77,6 +69,15 @@ func TestTask(t *testing.T) {
 			So(task.URIs, ShouldHaveLength, 1)
 			So(task.URIs, ShouldContain, request.URIs[0])
 		})
+
+		Convey("Given no Command", func() {
+			request.Command = ""
+
+			task, err := createEremeticTask(request)
+
+			So(err, ShouldBeNil)
+			So(task.Command, ShouldBeEmpty)
+		})
 	})
 
 	Convey("createTaskInfo", t, func() {
@@ -110,6 +111,15 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Container.GetType().String(), ShouldEqual, "DOCKER")
 			So(taskInfo.Container.Docker.GetImage(), ShouldEqual, "busybox")
 			So(net.SlaveId, ShouldEqual, "slave-id")
+		})
+
+		Convey("Given no Command", func() {
+			eremeticTask.Command = ""
+
+			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(taskInfo.Command.GetValue(), ShouldBeEmpty)
+			So(taskInfo.Command.GetShell(), ShouldBeFalse)
 		})
 
 		Convey("Given a volume and environment", func() {
