@@ -60,6 +60,18 @@ func TestTask(t *testing.T) {
 			So(task.Volumes[0].HostPath, ShouldEqual, volumes[0].HostPath)
 		})
 
+		Convey("Given a masked environment", func() {
+			var maskedEnv = make(map[string]string)
+			maskedEnv["foo"] = "bar"
+
+			request.MaskedEnvironment = maskedEnv
+			task, err := createEremeticTask(request)
+
+			So(err, ShouldBeNil)
+			So(task.MaskedEnvironment, ShouldContainKey, "foo")
+			So(task.MaskedEnvironment["foo"], ShouldEqual, "bar")
+		})
+
 		Convey("Given uri to download", func() {
 			request.URIs = []string{"http://foobar.local/kitten.jpg"}
 

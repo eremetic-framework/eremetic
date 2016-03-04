@@ -38,6 +38,12 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 			Value: proto.String(v),
 		})
 	}
+	for k, v := range task.MaskedEnvironment {
+		environment = append(environment, &mesos.Environment_Variable{
+			Name:  proto.String(k),
+			Value: proto.String(v),
+		})
+	}
 
 	environment = append(environment, &mesos.Environment_Variable{
 		Name:  proto.String("MESOS_TASK_ID"),

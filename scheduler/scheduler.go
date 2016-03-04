@@ -100,7 +100,7 @@ loop:
 			break loop
 		case tid := <-s.tasks:
 			logrus.WithField("task_id", tid).Debug("Trying to find offer to launch task with")
-			t, _ := database.ReadTask(tid)
+			t, _ := database.ReadUnmaskedTask(tid)
 			offer, offers = matchOffer(t, offers)
 
 			if offer == nil {
@@ -142,7 +142,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		"status":  status.State.String(),
 	}).Debug("Received task status update")
 
-	task, err := database.ReadTask(id)
+	task, err := database.ReadUnmaskedTask(id)
 	if err != nil {
 		logrus.WithError(err).WithField("task_id", id).Debug("Unable to read task from database")
 	}

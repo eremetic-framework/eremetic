@@ -83,17 +83,21 @@ func TestDatabase(t *testing.T) {
 		defer teardown()
 		defer Close()
 
+		var maskedEnv = make(map[string]string)
+		maskedEnv["foo"] = "bar"
+
 		task1 := types.EremeticTask{ID: "1234"}
 		task2 := types.EremeticTask{
-			ID:          "12345",
-			TaskCPUs:    2.5,
-			TaskMem:     15.3,
-			Name:        "request Name",
-			Status:      status,
-			FrameworkId: "1234",
-			Command:     "echo date",
-			User:        "root",
-			Image:       "busybox",
+			ID:                "12345",
+			TaskCPUs:          2.5,
+			TaskMem:           15.3,
+			Name:              "request Name",
+			Status:            status,
+			FrameworkId:       "1234",
+			Command:           "echo date",
+			User:              "root",
+			Image:             "busybox",
+			MaskedEnvironment: maskedEnv,
 		}
 
 		PutTask(&task1)
@@ -103,8 +107,38 @@ func TestDatabase(t *testing.T) {
 		So(t1, ShouldResemble, task1)
 		So(err, ShouldBeNil)
 		t2, err := ReadTask(task2.ID)
-		So(t2, ShouldResemble, task2)
 		So(err, ShouldBeNil)
+		So(t2.MaskedEnvironment["foo"], ShouldEqual, "*******")
+	})
+
+	Convey("Read unmasked task", t, func() {
+		setup()
+		defer teardown()
+		defer Close()
+
+		var maskedEnv = make(map[string]string)
+		maskedEnv["foo"] = "bar"
+
+		task := types.EremeticTask{
+			ID:                "12345",
+			TaskCPUs:          2.5,
+			TaskMem:           15.3,
+			Name:              "request Name",
+			Status:            status,
+			FrameworkId:       "1234",
+			Command:           "echo date",
+			User:              "root",
+			Image:             "busybox",
+			MaskedEnvironment: maskedEnv,
+		}
+		PutTask(&task)
+
+		t, err := ReadUnmaskedTask(task.ID)
+		So(t, ShouldResemble, task)
+		So(err, ShouldBeNil)
+		So(t.MaskedEnvironment, ShouldContainKey, "foo")
+		So(t.MaskedEnvironment["foo"], ShouldEqual, "bar")
+
 	})
 
 	Convey("List non-terminal tasks", t, func() {

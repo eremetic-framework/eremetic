@@ -2,7 +2,10 @@ package handler
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -108,6 +111,34 @@ func TestHandling(t *testing.T) {
 			m.ServeHTTP(wr, r)
 
 			So(wr.Code, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("Task with MaskedEnv gets masked", func() {
+			r, _ := http.NewRequest("GET", "/task/eremetic-task.987", nil)
+			id := "eremetic-task.987"
+			maskedEnv := make(map[string]string)
+			maskedEnv["foo"] = "bar"
+			task := types.EremeticTask{
+				TaskCPUs:          0.2,
+				TaskMem:           0.5,
+				Command:           "test",
+				Image:             "test",
+				Status:            status,
+				ID:                id,
+				MaskedEnvironment: maskedEnv,
+			}
+
+			database.PutTask(&task)
+			m.ServeHTTP(wr, r)
+
+			var retrievedTask types.EremeticTask
+			body, _ := ioutil.ReadAll(io.LimitReader(wr.Body, 1048576))
+
+			json.Unmarshal(body, &retrievedTask)
+			So(retrievedTask.MaskedEnvironment, ShouldContainKey, "foo")
+			So(retrievedTask.MaskedEnvironment["foo"], ShouldNotEqual, "bar")
+			So(retrievedTask.MaskedEnvironment["foo"], ShouldEqual, "*******")
+
 		})
 	})
 
