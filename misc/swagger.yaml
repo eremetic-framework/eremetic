@@ -95,6 +95,9 @@ definitions:
       env:
         type: object
         description: Environment variables to set
+      masked_env:
+        type: object
+        description: Environment variables to set but that are masked in any GET request.
       uris:
         type: array
         items:
@@ -135,6 +138,6 @@ definitions:
                 - TASK_FAILED
                 - TASK_LOST
                 - TASK_ERROR
-            time: 
+            time:
               type: number
               description: Unix timestamp of status change

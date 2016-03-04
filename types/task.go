@@ -14,22 +14,23 @@ type Status struct {
 }
 
 type EremeticTask struct {
-	TaskCPUs    float64           `json:"task_cpus"`
-	TaskMem     float64           `json:"task_mem"`
-	Command     string            `json:"command"`
-	User        string            `json:"user"`
-	Environment map[string]string `json:"env"`
-	Image       string            `json:"image"`
-	Volumes     []Volume          `json:"volumes"`
-	Status      []Status          `json:"status"`
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	FrameworkId string            `json:"framework_id"`
-	SlaveId     string            `json:"slave_id"`
-	Hostname    string            `json:"hostname"`
-	Retry       int               `json:"retry"`
-	CallbackURI string            `json:"callback_uri"`
-	URIs        []string          `json:"uris"`
+	TaskCPUs          float64           `json:"task_cpus"`
+	TaskMem           float64           `json:"task_mem"`
+	Command           string            `json:"command"`
+	User              string            `json:"user"`
+	Environment       map[string]string `json:"env"`
+	MaskedEnvironment map[string]string `json:"masked_env"`
+	Image             string            `json:"image"`
+	Volumes           []Volume          `json:"volumes"`
+	Status            []Status          `json:"status"`
+	ID                string            `json:"id"`
+	Name              string            `json:"name"`
+	FrameworkId       string            `json:"framework_id"`
+	SlaveId           string            `json:"slave_id"`
+	Hostname          string            `json:"hostname"`
+	Retry             int               `json:"retry"`
+	CallbackURI       string            `json:"callback_uri"`
+	URIs              []string          `json:"uris"`
 }
 
 func NewEremeticTask(request Request) (EremeticTask, error) {
@@ -48,18 +49,19 @@ func NewEremeticTask(request Request) (EremeticTask, error) {
 	}
 
 	task := EremeticTask{
-		ID:          taskID,
-		TaskCPUs:    request.TaskCPUs,
-		TaskMem:     request.TaskMem,
-		Name:        request.Name,
-		Status:      status,
-		Command:     request.Command,
-		User:        "root",
-		Environment: request.Environment,
-		Image:       request.DockerImage,
-		Volumes:     request.Volumes,
-		CallbackURI: request.CallbackURI,
-		URIs:        request.URIs,
+		ID:                taskID,
+		TaskCPUs:          request.TaskCPUs,
+		TaskMem:           request.TaskMem,
+		Name:              request.Name,
+		Status:            status,
+		Command:           request.Command,
+		User:              "root",
+		Environment:       request.Environment,
+		MaskedEnvironment: request.MaskedEnvironment,
+		Image:             request.DockerImage,
+		Volumes:           request.Volumes,
+		CallbackURI:       request.CallbackURI,
+		URIs:              request.URIs,
 	}
 	return task, nil
 }

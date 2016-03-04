@@ -37,6 +37,11 @@ JSON format:
   "env": {
     "KEY": "value"
   },
+  // Object, Will be merged to `env` when passed to Mesos, but masked when doing a GET.
+  // See Clarification of the Masked Env field below for more information
+  "masked_env": {
+    "KEY": "value"
+  },
   // URIs of resource to download
   "uris": [
     "http://server.local/resource"
@@ -49,6 +54,13 @@ JSON format:
 
 ### Note
 Most of this meta-data will not remain after a full restart of Eremetic.
+
+### Clarification of the Masked Env field
+The purpose of the field is to provide a way to pass along environment variables that you don't want to have exposed in a subsequent GET call.
+It is not intended to provide full security, as someone with access to either the machine running Eremetic or the Mesos Slave that the task is being run on will still be able to view these values.
+These values are not encrypted, but simply masked when retrieved back via the API.
+
+For security purposes, ensure TLS (https) is being used for the Eremetic communication and that access to any machines is properly restricted.
 
 
 ## Configuration
