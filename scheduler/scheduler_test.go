@@ -1,7 +1,11 @@
 package scheduler
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -13,6 +17,26 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
 )
+
+func callbackReceiver() (chan callbackData, *httptest.Server) {
+	cb := make(chan callbackData, 10)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var callback callbackData
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			close(cb)
+			return
+		}
+		err = json.Unmarshal(body, &callback)
+		if err != nil {
+			close(cb)
+			return
+		}
+		fmt.Fprintln(w, "ok")
+		cb <- callback
+	}))
+	return cb, ts
+}
 
 func TestScheduler(t *testing.T) {
 	dir, _ := os.Getwd()
@@ -115,7 +139,7 @@ func TestScheduler(t *testing.T) {
 					So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
 				})
 
-				Convey("Failing immediatly", func() {
+				Convey("Failing immediately", func() {
 					s.tasks = make(chan string, 100)
 					s.StatusUpdate(nil, &mesos.TaskStatus{
 						TaskId: &mesos.TaskID{
@@ -131,6 +155,93 @@ func TestScheduler(t *testing.T) {
 					select {
 					case c := <-s.tasks:
 						So(c, ShouldEqual, id)
+					}
+				})
+
+				Convey("Task finished callback", func() {
+					cb, ts := callbackReceiver()
+					defer ts.Close()
+
+					id := "eremetic-task.1000"
+					database.PutTask(&types.EremeticTask{
+						ID:          id,
+						CallbackURI: ts.URL,
+					})
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						State: mesos.TaskState_TASK_FINISHED.Enum(),
+					})
+
+					select {
+					case c := <-cb:
+						So(c.TaskID, ShouldEqual, id)
+						So(c.Status, ShouldEqual, "TASK_FINISHED")
+					}
+				})
+
+				Convey("Task failed callback", func() {
+					cb, ts := callbackReceiver()
+					defer ts.Close()
+
+					id := "eremetic-task.1001"
+					database.PutTask(&types.EremeticTask{
+						ID:          id,
+						CallbackURI: ts.URL,
+					})
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						State: mesos.TaskState_TASK_RUNNING.Enum(),
+					})
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						State: mesos.TaskState_TASK_FAILED.Enum(),
+					})
+
+					select {
+					case c := <-cb:
+						So(c.TaskID, ShouldEqual, id)
+						So(c.Status, ShouldEqual, "TASK_FAILED")
+					}
+				})
+
+				Convey("Task retry callback", func() {
+					cb, ts := callbackReceiver()
+					defer ts.Close()
+
+					id := "eremetic-task.1002"
+					database.PutTask(&types.EremeticTask{
+						ID:          id,
+						CallbackURI: ts.URL,
+					})
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						State: mesos.TaskState_TASK_FAILED.Enum(),
+					})
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						State: mesos.TaskState_TASK_RUNNING.Enum(),
+					})
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						State: mesos.TaskState_TASK_FINISHED.Enum(),
+					})
+
+					select {
+					case c := <-cb:
+						So(c.TaskID, ShouldEqual, id)
+						So(c.Status, ShouldEqual, "TASK_FINISHED")
 					}
 				})
 			})

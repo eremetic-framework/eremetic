@@ -17,7 +17,7 @@ var (
 		Subsystem: "scheduler",
 		Name:      "tasks_terminated",
 		Help:      "Number of terminated tasks by terminal status",
-	}, []string{"status"})
+	}, []string{"status", "sequence"})
 	TasksDelayed = prometheus.NewCounter(prometheus.CounterOpts{
 		Subsystem: "scheduler",
 		Name:      "tasks_delayed",

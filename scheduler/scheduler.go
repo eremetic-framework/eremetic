@@ -154,12 +154,33 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		}
 	}
 
-	if !task.IsRunning() && *status.State == mesos.TaskState_TASK_RUNNING {
+	if *status.State == mesos.TaskState_TASK_RUNNING && !task.IsRunning() {
 		TasksRunning.Inc()
 	}
 
+	var shouldRetry bool
+	if *status.State == mesos.TaskState_TASK_FAILED && !task.WasRunning() {
+		if task.Retry >= maxRetries {
+			logrus.WithFields(logrus.Fields{
+				"task_id": id,
+				"retries": task.Retry,
+			}).Warn("Giving up on launching task")
+		} else {
+			shouldRetry = true
+		}
+	}
+
 	if types.IsTerminal(status.State) {
-		TasksTerminated.With(prometheus.Labels{"status": status.State.String()}).Inc()
+		var seq string
+		if shouldRetry {
+			seq = "retry"
+		} else {
+			seq = "final"
+		}
+		TasksTerminated.With(prometheus.Labels{
+			"status":   status.State.String(),
+			"sequence": seq,
+		}).Inc()
 		if task.WasRunning() {
 			TasksRunning.Dec()
 		}
@@ -170,27 +191,18 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		Time:   time.Now().Unix(),
 	})
 
-	if *status.State == mesos.TaskState_TASK_FAILED && !task.WasRunning() {
-		if task.Retry >= maxRetries {
-			logrus.WithFields(logrus.Fields{
-				"task_id": id,
-				"retries": task.Retry,
-			}).Warn("Giving up on launching task")
-		} else {
-			logrus.WithField("task_id", id).Info("Re-scheduling task that never ran.")
-			task.UpdateStatus(types.Status{
-				Status: mesos.TaskState_TASK_STAGING.String(),
-				Time:   time.Now().Unix(),
-			})
-			task.Retry++
-			go func() {
-				QueueSize.Inc()
-				s.tasks <- id
-			}()
-		}
-	}
-
-	if types.IsTerminal(status.State) {
+	if shouldRetry {
+		logrus.WithField("task_id", id).Info("Re-scheduling task that never ran.")
+		task.UpdateStatus(types.Status{
+			Status: mesos.TaskState_TASK_STAGING.String(),
+			Time:   time.Now().Unix(),
+		})
+		task.Retry++
+		go func() {
+			QueueSize.Inc()
+			s.tasks <- id
+		}()
+	} else if types.IsTerminal(status.State) {
 		NotifyCallback(&task)
 	}
 
