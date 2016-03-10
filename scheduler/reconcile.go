@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
