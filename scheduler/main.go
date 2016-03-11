@@ -18,8 +18,10 @@ func Run(s *eremeticScheduler) {
 		return
 	}
 
-	defer close(s.shutdown)
-	defer driver.Stop(false)
+	go func() {
+		<-s.shutdown
+		driver.Stop(false)
+	}()
 
 	if status, err := driver.Run(); err != nil {
 		logrus.WithError(err).WithField("status", status.String()).Error("Framework stopped")
