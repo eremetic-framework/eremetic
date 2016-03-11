@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/braintree/manners"
 	"github.com/kardianos/osext"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/routes"
@@ -63,6 +63,12 @@ func main() {
 
 	bind := fmt.Sprintf("%s:%d", viper.GetString("address"), viper.GetInt("port"))
 
+	sched := scheduler.Create()
+	go func() {
+		scheduler.Run(sched)
+		manners.Close()
+	}()
+
 	// Catch interrupt
 	go func() {
 		c := make(chan os.Signal, 1)
@@ -73,17 +79,17 @@ func main() {
 		}
 
 		logrus.Info("Eremetic is shutting down")
-		os.Exit(0)
+		sched.Stop()
 	}()
 
-	sched := scheduler.Create()
 	router := routes.Create(sched)
 	logrus.WithFields(logrus.Fields{
 		"address": viper.GetString("address"),
 		"port":    viper.GetInt("port"),
 	}).Infof("listening to %s", bind)
-	go scheduler.Run(sched)
-	err := http.ListenAndServe(bind, router)
+	err := manners.ListenAndServe(bind, router)
+	database.Close()
+
 	if err != nil {
 		logrus.WithError(err).Fatal("Unrecoverable error")
 	}

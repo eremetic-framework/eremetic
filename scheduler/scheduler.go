@@ -33,9 +33,6 @@ type eremeticScheduler struct {
 	// This channel is closed when the program receives an interrupt,
 	// signalling that the program should shut down.
 	shutdown chan struct{}
-	// This channel is closed after shutdown is closed, and only when all
-	// outstanding tasks have been cleaned up
-	done chan struct{}
 
 	// Handle for current reconciliation job
 	reconcile *Reconcile
@@ -251,7 +248,6 @@ func (s *eremeticScheduler) Error(_ sched.SchedulerDriver, err string) {
 func createEremeticScheduler() *eremeticScheduler {
 	s := &eremeticScheduler{
 		shutdown: make(chan struct{}),
-		done:     make(chan struct{}),
 		tasks:    make(chan string, 100),
 	}
 	return s
@@ -285,4 +281,8 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 	case <-time.After(time.Duration(1) * time.Second):
 		return "", ErrQueueFull
 	}
+}
+
+func (s *eremeticScheduler) Stop() {
+	close(s.shutdown)
 }
