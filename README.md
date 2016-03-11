@@ -12,7 +12,9 @@ curl -H "Content-Type: application/json" \
      http://eremetic_server:8080/task
 ```
 
-These basic fields are required but you can also specify volumes, environment variables and URIs for the mesos fetcher to download.
+These basic fields are required but you can also specify volumes, environment
+variables, and URIs for the mesos fetcher to download. See
+[examples.md](examples.md) for more examples on how to use eremetic.
 
 JSON format:
 
