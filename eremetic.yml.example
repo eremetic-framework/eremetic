@@ -6,3 +6,4 @@ messenger_port: <port for mesos to communicate on>
 loglevel: info
 logformat: json
 database: db/eremetic.db
+credential_file: /tmp/secret_file
