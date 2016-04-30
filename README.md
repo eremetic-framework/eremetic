@@ -76,6 +76,14 @@ create /etc/eremetic/eremetic.yml with:
     loglevel: DEBUG
     logformat: json
 
+### Authentication
+To enable mesos framework authentication add the location of credential file to your configuration:
+
+    credential_file: /var/mesos_secret
+
+The file should contain the Principal to authenticate and the secret separated by white space like so:
+
+    principal    secret_key
 
 ## Building
 
@@ -112,6 +120,7 @@ The tests rely on [GoConvey](http://goconvey.co/), and can be run either by runn
 ## Contributors
 - Rickard Dybeck
 - David Keijser
+- Aidan McGinley
 
 ## Acknowledgements
 Thanks to Sebastian Norde for the awesome logo!
