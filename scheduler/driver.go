@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"errors"
 	"io/ioutil"
 	"net"
 	"strings"
