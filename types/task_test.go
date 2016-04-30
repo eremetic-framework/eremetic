@@ -108,6 +108,12 @@ func TestTask(t *testing.T) {
 
 			So(task.IsRunning(), ShouldBeTrue)
 		})
+
+		Convey("A empty task", func() {
+			task := EremeticTask{}
+
+			So(task.IsRunning(), ShouldBeFalse)
+		})
 	})
 
 	Convey("LastUpdated", t, func() {
@@ -130,6 +136,19 @@ func TestTask(t *testing.T) {
 			s := task.LastUpdated()
 
 			So(s.Unix(), ShouldEqual, 0)
+		})
+	})
+
+	Convey("NewEremeticTask", t, func() {
+		Convey("New task from empty request", func() {
+			req := Request{}
+			task, err := NewEremeticTask(req)
+
+			So(err, ShouldBeNil)
+			So(task, ShouldNotBeNil)
+			So(task.WasRunning(), ShouldBeFalse)
+			So(task.IsRunning(), ShouldBeFalse)
+			So(task.IsTerminated(), ShouldBeFalse)
 		})
 	})
 }
