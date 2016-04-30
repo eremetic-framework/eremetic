@@ -7,11 +7,11 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
+	"github.com/mesos/mesos-go/auth"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
-	"github.com/mesos/mesos-go/auth"
 )
 
 func getFrameworkID() *mesos.FrameworkID {
