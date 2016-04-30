@@ -41,13 +41,22 @@ func getCredential() (*mesos.Credential, error) {
 			return nil, err
 		}
 		fields := strings.Fields(string(content))
+
+		if len(fields) != 2 {
+			err := errors.New("Unable to parse credentials")
+			logrus.WithError(err).WithFields(logrus.Fields{
+				"credential_file": viper.GetString("credential_file"),
+			}).Error("Should only contain a key and a secret separated by whitespace")
+			return nil, err
+		}
+
 		logrus.WithField("principal", fields[0]).Info("Successfully loaded principal")
 		return &mesos.Credential{
 			Principal: proto.String(fields[0]),
 			Secret:    proto.String(fields[1]),
 		}, nil
 	}
-	logrus.Info("No credentials specified in configuration")
+	logrus.Debug("No credentials specified in configuration")
 	return nil, nil
 }
 
