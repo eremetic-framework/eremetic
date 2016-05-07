@@ -10,6 +10,19 @@ produces:
   - application/json
 paths:
   /task:
+    get:
+      summary: List running tasks
+      description: |
+        List all running tasks, masking values in MaskedEnvironment.
+      responses:
+        200:
+          description: Task details
+          schema:
+            $ref: '#/definitions/Task'
+        404:
+          description: No tasks found
+        default:
+          description: Unexpected error
     post:
       summary: Launch a task
       consumes:
@@ -60,6 +73,10 @@ definitions:
       host_path:
         type: string
         description: Path on host to mount
+  Tasks:
+    type: array
+    items:
+      $ref: '#/definitions/Task'
   Task:
     type: object
     required:

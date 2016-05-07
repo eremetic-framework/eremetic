@@ -86,6 +86,7 @@ func ListNonTerminalTasks() ([]*types.EremeticTask, error) {
 			var task types.EremeticTask
 			json.Unmarshal(v, &task)
 			if !task.IsTerminated() {
+				applyMask(&task)
 				tasks = append(tasks, &task)
 			}
 			return nil
@@ -94,4 +95,10 @@ func ListNonTerminalTasks() ([]*types.EremeticTask, error) {
 	})
 
 	return tasks, err
+}
+
+func applyMask(task *types.EremeticTask) {
+	for k := range task.MaskedEnvironment {
+		task.MaskedEnvironment[k] = "*******"
+	}
 }
