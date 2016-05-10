@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,10 +30,22 @@ func (m mockError) Error() string {
 }
 
 type mockScheduler struct {
+	nextError *error
 }
 
 func (s *mockScheduler) ScheduleTask(request types.Request) (string, error) {
+	if err := s.nextError; err != nil {
+		s.nextError = nil
+		return "", *err
+	}
 	return "eremetic-task.mock", nil
+}
+
+type errorReader struct {
+}
+
+func (r *errorReader) Read(p []byte) (int, error) {
+	return 0, errors.New("oh no")
 }
 
 func TestHandling(t *testing.T) {
@@ -156,6 +169,40 @@ func TestHandling(t *testing.T) {
 			location := wr.HeaderMap["Location"][0]
 			So(location, ShouldStartWith, "http://localhost/task/eremetic-task.")
 			So(wr.Code, ShouldEqual, http.StatusAccepted)
+		})
+
+		Convey("Failed to schedule", func() {
+			data := []byte(`{"task_mem":22.0, "docker_image": "busybox", "command": "echo hello", "task_cpus":0.5, "tasks_to_launch": 1}`)
+			r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
+			r.Host = "localhost"
+			err := errors.New("A random error")
+			scheduler.nextError = &err
+
+			handler := AddTask(scheduler)
+			handler(wr, r)
+
+			So(wr.Code, ShouldEqual, 500)
+		})
+
+		Convey("Error on bad input stream", func() {
+			r, _ := http.NewRequest("POST", "/task", &errorReader{})
+			r.Host = "localhost"
+
+			handler := AddTask(scheduler)
+			handler(wr, r)
+
+			So(wr.Code, ShouldEqual, 422)
+		})
+
+		Convey("Error on malformed json", func() {
+			data := []byte(`{"key:123}`)
+			r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
+			r.Host = "localhost"
+
+			handler := AddTask(scheduler)
+			handler(wr, r)
+
+			So(wr.Code, ShouldEqual, 422)
 		})
 	})
 }
