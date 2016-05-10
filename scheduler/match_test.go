@@ -3,8 +3,8 @@ package scheduler
 import (
 	"testing"
 
-	"github.com/klarna/eremetic/types"
 	"github.com/golang/protobuf/proto"
+	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
@@ -15,6 +15,13 @@ func offer(id string, cpu float64, mem float64) *mesos.Offer {
 		Id: &mesos.OfferID{
 			Value: proto.String(id),
 		},
+		FrameworkId: &mesos.FrameworkID{
+			Value: proto.String("framework-1234"),
+		},
+		SlaveId: &mesos.SlaveID{
+			Value: proto.String("slave-1234"),
+		},
+		Hostname: proto.String("localhost"),
 		Resources: []*mesos.Resource{
 			mesosutil.NewScalarResource("cpus", cpu),
 			mesosutil.NewScalarResource("mem", mem),

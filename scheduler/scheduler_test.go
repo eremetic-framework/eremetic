@@ -46,7 +46,9 @@ func TestScheduler(t *testing.T) {
 	defer database.Close()
 
 	Convey("eremeticScheduler", t, func() {
-		s := eremeticScheduler{}
+		s := &eremeticScheduler{
+			tasks: make(chan string, 1),
+		}
 		id := "eremetic-task.9999"
 		database.PutTask(&types.EremeticTask{ID: id})
 
@@ -106,18 +108,60 @@ func TestScheduler(t *testing.T) {
 
 			Convey("ResourceOffers", func() {
 				driver := NewMockScheduler()
-				var offers []*mesos.Offer
 
 				Convey("No offers", func() {
+					offers := []*mesos.Offer{}
 					s.ResourceOffers(driver, offers)
 					So(driver.AssertNotCalled(t, "DeclineOffer"), ShouldBeTrue)
 					So(driver.AssertNotCalled(t, "LaunchTasks"), ShouldBeTrue)
 				})
 
 				Convey("No tasks", func() {
-					offers = append(offers, &mesos.Offer{Id: &mesos.OfferID{Value: proto.String("1234")}})
+					offers := []*mesos.Offer{
+						offer("1234", 1.0, 128),
+					}
 					driver.On("DeclineOffer").Return("declined").Once()
 					s.ResourceOffers(driver, offers)
+					So(driver.AssertCalled(t, "DeclineOffer"), ShouldBeTrue)
+					So(driver.AssertNotCalled(t, "LaunchTasks"), ShouldBeTrue)
+				})
+
+				Convey("One task able to launch", func() {
+					offers := []*mesos.Offer{
+						offer("1234", 1.0, 128),
+					}
+					driver.On("LaunchTasks").Return("launched").Once()
+
+					_, err := s.ScheduleTask(types.Request{
+						TaskCPUs:    0.5,
+						TaskMem:     22.0,
+						DockerImage: "busybox",
+						Command:     "echo hello",
+					})
+
+					So(err, ShouldBeNil)
+					s.ResourceOffers(driver, offers)
+
+					So(driver.AssertNotCalled(t, "DeclineOffer"), ShouldBeTrue)
+					So(driver.AssertCalled(t, "LaunchTasks"), ShouldBeTrue)
+				})
+
+				Convey("One task unable to launch", func() {
+					offers := []*mesos.Offer{
+						offer("1234", 1.0, 128),
+					}
+					driver.On("DeclineOffer").Return("declined").Once()
+
+					_, err := s.ScheduleTask(types.Request{
+						TaskCPUs:    1.5,
+						TaskMem:     22.0,
+						DockerImage: "busybox",
+						Command:     "echo hello",
+					})
+
+					So(err, ShouldBeNil)
+					s.ResourceOffers(driver, offers)
+
 					So(driver.AssertCalled(t, "DeclineOffer"), ShouldBeTrue)
 					So(driver.AssertNotCalled(t, "LaunchTasks"), ShouldBeTrue)
 				})
