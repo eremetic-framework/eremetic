@@ -11,6 +11,7 @@ import (
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/spf13/viper"
 
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
@@ -19,7 +20,13 @@ import (
 var (
 	defaultFilter = &mesos.Filters{RefuseSeconds: proto.Float64(10)}
 	maxRetries    = 5
-	ErrQueueFull  = errors.New("task queue is full")
+
+	// ErrQueueFull is returned in the event of a full queue. This allows the caller
+	// to handle this as he sees fit.
+	ErrQueueFull = errors.New("task queue is full")
+
+	// MaxQueueSize holds the number of allocated spaces in the channel.
+	MaxQueueSize = viper.GetInt("queue_size")
 )
 
 // eremeticScheduler holds the structure of the Eremetic Scheduler
@@ -36,6 +43,13 @@ type eremeticScheduler struct {
 
 	// Handle for current reconciliation job
 	reconcile *Reconcile
+}
+
+func createEremeticScheduler() *eremeticScheduler {
+	return &eremeticScheduler{
+		shutdown: make(chan struct{}),
+		tasks:    make(chan string, MaxQueueSize),
+	}
 }
 
 func (s *eremeticScheduler) Reconcile(driver sched.SchedulerDriver) {
@@ -243,14 +257,6 @@ func (s *eremeticScheduler) ExecutorLost(_ sched.SchedulerDriver, executorID *me
 
 func (s *eremeticScheduler) Error(_ sched.SchedulerDriver, err string) {
 	logrus.WithError(errors.New(err)).Debug("Received an error")
-}
-
-func createEremeticScheduler() *eremeticScheduler {
-	s := &eremeticScheduler{
-		shutdown: make(chan struct{}),
-		tasks:    make(chan string, 100),
-	}
-	return s
 }
 
 func nextID(s *eremeticScheduler) int {

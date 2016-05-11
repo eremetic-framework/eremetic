@@ -10,8 +10,18 @@ import (
 
 func TestMain(t *testing.T) {
 	Convey("readConfig", t, func() {
-		readConfig()
-		So(viper.AllKeys(), ShouldContain, "loglevel")
+		Convey("Defaults", func() {
+			readConfig()
+			keys := viper.AllKeys()
+			So(keys, ShouldContain, "name")
+			So(keys, ShouldContain, "user")
+			So(keys, ShouldContain, "loglevel")
+			So(keys, ShouldContain, "logformat")
+			So(keys, ShouldContain, "database")
+			So(keys, ShouldContain, "checkpoint")
+			So(keys, ShouldContain, "failover_timeout")
+			So(keys, ShouldContain, "queue_size")
+		})
 	})
 
 	Convey("setupLogging", t, func() {
