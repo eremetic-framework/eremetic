@@ -43,10 +43,19 @@ type eremeticScheduler struct {
 
 // Settings holds configuration values for the scheduler
 type Settings struct {
-	MaxQueueSize int
+	MaxQueueSize     int
+	Master           string
+	FrameworkID      string
+	CredentialFile   string
+	Name             string
+	User             string
+	MessengerAddress string
+	MessengerPort    uint16
+	Checkpoint       bool
+	FailoverTimeout  float64
 }
 
-func createEremeticScheduler(settings *Settings) *eremeticScheduler {
+func Create(settings *Settings) *eremeticScheduler {
 	return &eremeticScheduler{
 		shutdown: make(chan struct{}),
 		tasks:    make(chan string, settings.MaxQueueSize),

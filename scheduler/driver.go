@@ -11,15 +11,13 @@ import (
 	"github.com/mesos/mesos-go/auth"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 )
 
-func getFrameworkID() *mesos.FrameworkID {
-	id := viper.GetString("framework_id")
-	if id != "" {
+func getFrameworkID(settings *Settings) *mesos.FrameworkID {
+	if settings.FrameworkID != "" {
 		return &mesos.FrameworkID{
-			Value: proto.String(id),
+			Value: proto.String(settings.FrameworkID),
 		}
 	}
 	return nil
@@ -32,12 +30,12 @@ func getPrincipalID(credential *mesos.Credential) *string {
 	return nil
 }
 
-func getCredential() (*mesos.Credential, error) {
-	if viper.IsSet("credential_file") {
-		content, err := ioutil.ReadFile(viper.GetString("credential_file"))
+func getCredential(settings *Settings) (*mesos.Credential, error) {
+	if settings.CredentialFile != "" {
+		content, err := ioutil.ReadFile(settings.CredentialFile)
 		if err != nil {
 			logrus.WithError(err).WithFields(logrus.Fields{
-				"credential_file": viper.GetString("credential_file"),
+				"credential_file": settings.CredentialFile,
 			}).Error("Unable to read credential_file")
 			return nil, err
 		}
@@ -46,7 +44,7 @@ func getCredential() (*mesos.Credential, error) {
 		if len(fields) != 2 {
 			err := errors.New("Unable to parse credentials")
 			logrus.WithError(err).WithFields(logrus.Fields{
-				"credential_file": viper.GetString("credential_file"),
+				"credential_file": settings.CredentialFile,
 			}).Error("Should only contain a key and a secret separated by whitespace")
 			return nil, err
 		}
@@ -65,23 +63,23 @@ func getAuthContext(ctx context.Context) context.Context {
 	return auth.WithLoginProvider(ctx, "SASL")
 }
 
-func createDriver(scheduler *eremeticScheduler) (*sched.MesosSchedulerDriver, error) {
-	publishedAddr := net.ParseIP(viper.GetString("messenger_address"))
-	bindingPort := uint16(viper.GetInt("messenger_port"))
-	credential, err := getCredential()
+func createDriver(scheduler *eremeticScheduler, settings *Settings) (*sched.MesosSchedulerDriver, error) {
+	publishedAddr := net.ParseIP(settings.MessengerAddress)
+	bindingPort := settings.MessengerPort
+	credential, err := getCredential(settings)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return sched.NewMesosSchedulerDriver(sched.DriverConfig{
-		Master: viper.GetString("master"),
+		Master: settings.Master,
 		Framework: &mesos.FrameworkInfo{
-			Id:              getFrameworkID(),
-			Name:            proto.String(viper.GetString("name")),
-			User:            proto.String(viper.GetString("user")),
-			Checkpoint:      proto.Bool(viper.GetBool("checkpoint")),
-			FailoverTimeout: proto.Float64(viper.GetFloat64("failover_timeout")),
+			Id:              getFrameworkID(settings),
+			Name:            proto.String(settings.Name),
+			User:            proto.String(settings.User),
+			Checkpoint:      proto.Bool(settings.Checkpoint),
+			FailoverTimeout: proto.Float64(settings.FailoverTimeout),
 			Principal:       getPrincipalID(credential),
 		},
 		Scheduler:        scheduler,
