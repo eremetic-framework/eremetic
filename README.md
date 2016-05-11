@@ -1,6 +1,10 @@
 # <img src="static/images/eremiteLOGO_02.png" width="400px" alt="Eremetic">[![Build Status][travis-image]](https://travis-ci.org/klarna/eremetic)
 
-Eremetic is a Mesos Framework to run one-shot tasks.
+## Purpose
+Eremetic is a Mesos Framework to run one-shot tasks. The vision is to provide a
+bridge between Applications that need to run tasks and Mesos. That way a developer
+creating an application that needs to schedule tasks (such as cron) wouldn't need
+to connect to Mesos directly.
 
 ## Usage
 Send a cURL to the eremetic framework with how much cpu and memory you need, what docker image to run and which command to run with that image.
