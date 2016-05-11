@@ -22,7 +22,7 @@ var (
 	maxRetries    = 5
 
 	// ErrQueueFull is returned in the event of a full queue. This allows the caller
-	// to handle this as he sees fit.
+	// to handle this as they see fit.
 	ErrQueueFull = errors.New("task queue is full")
 
 	// MaxQueueSize holds the number of allocated spaces in the channel.
