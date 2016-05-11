@@ -11,7 +11,6 @@ import (
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spf13/viper"
 
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
@@ -24,9 +23,6 @@ var (
 	// ErrQueueFull is returned in the event of a full queue. This allows the caller
 	// to handle this as they see fit.
 	ErrQueueFull = errors.New("task queue is full")
-
-	// MaxQueueSize holds the number of allocated spaces in the channel.
-	MaxQueueSize = viper.GetInt("queue_size")
 )
 
 // eremeticScheduler holds the structure of the Eremetic Scheduler
@@ -45,10 +41,15 @@ type eremeticScheduler struct {
 	reconcile *Reconcile
 }
 
-func createEremeticScheduler() *eremeticScheduler {
+// Settings holds configuration values for the scheduler
+type Settings struct {
+	MaxQueueSize int
+}
+
+func createEremeticScheduler(settings *Settings) *eremeticScheduler {
 	return &eremeticScheduler{
 		shutdown: make(chan struct{}),
-		tasks:    make(chan string, MaxQueueSize),
+		tasks:    make(chan string, settings.MaxQueueSize),
 	}
 }
 
