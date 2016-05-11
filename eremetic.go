@@ -28,6 +28,7 @@ func readConfig() {
 	viper.SetDefault("database", "db/eremetic.db")
 	viper.SetDefault("checkpoint", "true")
 	viper.SetDefault("failover_timeout", 2592000.0)
+	viper.SetDefault("queue_size", 100)
 	viper.ReadInConfig()
 }
 

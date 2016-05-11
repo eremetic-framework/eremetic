@@ -19,7 +19,10 @@ import (
 var (
 	defaultFilter = &mesos.Filters{RefuseSeconds: proto.Float64(10)}
 	maxRetries    = 5
-	ErrQueueFull  = errors.New("task queue is full")
+
+	// ErrQueueFull is returned in the event of a full queue. This allows the caller
+	// to handle this as they see fit.
+	ErrQueueFull = errors.New("task queue is full")
 )
 
 // eremeticScheduler holds the structure of the Eremetic Scheduler
@@ -36,6 +39,18 @@ type eremeticScheduler struct {
 
 	// Handle for current reconciliation job
 	reconcile *Reconcile
+}
+
+// Settings holds configuration values for the scheduler
+type Settings struct {
+	MaxQueueSize int
+}
+
+func createEremeticScheduler(settings *Settings) *eremeticScheduler {
+	return &eremeticScheduler{
+		shutdown: make(chan struct{}),
+		tasks:    make(chan string, settings.MaxQueueSize),
+	}
 }
 
 func (s *eremeticScheduler) Reconcile(driver sched.SchedulerDriver) {
@@ -243,14 +258,6 @@ func (s *eremeticScheduler) ExecutorLost(_ sched.SchedulerDriver, executorID *me
 
 func (s *eremeticScheduler) Error(_ sched.SchedulerDriver, err string) {
 	logrus.WithError(errors.New(err)).Debug("Received an error")
-}
-
-func createEremeticScheduler() *eremeticScheduler {
-	s := &eremeticScheduler{
-		shutdown: make(chan struct{}),
-		tasks:    make(chan string, 100),
-	}
-	return s
 }
 
 func nextID(s *eremeticScheduler) int {

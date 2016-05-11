@@ -2,11 +2,14 @@ package scheduler
 
 import (
 	"github.com/Sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
-// Create is used to build a new scheduler
+// Create is used to build a new scheduler with default settings
 func Create() *eremeticScheduler {
-	return createEremeticScheduler()
+	return createEremeticScheduler(&Settings{
+		MaxQueueSize: viper.GetInt("queue_size"),
+	})
 }
 
 // Run the eremetic scheduler

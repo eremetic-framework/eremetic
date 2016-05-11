@@ -15,6 +15,7 @@ import (
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -68,9 +69,17 @@ func TestScheduler(t *testing.T) {
 			So(taskData.SlaveId, ShouldEqual, "slave-id")
 		})
 
-		Convey("createEremeticScheduler", func() {
-			s := createEremeticScheduler()
+		Convey("Create", func() {
+			viper.Set("queue_size", 100)
+			s := Create()
 			So(s.tasksCreated, ShouldEqual, 0)
+			So(cap(s.tasks), ShouldEqual, 100)
+		})
+
+		Convey("createEremeticScheduler", func() {
+			s := createEremeticScheduler(&Settings{MaxQueueSize: 200})
+			So(s.tasksCreated, ShouldEqual, 0)
+			So(cap(s.tasks), ShouldEqual, 200)
 		})
 
 		Convey("API", func() {
