@@ -96,6 +96,18 @@ func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
 	}
 }
 
+// ListRunningTasks returns information about running tasks in the database.
+func ListRunningTasks(scheduler types.Scheduler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logrus.Debug("Fetching all tasks")
+		tasks, err := database.ListNonTerminalTasks()
+		if err != nil {
+			handleError(err, w, "Unable to fetch running tasks from the database")
+		}
+		writeJSON(200, tasks, w)
+	}
+}
+
 func handleError(err error, w http.ResponseWriter, message string) {
 	if err == nil {
 		return

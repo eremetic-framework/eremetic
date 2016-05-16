@@ -30,6 +30,12 @@ func Create(scheduler types.Scheduler) *mux.Router {
 			Pattern: "/task/{taskId}",
 			Handler: handler.GetTaskInfo(scheduler),
 		},
+		types.Route{
+			Name:    "ListRunningTasks",
+			Method:  "GET",
+			Pattern: "/task",
+			Handler: handler.ListRunningTasks(scheduler),
+		},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
