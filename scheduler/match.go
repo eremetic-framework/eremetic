@@ -3,6 +3,7 @@ package scheduler
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	ogle "github.com/jacobsa/oglematchers"
@@ -13,6 +14,10 @@ import (
 type resourceMatcher struct {
 	name  string
 	value float64
+}
+
+type attributeMatcher struct {
+	SlaveConstraints []types.SlaveConstraint
 }
 
 func (m *resourceMatcher) Matches(o interface{}) error {
@@ -47,10 +52,54 @@ func MemoryAvailable(v float64) ogle.Matcher {
 	return &resourceMatcher{"mem", v}
 }
 
+func (m *attributeMatcher) Matches(o interface{}) (err error) {
+	offer := o.(*mesos.Offer)
+	matched := int(0)
+
+	for _, constraint := range m.SlaveConstraints {
+		for _, attr := range offer.Attributes {
+			if attr.GetName() == constraint.AttributeName {
+				if attr.GetType() != mesos.Value_TEXT ||
+					attr.Text.GetValue() != constraint.AttributeValue {
+					err = errors.New("")
+
+					// Match all constraints, not just one.
+					return
+				}
+				matched += 1
+			}
+		}
+	}
+
+	if matched != len(m.SlaveConstraints) {
+		err = errors.New("")
+	}
+	return
+}
+
+func (m *attributeMatcher) Description() string {
+	descriptions := []string{}
+	for _, constraint := range m.SlaveConstraints {
+		descriptions = append(descriptions,
+			fmt.Sprintf("slave attribute constraint %s=%s",
+				constraint.AttributeName,
+				constraint.AttributeValue,
+			),
+		)
+	}
+	return strings.Join(descriptions, ", ")
+}
+
+func AttributeMatch(slaveConstraints []types.SlaveConstraint) ogle.Matcher {
+	return &attributeMatcher{slaveConstraints}
+}
+
 func createMatcher(task types.EremeticTask) ogle.Matcher {
 	return ogle.AllOf(
 		CPUAvailable(task.TaskCPUs),
-		MemoryAvailable(task.TaskMem))
+		MemoryAvailable(task.TaskMem),
+		AttributeMatch(task.SlaveConstraints),
+	)
 }
 
 func matches(matcher ogle.Matcher, o interface{}) bool {
