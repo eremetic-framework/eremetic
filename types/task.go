@@ -13,6 +13,18 @@ type Status struct {
 	Status string `json:"status"`
 }
 
+// Volume is a mapping between ContainerPath and HostPath, to allow Docker
+// to mount volumes.
+type Volume struct {
+	ContainerPath string `json:"container_path"`
+	HostPath      string `json:"host_path"`
+}
+
+type SlaveConstraint struct {
+	AttributeName  string `json:"attribute_name"`
+	AttributeValue string `json:"attribute_value"`
+}
+
 type EremeticTask struct {
 	TaskCPUs          float64           `json:"task_cpus"`
 	TaskMem           float64           `json:"task_mem"`
@@ -27,6 +39,7 @@ type EremeticTask struct {
 	Name              string            `json:"name"`
 	FrameworkId       string            `json:"framework_id"`
 	SlaveId           string            `json:"slave_id"`
+	SlaveConstraints  []SlaveConstraint `json:"slave_constraint"`
 	Hostname          string            `json:"hostname"`
 	Retry             int               `json:"retry"`
 	CallbackURI       string            `json:"callback_uri"`
@@ -58,6 +71,7 @@ func NewEremeticTask(request Request) (EremeticTask, error) {
 		User:              "root",
 		Environment:       request.Environment,
 		MaskedEnvironment: request.MaskedEnvironment,
+		SlaveConstraints:  request.SlaveConstraints,
 		Image:             request.DockerImage,
 		Volumes:           request.Volumes,
 		CallbackURI:       request.CallbackURI,
