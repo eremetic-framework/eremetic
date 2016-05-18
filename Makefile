@@ -6,7 +6,8 @@ DOCKERNAME?=alde/eremetic
 DOCKERTAG?=${DOCKERNAME}:${VERSION}
 LDFLAGS=-X main.Version '${VERSION}' -X main.BuildDate '${DATE}'
 TOOLS=${GOPATH}/bin/go-bindata \
-      ${GOPATH}/bin/go-bindata-assetfs
+      ${GOPATH}/bin/go-bindata-assetfs \
+      ${GOPATH}/bin/goconvey
 SRC=$(shell find . -name '*.go')
 STATIC=$(shell find static templates)
 
@@ -15,9 +16,13 @@ all: test
 ${TOOLS}:
 	go get github.com/jteeuwen/go-bindata/...
 	go get github.com/elazarl/go-bindata-assetfs/...
+	go get github.com/smartystreets/goconvey
 
 test: eremetic
 	go test -v ./...
+
+test-server: ${TOOLS}
+	${GOPATH}/bin/goconvey
 
 assets/assets.go: generate.go ${STATIC}
 	go generate
