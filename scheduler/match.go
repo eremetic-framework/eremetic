@@ -3,6 +3,7 @@ package scheduler
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	ogle "github.com/jacobsa/oglematchers"
@@ -53,47 +54,43 @@ func MemoryAvailable(v float64) ogle.Matcher {
 
 func (m *attributeMatcher) Matches(o interface{}) (err error) {
 	offer := o.(*mesos.Offer)
+	matched := int(0)
 
 	for _, constraint := range m.SlaveConstraints {
 		for _, attr := range offer.Attributes {
 			if attr.GetName() == constraint.AttributeName {
-
-				logrus.WithFields(logrus.Fields{
-					"attr.GetName()":            attr.GetName(),
-					"attr.Text.GetValue()":      attr.Text.GetValue(),
-					"attr.GetType()":            attr.GetType(),
-					"mesos.Value_TEXT":          mesos.Value_TEXT,
-					"constraint.AttributeName":  constraint.AttributeName,
-					"constraint.AttributeValue": constraint.AttributeValue,
-				}).Info("attributeMatcher found matching constraint")
-
-				if attr.GetType() != mesos.Value_TEXT {
+				if attr.GetType() != mesos.Value_TEXT ||
+					attr.Text.GetValue() != constraint.AttributeValue {
 					err = errors.New("")
+
+					// Match all constraints, not just one.
 					return
 				}
-
-				if attr.Text.GetValue() != constraint.AttributeValue {
-					err = errors.New("")
-					return
-				}
-
-				return
+				matched += 1
 			}
 		}
+	}
+
+	if matched != len(m.SlaveConstraints) {
+		err = errors.New("")
 	}
 	return
 }
 
 func (m *attributeMatcher) Description() string {
-	description := ""
+	descriptions := []string{}
 	for _, constraint := range m.SlaveConstraints {
-		description += fmt.Sprintf("%s of attribute %s, ", constraint.AttributeValue, constraint.AttributeName)
+		descriptions = append(descriptions,
+			fmt.Sprintf("slave attribute constraint %s=%s",
+				constraint.AttributeName,
+				constraint.AttributeValue,
+			),
+		)
 	}
-	return description
+	return strings.Join(descriptions, ", ")
 }
 
 func AttributeMatch(slaveConstraints []types.SlaveConstraint) ogle.Matcher {
-	logrus.Info("AttributeAvailable()")
 	return &attributeMatcher{slaveConstraints}
 }
 
