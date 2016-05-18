@@ -16,7 +16,7 @@ type resourceMatcher struct {
 }
 
 type attributeMatcher struct {
-	SlaveConstraints []*types.SlaveConstraint
+	SlaveConstraints []types.SlaveConstraint
 }
 
 func (m *resourceMatcher) Matches(o interface{}) error {
@@ -51,9 +51,8 @@ func MemoryAvailable(v float64) ogle.Matcher {
 	return &resourceMatcher{"mem", v}
 }
 
-func (m *attributeMatcher) Matches(o interface{}) error {
+func (m *attributeMatcher) Matches(o interface{}) (err error) {
 	offer := o.(*mesos.Offer)
-	err := errors.New("")
 
 	for _, constraint := range m.SlaveConstraints {
 		for _, attr := range offer.Attributes {
@@ -66,15 +65,12 @@ func (m *attributeMatcher) Matches(o interface{}) error {
 					"constraint.AttributeValue": constraint.AttributeValue,
 				}).Info("attributeMatcher found matching constraint")
 
-				if attr.GetType() != mesos.Value_TEXT {
-					return err
+				if attr.GetType() != mesos.Value_TEXT ||
+					attr.Text.GetValue() == constraint.AttributeValue {
+					err = errors.New("")
 				}
 
-				if attr.Text.GetValue() == constraint.AttributeValue {
-					return nil
-				}
-
-				return err
+				return
 			}
 		}
 	}
@@ -89,7 +85,7 @@ func (m *attributeMatcher) Description() string {
 	return description
 }
 
-func AttributeMatch(slaveConstraints []*types.SlaveConstraint) ogle.Matcher {
+func AttributeMatch(slaveConstraints []types.SlaveConstraint) ogle.Matcher {
 	logrus.Info("AttributeAvailable()")
 	return &attributeMatcher{slaveConstraints}
 }
@@ -98,7 +94,7 @@ func createMatcher(task types.EremeticTask) ogle.Matcher {
 	return ogle.AllOf(
 		CPUAvailable(task.TaskCPUs),
 		MemoryAvailable(task.TaskMem),
-		//AttributeMatch(task.SlaveConstraints),
+		AttributeMatch(task.SlaveConstraints),
 	)
 }
 
