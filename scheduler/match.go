@@ -61,20 +61,27 @@ func (m *attributeMatcher) Matches(o interface{}) (err error) {
 				logrus.WithFields(logrus.Fields{
 					"attr.GetName()":            attr.GetName(),
 					"attr.Text.GetValue()":      attr.Text.GetValue(),
+					"attr.GetType()":            attr.GetType(),
+					"mesos.Value_TEXT":          mesos.Value_TEXT,
 					"constraint.AttributeName":  constraint.AttributeName,
 					"constraint.AttributeValue": constraint.AttributeValue,
 				}).Info("attributeMatcher found matching constraint")
 
-				if attr.GetType() != mesos.Value_TEXT ||
-					attr.Text.GetValue() == constraint.AttributeValue {
+				if attr.GetType() != mesos.Value_TEXT {
 					err = errors.New("")
+					return
+				}
+
+				if attr.Text.GetValue() != constraint.AttributeValue {
+					err = errors.New("")
+					return
 				}
 
 				return
 			}
 		}
 	}
-	return err
+	return
 }
 
 func (m *attributeMatcher) Description() string {

@@ -50,6 +50,7 @@ func TestMatch(t *testing.T) {
 	)
 	offerB := offer("offer-b", 1.8, 512.0, &mesos.Attribute{
 		Name: proto.String("node_name"),
+		Type: mesos.Value_TEXT.Enum(),
 		Text: &mesos.Value_Text{
 			Value: proto.String("node2"),
 		},
@@ -83,28 +84,28 @@ func TestMatch(t *testing.T) {
 		})
 	})
 
-	//Convey("AttributeMatch", t, func() {
-	//Convey("Does match", func() {
-	//m := AttributeMatch([]*types.SlaveConstraint{
-	//types.SlaveConstraint{
-	//AttributeName:  "node_name",
-	//AttributeValue: "node1",
-	//},
-	//})
-	//err := m.Matches(offerA)
-	//So(err, ShouldBeNil)
-	//})
-	//Convey("Does not match", func() {
-	//m := AttributeMatch([]*types.SlaveConstraint{
-	//types.SlaveConstraint{
-	//AttributeName:  "node_name",
-	//AttributeValue: "node2",
-	//},
-	//})
-	//err := m.Matches(offerA)
-	//So(err, ShouldNotBeNil)
-	//})
-	//})
+	Convey("AttributeMatch", t, func() {
+		Convey("Does match", func() {
+			m := AttributeMatch([]types.SlaveConstraint{
+				types.SlaveConstraint{
+					AttributeName:  "node_name",
+					AttributeValue: "node1",
+				},
+			})
+			err := m.Matches(offerA)
+			So(err, ShouldBeNil)
+		})
+		Convey("Does not match", func() {
+			m := AttributeMatch([]types.SlaveConstraint{
+				types.SlaveConstraint{
+					AttributeName:  "node_name",
+					AttributeValue: "node2",
+				},
+			})
+			err := m.Matches(offerA)
+			So(err, ShouldNotBeNil)
+		})
+	})
 
 	Convey("matchOffer", t, func() {
 		Convey("Tasks without SlaveConstraints", func() {
