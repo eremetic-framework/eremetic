@@ -16,7 +16,7 @@ type resourceMatcher struct {
 }
 
 type attributeMatcher struct {
-	SlaveConstraints []types.SlaveConstraint
+	SlaveConstraints []*types.SlaveConstraint
 }
 
 func (m *resourceMatcher) Matches(o interface{}) error {
@@ -89,7 +89,7 @@ func (m *attributeMatcher) Description() string {
 	return description
 }
 
-func AttributeMatch(slaveConstraints []types.SlaveConstraint) ogle.Matcher {
+func AttributeMatch(slaveConstraints []*types.SlaveConstraint) ogle.Matcher {
 	logrus.Info("AttributeAvailable()")
 	return &attributeMatcher{slaveConstraints}
 }
@@ -98,7 +98,7 @@ func createMatcher(task types.EremeticTask) ogle.Matcher {
 	return ogle.AllOf(
 		CPUAvailable(task.TaskCPUs),
 		MemoryAvailable(task.TaskMem),
-		AttributeMatch(task.SlaveConstraints),
+		//AttributeMatch(task.SlaveConstraints),
 	)
 }
 
