@@ -51,6 +51,14 @@ JSON format:
   "uris": [
     "http://server.local/resource"
   ],
+  // Constraints for which slave the task can run on (beyond cpu/memory). Currently supported: attributes
+  // If multiple constraints exist, they are evaluated using AND (ie: all or none).
+  "slave_constraints": [       
+      {
+          "attribute_name": "aws-region",
+          "attribute_value": "us-west-2"
+      }
+  ],
   // String, URL to post a callback to. Callback message has format:
   // {"time":1451398320,"status":"TASK_FAILED","task_id":"eremetic-task.79feb50d-3d36-47cf-98ff-a52ef2bc0eb5"}
   "callback_uri": "http://callback.local"
