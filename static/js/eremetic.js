@@ -27,6 +27,13 @@ $(document).ready(function() {
       }, {});
     }
 
+    if (typeof json.slave_constraints !== "undefined") {
+      json.slave_constraints = json.slave_constraints.reduce(function(collector, element) {
+        collector.push({ 'attribute_name': element.attribute_name, 'attribute_value': element.attribute_value });
+        return collector;
+      }, []);
+    }
+
     json.task_cpus = parseFloat(json.task_cpus);
     json.task_mem = parseFloat(json.task_mem);
 
@@ -78,6 +85,17 @@ $(document).ready(function() {
         two: {
           name: 'env['+number+'][value]',
           placeholder: 'value'
+        }
+      }
+    } else if (type === 'slave_constraints') {
+      input = {
+        one: {
+          name: 'slave_constraints['+number+'][attribute_name]',
+          placeholder: 'Attribute Name'
+        },
+        two: {
+          name: 'slave_constraints['+number+'][attribute_value]',
+          placeholder: 'Attribute Value'
         }
       }
     } else if (type === 'volumes') {
@@ -150,7 +168,7 @@ $(document).ready(function() {
         '<div class="field">' +
           '<input name="uri_' + index + '" placeholder="URI"/>' +
         '</div>' +
-        '<button class="ui icon button">' +
+        '&nbsp;<button class="ui icon button">' +
           '<i class="minus red icon"></i>' +
         '</button>' +
       '</div>'
@@ -159,6 +177,18 @@ $(document).ready(function() {
     $cont.append($input);
     $cont.data('count', index);
 
+  }
+
+  function addSlaveConstraints(e) {
+    var   $cont = $('#slave_constraints')
+        , index = $cont.data('count') + 1
+        , $input = createInput('slave_constraints', index)
+        ;
+
+    e.preventDefault();
+
+    $cont.append($input);
+    $cont.data('count', index);
   }
 
   function removeInput(e) {
@@ -172,6 +202,7 @@ $(document).ready(function() {
   $('#new_task #volumes .plus').on('click', addVolumes);
   $('#new_task #env .plus').on('click', addEnvironments);
   $('#new_task #uris .plus').on('click', addURIs);
+  $('#new_task #slave_constraints .plus').on('click', addSlaveConstraints);
   $('#new_task #cancel').on('click', function(e) {
     e.preventDefault();
     window.location = window.location;
