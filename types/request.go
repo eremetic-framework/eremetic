@@ -10,7 +10,7 @@ type Request struct {
 	Volumes           []Volume          `json:"volumes"`
 	Environment       map[string]string `json:"env"`
 	MaskedEnvironment map[string]string `json:"masked_env"`
-	SlaveConstraints  []SlaveConstraint `json:"slave_constraint"`
+	SlaveConstraints  []SlaveConstraint `json:"slave_constraints"`
 	CallbackURI       string            `json:"callback_uri"`
 	URIs              []string          `json:"uris"`
 }
