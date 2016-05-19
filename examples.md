@@ -80,7 +80,7 @@ the time on any Mesos Slave with the attribute "role" set to "build".
 ```json
 {
     "docker_image": "busybox",
-    "command": "for i in $(seq 1 5); do echo \"`date` $i\"; done",
+    "command": "for i in $(seq 1 5); do echo \"`date` $i\"; sleep 5; done",
     "task_cpus": 0.1,
     "task_mem": 100.0,
     "slave_constraints": [
