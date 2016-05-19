@@ -123,8 +123,10 @@
 .ui.button.eremetic_teal {
   background-color: #0199c8;
 }
-.volumes .two.fields .field input,
-.env .two.fields .field input {
+.volumes .field input,
+.env .field input,
+.uri .field input,
+.slave_constraints .field input {
   width: auto !important;
 }
 
