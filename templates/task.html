@@ -12,9 +12,11 @@
     <body>
         <div class="ui fixed inverted menu">
             <div class="ui container">
-                <div class="header item">
-                    <img class="logo eremetic" src="/static/images/eremiteLOGO_02.png">
-                </div>
+                <a href="/">
+                    <div class="header item">
+                        <img class="logo eremetic" src="/static/images/eremiteLOGO_02.png">
+                    </div>
+                </a>
             </div>
         </div>
         <div class="ui main container">
@@ -91,6 +93,17 @@
                                 {{.Memory}}
                             </div>
                         </div>
+                        {{if .SlaveConstraints}}
+                            <div class="item" title="slave constraints">
+                                <i class="lock icon"></i>
+                                <div class="content">
+                                    <strong>Slave constraints:</strong>
+                                    {{range $index, $constraint := .SlaveConstraints}}
+                                        <br/>{{$constraint.AttributeName}}={{$constraint.AttributeValue}}
+                                    {{end}}
+                                </div>
+                            </div>
+                        {{end}}
                     </div>
                 </div>
                 <div class="column">
