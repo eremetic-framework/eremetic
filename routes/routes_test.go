@@ -7,7 +7,7 @@ import (
 )
 
 func TestRoutes(t *testing.T) {
-	routes := []string{"AddTask", "Status"}
+	routes := []string{"AddTask", "Status", "ListRunningTasks"}
 
 	Convey("Create", t, func() {
 		Convey("Should build the expected routes", func() {
