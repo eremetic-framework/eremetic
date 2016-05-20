@@ -23,6 +23,11 @@ func offer(id string, cpu float64, mem float64, attributes ...*mesos.Attribute) 
 			Value: proto.String("slave-1234"),
 		},
 		Hostname: proto.String("localhost"),
+		Url: &mesos.URL{
+			Address: &mesos.Address{
+				Port: proto.Int32(5050),
+			},
+		},
 		Resources: []*mesos.Resource{
 			mesosutil.NewScalarResource("cpus", cpu),
 			mesosutil.NewScalarResource("mem", mem),

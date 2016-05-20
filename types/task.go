@@ -41,6 +41,7 @@ type EremeticTask struct {
 	SlaveId           string            `json:"slave_id"`
 	SlaveConstraints  []SlaveConstraint `json:"slave_constraints"`
 	Hostname          string            `json:"hostname"`
+	Port              int32             `json:"port"`
 	Retry             int               `json:"retry"`
 	CallbackURI       string            `json:"callback_uri"`
 	URIs              []string          `json:"uris"`
