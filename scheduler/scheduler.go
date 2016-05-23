@@ -281,9 +281,7 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 		"command":      request.Command,
 	}).Debug("Adding task to queue")
 
-	request.Name = fmt.Sprintf("Eremetic task %d", nextID(s))
-
-	task, err := createEremeticTask(request)
+	task, err := types.NewEremeticTask(request, fmt.Sprintf("Eremetic task %d", nextID(s)))
 	if err != nil {
 		return "", err
 	}

@@ -22,10 +22,6 @@ func isArchive(url string) bool {
 	return false
 }
 
-func createEremeticTask(request types.Request) (types.EremeticTask, error) {
-	return types.NewEremeticTask(request)
-}
-
 func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
 	task.FrameworkId = *offer.FrameworkId.Value
 	task.SlaveId = *offer.SlaveId.Value

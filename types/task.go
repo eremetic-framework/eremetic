@@ -33,7 +33,7 @@ type EremeticTask struct {
 	URIs              []string          `json:"uris"`
 }
 
-func NewEremeticTask(request Request) (EremeticTask, error) {
+func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 	uuid, err := uuid.V4()
 	if err != nil {
 		return EremeticTask{}, err
@@ -52,7 +52,7 @@ func NewEremeticTask(request Request) (EremeticTask, error) {
 		ID:                taskID,
 		TaskCPUs:          request.TaskCPUs,
 		TaskMem:           request.TaskMem,
-		Name:              request.Name,
+		Name:              name,
 		Status:            status,
 		Command:           request.Command,
 		User:              "root",
