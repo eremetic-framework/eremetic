@@ -6,3 +6,4 @@ docker/templates
 assets/assets.go
 .DS_Store
 ._*
+*\.sw[op]
