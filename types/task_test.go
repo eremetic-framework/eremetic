@@ -140,9 +140,80 @@ func TestTask(t *testing.T) {
 	})
 
 	Convey("NewEremeticTask", t, func() {
+		request := Request{
+			TaskCPUs:    0.5,
+			TaskMem:     22.0,
+			DockerImage: "busybox",
+			Command:     "echo hello",
+		}
+
+		Convey("No volume or environment specified", func() {
+			task, err := NewEremeticTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task, ShouldNotBeNil)
+			So(task.Command, ShouldEqual, "echo hello")
+			So(task.User, ShouldEqual, "root")
+			So(task.Environment, ShouldBeEmpty)
+			So(task.Image, ShouldEqual, "busybox")
+			So(task.Volumes, ShouldBeEmpty)
+			So(task.Status[0].Status, ShouldEqual, "TASK_STAGING")
+		})
+
+		Convey("Given a volume and environment", func() {
+			var volumes []Volume
+			var environment = make(map[string]string)
+			environment["foo"] = "bar"
+			volumes = append(volumes, Volume{
+				ContainerPath: "/var/www",
+				HostPath:      "/var/www",
+			})
+			request.Volumes = volumes
+			request.Environment = environment
+
+			task, err := NewEremeticTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.Environment, ShouldContainKey, "foo")
+			So(task.Environment["foo"], ShouldEqual, "bar")
+			So(task.Volumes[0].ContainerPath, ShouldEqual, volumes[0].ContainerPath)
+			So(task.Volumes[0].HostPath, ShouldEqual, volumes[0].HostPath)
+		})
+
+		Convey("Given a masked environment", func() {
+			var maskedEnv = make(map[string]string)
+			maskedEnv["foo"] = "bar"
+
+			request.MaskedEnvironment = maskedEnv
+			task, err := NewEremeticTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.MaskedEnvironment, ShouldContainKey, "foo")
+			So(task.MaskedEnvironment["foo"], ShouldEqual, "bar")
+		})
+
+		Convey("Given uri to download", func() {
+			request.URIs = []string{"http://foobar.local/kitten.jpg"}
+
+			task, err := NewEremeticTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.URIs, ShouldHaveLength, 1)
+			So(task.URIs, ShouldContain, request.URIs[0])
+		})
+
+		Convey("Given no Command", func() {
+			request.Command = ""
+
+			task, err := NewEremeticTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.Command, ShouldBeEmpty)
+		})
+
 		Convey("New task from empty request", func() {
 			req := Request{}
-			task, err := NewEremeticTask(req)
+			task, err := NewEremeticTask(req, "")
 
 			So(err, ShouldBeNil)
 			So(task, ShouldNotBeNil)
