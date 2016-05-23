@@ -52,6 +52,21 @@ func setupMetrics() {
 	prometheus.MustRegister(scheduler.QueueSize)
 }
 
+func getSchedulerSettings() *scheduler.Settings {
+	return &scheduler.Settings{
+		MaxQueueSize:     viper.GetInt("queue_size"),
+		Master:           viper.GetString("master"),
+		FrameworkID:      viper.GetString("framework_id"),
+		CredentialFile:   viper.GetString("credential_file"),
+		Name:             viper.GetString("name"),
+		User:             viper.GetString("user"),
+		MessengerAddress: viper.GetString("messenger_address"),
+		MessengerPort:    uint16(viper.GetInt("messenger_port")),
+		Checkpoint:       viper.GetBool("checkpoint"),
+		FailoverTimeout:  viper.GetFloat64("failover_timeout"),
+	}
+}
+
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
 		fmt.Println(Version)
@@ -64,9 +79,10 @@ func main() {
 
 	bind := fmt.Sprintf("%s:%d", viper.GetString("address"), viper.GetInt("port"))
 
-	sched := scheduler.Create()
+	schedulerSettings := getSchedulerSettings()
+	sched := scheduler.Create(schedulerSettings)
 	go func() {
-		scheduler.Run(sched)
+		scheduler.Run(sched, schedulerSettings)
 		manners.Close()
 	}()
 
