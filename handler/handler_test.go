@@ -58,9 +58,14 @@ func TestHandling(t *testing.T) {
 	}
 
 	dir, _ := os.Getwd()
-	database.NewDB(fmt.Sprintf("%s/../db/test.db", dir))
-	database.Clean()
-	defer database.Close()
+	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
+	if err != nil {
+		t.Fail()
+	}
+	h := Create(scheduler, db)
+
+	db.Clean()
+	defer db.Close()
 
 	Convey("writeJSON", t, func() {
 		Convey("Should respond with a JSON and the appropriate status code", func() {
@@ -92,7 +97,7 @@ func TestHandling(t *testing.T) {
 		wr := httptest.NewRecorder()
 		r, _ := http.NewRequest("GET", "/task/eremetic-task.1234", nil)
 		m := mux.NewRouter()
-		m.HandleFunc("/task/{taskId}", GetTaskInfo(scheduler))
+		m.HandleFunc("/task/{taskId}", h.GetTaskInfo())
 
 		Convey("Not Found", func() {
 			id := "eremetic-task.5678"
@@ -104,7 +109,7 @@ func TestHandling(t *testing.T) {
 				Status:   status,
 				ID:       id,
 			}
-			database.PutTask(&task)
+			db.PutTask(&task)
 			m.ServeHTTP(wr, r)
 
 			So(wr.Code, ShouldEqual, http.StatusNotFound)
@@ -120,7 +125,7 @@ func TestHandling(t *testing.T) {
 				Status:   status,
 				ID:       id,
 			}
-			database.PutTask(&task)
+			db.PutTask(&task)
 			m.ServeHTTP(wr, r)
 
 			So(wr.Code, ShouldEqual, http.StatusOK)
@@ -141,7 +146,7 @@ func TestHandling(t *testing.T) {
 				MaskedEnvironment: maskedEnv,
 			}
 
-			database.PutTask(&task)
+			db.PutTask(&task)
 			m.ServeHTTP(wr, r)
 
 			var retrievedTask types.EremeticTask
@@ -163,7 +168,7 @@ func TestHandling(t *testing.T) {
 			r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
 			r.Host = "localhost"
 
-			handler := AddTask(scheduler)
+			handler := h.AddTask()
 			handler(wr, r)
 
 			location := wr.HeaderMap["Location"][0]
@@ -178,7 +183,7 @@ func TestHandling(t *testing.T) {
 			err := errors.New("A random error")
 			scheduler.nextError = &err
 
-			handler := AddTask(scheduler)
+			handler := h.AddTask()
 			handler(wr, r)
 
 			So(wr.Code, ShouldEqual, 500)
@@ -188,7 +193,7 @@ func TestHandling(t *testing.T) {
 			r, _ := http.NewRequest("POST", "/task", &errorReader{})
 			r.Host = "localhost"
 
-			handler := AddTask(scheduler)
+			handler := h.AddTask()
 			handler(wr, r)
 
 			So(wr.Code, ShouldEqual, 422)
@@ -199,7 +204,7 @@ func TestHandling(t *testing.T) {
 			r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
 			r.Host = "localhost"
 
-			handler := AddTask(scheduler)
+			handler := h.AddTask()
 			handler(wr, r)
 
 			So(wr.Code, ShouldEqual, 422)

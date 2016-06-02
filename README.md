@@ -79,6 +79,14 @@ create /etc/eremetic/eremetic.yml with:
     loglevel: DEBUG
     logformat: json
 
+## Database Backing
+Eremetic uses a BoltDB based database to store task information. The location of
+it can be set by adding
+
+    database: '/tmp/eremeticdb/eremetic.db'
+
+to the eremetic.yml
+
 ### Authentication
 To enable mesos framework authentication add the location of credential file to your configuration:
 

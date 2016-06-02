@@ -39,6 +39,9 @@ type eremeticScheduler struct {
 
 	// Handle for current reconciliation job
 	reconcile *Reconcile
+
+	// Handler for storing tasks
+	database database.TaskDB
 }
 
 // Settings holds configuration values for the scheduler
@@ -55,10 +58,11 @@ type Settings struct {
 	FailoverTimeout  float64
 }
 
-func Create(settings *Settings) *eremeticScheduler {
+func Create(settings *Settings, db database.TaskDB) *eremeticScheduler {
 	return &eremeticScheduler{
 		shutdown: make(chan struct{}),
 		tasks:    make(chan string, settings.MaxQueueSize),
+		database: db,
 	}
 }
 
@@ -66,7 +70,7 @@ func (s *eremeticScheduler) Reconcile(driver sched.SchedulerDriver) {
 	if s.reconcile != nil {
 		s.reconcile.Cancel()
 	}
-	s.reconcile = ReconcileTasks(driver)
+	s.reconcile = ReconcileTasks(driver, s.database)
 }
 
 func (s *eremeticScheduler) newTask(spec types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
@@ -121,7 +125,7 @@ loop:
 			break loop
 		case tid := <-s.tasks:
 			logrus.WithField("task_id", tid).Debug("Trying to find offer to launch task with")
-			t, _ := database.ReadUnmaskedTask(tid)
+			t, _ := s.database.ReadUnmaskedTask(tid)
 			offer, offers = matchOffer(t, offers)
 
 			if offer == nil {
@@ -137,7 +141,7 @@ loop:
 			}).Debug("Preparing to launch task")
 
 			t, task := s.newTask(t, offer)
-			database.PutTask(&t)
+			s.database.PutTask(&t)
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
 			TasksLaunched.Inc()
 			QueueSize.Dec()
@@ -163,7 +167,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		"status":  status.State.String(),
 	}).Debug("Received task status update")
 
-	task, err := database.ReadUnmaskedTask(id)
+	task, err := s.database.ReadUnmaskedTask(id)
 	if err != nil {
 		logrus.WithError(err).WithField("task_id", id).Debug("Unable to read task from database")
 	}
@@ -227,7 +231,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		NotifyCallback(&task)
 	}
 
-	database.PutTask(&task)
+	s.database.PutTask(&task)
 }
 
 func (s *eremeticScheduler) FrameworkMessage(
@@ -288,7 +292,7 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 
 	select {
 	case s.tasks <- task.ID:
-		database.PutTask(&task)
+		s.database.PutTask(&task)
 		TasksCreated.Inc()
 		QueueSize.Inc()
 		return task.ID, nil

@@ -13,12 +13,23 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var testDB string
+var (
+	testDB string
+	db     boltDriver
+)
 
 func setup() error {
 	dir, _ := ioutil.TempDir("", "eremetic")
 	testDB = fmt.Sprintf("%s/test.db", dir)
-	return NewDB(testDB)
+	adb, err := NewDB("boltdb", testDB)
+
+	if err != nil {
+		return err
+	}
+
+	db = adb.(boltDriver)
+
+	return nil
 }
 
 func teardown() {
@@ -35,53 +46,43 @@ func TestDatabase(t *testing.T) {
 
 	Convey("NewDB", t, func() {
 		Convey("With an absolute path", func() {
-			err := setup()
+			setup()
 			defer teardown()
-			defer Close()
+			defer db.Close()
 
-			So(boltdb.Path(), ShouldNotBeEmpty)
-			So(filepath.IsAbs(boltdb.Path()), ShouldBeTrue)
-			So(err, ShouldBeNil)
-		})
-
-		Convey("With a relative path", func() {
-			NewDB("db/test.db")
-			defer Close()
-
-			dir, _ := os.Getwd()
-			So(filepath.IsAbs(boltdb.Path()), ShouldBeTrue)
-			So(boltdb.Path(), ShouldEqual, fmt.Sprintf("%s/../db/test.db", dir))
+			So(db.database.Path(), ShouldNotBeEmpty)
+			So(filepath.IsAbs(db.database.Path()), ShouldBeTrue)
 		})
 	})
 
 	Convey("Close", t, func() {
 		setup()
 		defer teardown()
-		Close()
+		db.Close()
 
-		So(boltdb.Path(), ShouldBeEmpty)
+		So(db.database.Path(), ShouldBeEmpty)
 	})
 
 	Convey("Clean", t, func() {
 		setup()
 		defer teardown()
-		defer Close()
+		defer db.Close()
 
-		PutTask(&types.EremeticTask{ID: "1234"})
-		task, _ := ReadTask("1234")
+		db.PutTask(&types.EremeticTask{ID: "1234"})
+		task, _ := db.ReadTask("1234")
 		So(task, ShouldNotEqual, types.EremeticTask{})
 		So(task.ID, ShouldNotBeEmpty)
 
-		Clean()
+		db.Clean()
 
-		task, _ = ReadTask("1234")
+		task, _ = db.ReadTask("1234")
 		So(task, ShouldBeZeroValue)
 	})
 
 	Convey("Put and Read Task", t, func() {
 		setup()
 		defer teardown()
-		defer Close()
+		defer db.Close()
 
 		var maskedEnv = make(map[string]string)
 		maskedEnv["foo"] = "bar"
@@ -100,13 +101,13 @@ func TestDatabase(t *testing.T) {
 			MaskedEnvironment: maskedEnv,
 		}
 
-		PutTask(&task1)
-		PutTask(&task2)
+		db.PutTask(&task1)
+		db.PutTask(&task2)
 
-		t1, err := ReadTask(task1.ID)
+		t1, err := db.ReadTask(task1.ID)
 		So(t1, ShouldResemble, task1)
 		So(err, ShouldBeNil)
-		t2, err := ReadTask(task2.ID)
+		t2, err := db.ReadTask(task2.ID)
 		So(err, ShouldBeNil)
 		So(t2.MaskedEnvironment["foo"], ShouldEqual, "*******")
 	})
@@ -114,7 +115,7 @@ func TestDatabase(t *testing.T) {
 	Convey("Read unmasked task", t, func() {
 		setup()
 		defer teardown()
-		defer Close()
+		defer db.Close()
 
 		var maskedEnv = make(map[string]string)
 		maskedEnv["foo"] = "bar"
@@ -131,9 +132,9 @@ func TestDatabase(t *testing.T) {
 			Image:             "busybox",
 			MaskedEnvironment: maskedEnv,
 		}
-		PutTask(&task)
+		db.PutTask(&task)
 
-		t, err := ReadUnmaskedTask(task.ID)
+		t, err := db.ReadUnmaskedTask(task.ID)
 		So(t, ShouldResemble, task)
 		So(err, ShouldBeNil)
 		So(t.MaskedEnvironment, ShouldContainKey, "foo")
@@ -144,12 +145,12 @@ func TestDatabase(t *testing.T) {
 	Convey("List non-terminal tasks", t, func() {
 		setup()
 		defer teardown()
-		defer Close()
+		defer db.Close()
 
-		Clean()
+		db.Clean()
 
 		// A terminated task
-		PutTask(&types.EremeticTask{
+		db.PutTask(&types.EremeticTask{
 			ID: "1234",
 			Status: []types.Status{
 				types.Status{
@@ -168,7 +169,7 @@ func TestDatabase(t *testing.T) {
 		})
 
 		// A running task
-		PutTask(&types.EremeticTask{
+		db.PutTask(&types.EremeticTask{
 			ID: "2345",
 			Status: []types.Status{
 				types.Status{
@@ -182,7 +183,7 @@ func TestDatabase(t *testing.T) {
 			},
 		})
 
-		tasks, err := ListNonTerminalTasks()
+		tasks, err := db.ListNonTerminalTasks()
 		So(err, ShouldBeNil)
 		So(tasks, ShouldHaveLength, 1)
 		task := tasks[0]

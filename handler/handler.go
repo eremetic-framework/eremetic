@@ -25,6 +25,18 @@ type ErrorDocument struct {
 	Message string `json:"message"`
 }
 
+type Handler struct {
+	scheduler types.Scheduler
+	database  database.TaskDB
+}
+
+func Create(scheduler types.Scheduler, database database.TaskDB) Handler {
+	return Handler{
+		scheduler: scheduler,
+		database:  database,
+	}
+}
+
 func absURL(r *http.Request, path string) string {
 	scheme := r.Header.Get("X-Forwarded-Proto")
 	if scheme == "" {
@@ -40,7 +52,7 @@ func absURL(r *http.Request, path string) string {
 }
 
 // AddTask handles adding a task to the queue
-func AddTask(sched types.Scheduler) http.HandlerFunc {
+func (h Handler) AddTask() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request types.Request
 
@@ -56,7 +68,7 @@ func AddTask(sched types.Scheduler) http.HandlerFunc {
 			return
 		}
 
-		taskID, err := sched.ScheduleTask(request)
+		taskID, err := h.scheduler.ScheduleTask(request)
 		if err != nil {
 			logrus.WithError(err).Error("Unable to create task.")
 			httpStatus := 500
@@ -77,12 +89,12 @@ func AddTask(sched types.Scheduler) http.HandlerFunc {
 }
 
 // GetTaskInfo returns information about the given task.
-func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
+func (h Handler) GetTaskInfo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["taskId"]
 		logrus.WithField("task_id", id).Debug("Fetching task")
-		task, _ := database.ReadTask(id)
+		task, _ := h.database.ReadTask(id)
 
 		if strings.Contains(r.Header.Get("Accept"), "text/html") {
 			renderHTML(w, r, task, id)
@@ -97,10 +109,10 @@ func GetTaskInfo(scheduler types.Scheduler) http.HandlerFunc {
 }
 
 // ListRunningTasks returns information about running tasks in the database.
-func ListRunningTasks(scheduler types.Scheduler) http.HandlerFunc {
+func (h Handler) ListRunningTasks() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logrus.Debug("Fetching all tasks")
-		tasks, err := database.ListNonTerminalTasks()
+		tasks, err := h.database.ListNonTerminalTasks()
 		if err != nil {
 			handleError(err, w, "Unable to fetch running tasks from the database")
 		}

@@ -2,19 +2,66 @@ package database
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/boltdb/bolt"
 	"github.com/klarna/eremetic/types"
 )
 
-// PutTask stores a requested task in the database
-func PutTask(task *types.EremeticTask) error {
-	err := ensureDB()
-	if err != nil {
-		return err
+type boltDriver struct {
+	database *bolt.DB
+}
+
+func boltDB(file string) (TaskDB, error) {
+	if file == "" {
+		return nil, errors.New("Missing BoltDB database loctation.")
 	}
 
-	return boltdb.Update(func(tx *bolt.Tx) error {
+	if !filepath.IsAbs(file) {
+		dir, _ := os.Getwd()
+		file = fmt.Sprintf("%s/../%s", dir, file)
+	}
+	os.MkdirAll(filepath.Dir(file), 0755)
+
+	db, err := bolt.Open(file, 0600, nil)
+
+	wrapped := wrap(db)
+
+	return wrapped, err
+}
+
+func wrap(db *bolt.DB) TaskDB {
+	return boltDriver{
+		database: db,
+	}
+}
+
+// Close is used to Close the database
+func (db boltDriver) Close() {
+	if db.database != nil {
+		db.database.Close()
+	}
+}
+
+// Clean is used to delete the tasks bucket
+func (db boltDriver) Clean() error {
+	return db.database.Update(func(tx *bolt.Tx) error {
+		if err := tx.DeleteBucket([]byte("tasks")); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists([]byte("tasks")); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// PutTask stores a requested task in the database
+func (db boltDriver) PutTask(task *types.EremeticTask) error {
+	return db.database.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("tasks"))
 		if err != nil {
 			return err
@@ -31,8 +78,8 @@ func PutTask(task *types.EremeticTask) error {
 
 // ReadTask fetches a task from the database and applies a mask to the
 // MaskedEnvironment field
-func ReadTask(id string) (types.EremeticTask, error) {
-	task, err := ReadUnmaskedTask(id)
+func (db boltDriver) ReadTask(id string) (types.EremeticTask, error) {
+	task, err := db.ReadUnmaskedTask(id)
 
 	for k := range task.MaskedEnvironment {
 		task.MaskedEnvironment[k] = "*******"
@@ -46,15 +93,10 @@ func ReadTask(id string) (types.EremeticTask, error) {
 // This function should be considered internal to Eremetic, and is used where
 // we need to fetch a task and then re-save it to the database. It should not
 // be returned to the API.
-func ReadUnmaskedTask(id string) (types.EremeticTask, error) {
+func (db boltDriver) ReadUnmaskedTask(id string) (types.EremeticTask, error) {
 	var task types.EremeticTask
 
-	err := ensureDB()
-	if err != nil {
-		return task, err
-	}
-
-	err = boltdb.View(func(tx *bolt.Tx) error {
+	err := db.database.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("tasks"))
 		if b == nil {
 			return bolt.ErrBucketNotFound
@@ -69,15 +111,10 @@ func ReadUnmaskedTask(id string) (types.EremeticTask, error) {
 
 // ListNonTerminalTasks returns a list of tasks that are not yet finished in one
 // way or another.
-func ListNonTerminalTasks() ([]*types.EremeticTask, error) {
+func (db boltDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
 	var tasks []*types.EremeticTask
 
-	err := ensureDB()
-	if err != nil {
-		return tasks, err
-	}
-
-	err = boltdb.View(func(tx *bolt.Tx) error {
+	err := db.database.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("tasks"))
 		if b == nil {
 			return bolt.ErrBucketNotFound
@@ -95,10 +132,4 @@ func ListNonTerminalTasks() ([]*types.EremeticTask, error) {
 	})
 
 	return tasks, err
-}
-
-func applyMask(task *types.EremeticTask) {
-	for k := range task.MaskedEnvironment {
-		task.MaskedEnvironment[k] = "*******"
-	}
 }
