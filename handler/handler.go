@@ -88,6 +88,57 @@ func (h Handler) AddTask() http.HandlerFunc {
 	}
 }
 
+// GetSTDOUT fetches the stdout logs from the agent that ran the task
+func (h Handler) GetSTDOUT() http.HandlerFunc {
+	return h.getFile("stdout")
+}
+
+// GetSTDERR fetches the stderr logs from the agent that ran the task
+func (h Handler) GetSTDERR() http.HandlerFunc {
+	return h.getFile("stderr")
+}
+
+// getFile handles the actual fetching of file from the agent.
+func (h Handler) getFile(file string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		taskID := vars["taskId"]
+		task, _ := h.database.ReadTask(taskID)
+
+		if task.SandboxPath == "" {
+			writeJSON(http.StatusNoContent, nil, w)
+			return
+		}
+
+		url := fmt.Sprintf(
+			"http://%s:%d/files/download?path=%s/%s",
+			task.AgentIP,
+			task.AgentPort,
+			task.SandboxPath,
+			file,
+		)
+
+		logrus.WithField("url", url).Debug("Fetching file from sandbox")
+
+		response, err := http.Get(url)
+		if err != nil {
+			logrus.WithError(err).Errorf("Unable to fetch %s from agent %s.", file, task.SlaveId)
+			writeJSON(http.StatusInternalServerError, "Unable to fetch upstream file.", w)
+			return
+		}
+		defer response.Body.Close()
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			logrus.WithError(err).Error("Unable to deserialize file.")
+			writeJSON(http.StatusInternalServerError, "Unable to deserialize file.", w)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write(body)
+	}
+}
+
 // GetTaskInfo returns information about the given task.
 func (h Handler) GetTaskInfo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

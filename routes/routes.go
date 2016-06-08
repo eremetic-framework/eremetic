@@ -33,6 +33,18 @@ func Create(scheduler types.Scheduler, database database.TaskDB) *mux.Router {
 			Handler: h.GetTaskInfo(),
 		},
 		types.Route{
+			Name:    "STDOUT",
+			Method:  "GET",
+			Pattern: "/task/{taskId}/stdout",
+			Handler: h.GetSTDOUT(),
+		},
+		types.Route{
+			Name:    "STDERR",
+			Method:  "GET",
+			Pattern: "/task/{taskId}/stderr",
+			Handler: h.GetSTDERR(),
+		},
+		types.Route{
 			Name:    "ListRunningTasks",
 			Method:  "GET",
 			Pattern: "/task",
