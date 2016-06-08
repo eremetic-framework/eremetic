@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -209,5 +210,121 @@ func TestHandling(t *testing.T) {
 
 			So(wr.Code, ShouldEqual, 422)
 		})
+	})
+
+	Convey("Get Files from sandbox", t, func() {
+		s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			fmt.Fprintf(w, "mocked")
+		}))
+		defer s.Close()
+
+		addr := strings.Split(s.Listener.Addr().String(), ":")
+		ip := addr[0]
+		port, _ := strconv.ParseInt(addr[1], 10, 32)
+		id := "eremetic-task.1234"
+
+		task := types.EremeticTask{
+			TaskCPUs:    0.2,
+			TaskMem:     0.5,
+			Command:     "test",
+			Image:       "test",
+			Status:      status,
+			ID:          id,
+			SandboxPath: "/tmp",
+			AgentIP:     ip,
+			AgentPort:   int32(port),
+		}
+		db.PutTask(&task)
+		wr := httptest.NewRecorder()
+		m := mux.NewRouter()
+
+		Convey("stdout", func() {
+			r, _ := http.NewRequest("GET", "/task/eremetic-task.1234/stdout", nil)
+			m.HandleFunc("/task/{taskId}/stdout", h.GetSTDOUT())
+			m.ServeHTTP(wr, r)
+
+			So(wr.Code, ShouldEqual, http.StatusOK)
+			So(wr.Header().Get("Content-Type"), ShouldEqual, "text/plain; charset=UTF-8")
+
+			body, _ := ioutil.ReadAll(wr.Body)
+			So(string(body), ShouldEqual, "mocked")
+		})
+
+		Convey("stderr", func() {
+			r, _ := http.NewRequest("GET", "/task/eremetic-task.1234/stderr", nil)
+			m.HandleFunc("/task/{taskId}/stderr", h.GetSTDERR())
+
+			m.ServeHTTP(wr, r)
+
+			So(wr.Code, ShouldEqual, http.StatusOK)
+			So(wr.Header().Get("Content-Type"), ShouldEqual, "text/plain; charset=UTF-8")
+
+			body, _ := ioutil.ReadAll(wr.Body)
+			So(string(body), ShouldEqual, "mocked")
+		})
+
+		Convey("No Sandbox path", func() {
+			r, _ := http.NewRequest("GET", "/task/eremetic-task.1234/stdout", nil)
+			m.HandleFunc("/task/{taskId}/stdout", h.GetSTDOUT())
+
+			task := types.EremeticTask{
+				TaskCPUs:    0.2,
+				TaskMem:     0.5,
+				Command:     "test",
+				Image:       "test",
+				Status:      status,
+				ID:          id,
+				SandboxPath: "",
+				AgentIP:     ip,
+				AgentPort:   int32(port),
+			}
+			db.PutTask(&task)
+
+			m.ServeHTTP(wr, r)
+
+			So(wr.Code, ShouldEqual, http.StatusNoContent)
+		})
+
+	})
+
+	Convey("renderHTML", t, func() {
+		id := "eremetic-task.1234"
+
+		task := types.EremeticTask{
+			TaskCPUs: 0.2,
+			TaskMem:  0.5,
+			Command:  "test",
+			Image:    "test",
+			Status:   status,
+			ID:       id,
+		}
+
+		wr := httptest.NewRecorder()
+		r, _ := http.NewRequest("GET", "/task/eremetic-task.1234", nil)
+
+		renderHTML(wr, r, task, id)
+
+		body, _ := ioutil.ReadAll(wr.Body)
+		So(body, ShouldNotBeEmpty)
+		So(string(body), ShouldContainSubstring, "html")
+	})
+
+	Convey("makeMap", t, func() {
+		task := types.EremeticTask{
+			TaskCPUs: 0.2,
+			TaskMem:  0.5,
+			Command:  "test",
+			Image:    "test",
+			Status:   status,
+			ID:       "eremetic-task.1234",
+		}
+
+		data := makeMap(task)
+		So(data, ShouldContainKey, "CPU")
+		So(data, ShouldContainKey, "Memory")
+		So(data, ShouldContainKey, "Status")
+		So(data, ShouldContainKey, "ContainerImage")
+		So(data, ShouldContainKey, "Command")
+		So(data, ShouldContainKey, "TaskID")
 	})
 }

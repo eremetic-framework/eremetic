@@ -135,3 +135,22 @@
 .optional {
   font-style: italic;
 }
+
+p.gray {
+  color: #cccccc;
+}
+
+#show_stdout {
+  color: #777777;
+  border: 1px solid #bbb;
+  background-color: #dddddd;
+  text-align: center;
+  border-radius: 4px;
+  margin-bottom: 1em;
+  cursor: pointer;
+}
+
+#show_stdout:hover {
+  background-color: #eeeeee;
+  color: #999999;
+}
