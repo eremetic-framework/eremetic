@@ -40,16 +40,21 @@ func callbackReceiver() (chan callbackData, *httptest.Server) {
 
 func TestScheduler(t *testing.T) {
 	dir, _ := os.Getwd()
-	database.NewDB(fmt.Sprintf("%s/../db/test.db", dir))
-	database.Clean()
-	defer database.Close()
+	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
+	if err != nil || db == nil {
+		t.Error("Foo")
+		t.Fail()
+	}
+	db.Clean()
+	defer db.Close()
 
 	Convey("eremeticScheduler", t, func() {
 		s := &eremeticScheduler{
-			tasks: make(chan string, 1),
+			tasks:    make(chan string, 1),
+			database: db,
 		}
 		id := "eremetic-task.9999"
-		database.PutTask(&types.EremeticTask{ID: id})
+		db.PutTask(&types.EremeticTask{ID: id})
 
 		Convey("newTask", func() {
 			task := types.EremeticTask{
@@ -73,7 +78,7 @@ func TestScheduler(t *testing.T) {
 		Convey("Create", func() {
 			s := Create(&Settings{
 				MaxQueueSize: 200,
-			})
+			}, db)
 			So(s.tasksCreated, ShouldEqual, 0)
 			So(cap(s.tasks), ShouldEqual, 200)
 		})
@@ -91,7 +96,7 @@ func TestScheduler(t *testing.T) {
 			Convey("Reregistered", func() {
 				driver := NewMockScheduler()
 				driver.On("ReconcileTasks").Return("ok").Once()
-				database.Clean()
+				db.Clean()
 				s.Reregistered(driver, &mesos.MasterInfo{})
 				So(driver.AssertCalled(t, "ReconcileTasks"), ShouldBeTrue)
 			})
@@ -169,7 +174,7 @@ func TestScheduler(t *testing.T) {
 						},
 						State: mesos.TaskState_TASK_RUNNING.Enum(),
 					})
-					task, _ := database.ReadTask(id)
+					task, _ := db.ReadTask(id)
 					So(len(task.Status), ShouldEqual, 1)
 					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
 
@@ -179,7 +184,7 @@ func TestScheduler(t *testing.T) {
 						},
 						State: mesos.TaskState_TASK_FAILED.Enum(),
 					})
-					task, _ = database.ReadTask(id)
+					task, _ = db.ReadTask(id)
 
 					So(len(task.Status), ShouldEqual, 2)
 					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
@@ -194,7 +199,7 @@ func TestScheduler(t *testing.T) {
 						},
 						State: mesos.TaskState_TASK_FAILED.Enum(),
 					})
-					task, _ := database.ReadTask(id)
+					task, _ := db.ReadTask(id)
 					So(len(task.Status), ShouldEqual, 2)
 					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
 					So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_STAGING.String())
@@ -210,7 +215,7 @@ func TestScheduler(t *testing.T) {
 					defer ts.Close()
 
 					id := "eremetic-task.1000"
-					database.PutTask(&types.EremeticTask{
+					db.PutTask(&types.EremeticTask{
 						ID:          id,
 						CallbackURI: ts.URL,
 					})
@@ -233,7 +238,7 @@ func TestScheduler(t *testing.T) {
 					defer ts.Close()
 
 					id := "eremetic-task.1001"
-					database.PutTask(&types.EremeticTask{
+					db.PutTask(&types.EremeticTask{
 						ID:          id,
 						CallbackURI: ts.URL,
 					})
@@ -262,7 +267,7 @@ func TestScheduler(t *testing.T) {
 					defer ts.Close()
 
 					id := "eremetic-task.1002"
-					database.PutTask(&types.EremeticTask{
+					db.PutTask(&types.EremeticTask{
 						ID:          id,
 						CallbackURI: ts.URL,
 					})
@@ -342,7 +347,8 @@ func TestScheduler(t *testing.T) {
 	Convey("ScheduleTask", t, func() {
 		Convey("Given a valid Request", func() {
 			scheduler := &eremeticScheduler{
-				tasks: make(chan string, 100),
+				tasks:    make(chan string, 100),
+				database: db,
 			}
 
 			request := types.Request{
@@ -360,7 +366,7 @@ func TestScheduler(t *testing.T) {
 				select {
 				case c := <-scheduler.tasks:
 					So(c, ShouldEqual, taskID)
-					task, _ := database.ReadTask(taskID)
+					task, _ := db.ReadTask(taskID)
 					So(task.TaskCPUs, ShouldEqual, request.TaskCPUs)
 					So(task.TaskMem, ShouldEqual, request.TaskMem)
 					So(task.Command, ShouldEqual, request.Command)
@@ -374,7 +380,8 @@ func TestScheduler(t *testing.T) {
 
 		Convey("When the queue channel is full", func() {
 			scheduler := &eremeticScheduler{
-				tasks: make(chan string, 1),
+				tasks:    make(chan string, 1),
+				database: db,
 			}
 			scheduler.tasks <- "dummy"
 

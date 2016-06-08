@@ -15,16 +15,20 @@ import (
 
 func TestReconcile(t *testing.T) {
 	dir, _ := os.Getwd()
-	database.NewDB(fmt.Sprintf("%s/../db/test.db", dir))
-	database.Clean()
-	defer database.Close()
+	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
+	if err != nil {
+		t.Fail()
+	}
+
+	db.Clean()
+	defer db.Close()
 
 	maxReconciliationDelay = 1
 
 	Convey("ReconcileTasks", t, func() {
 		Convey("Finishes when there are no tasks", func() {
 			driver := NewMockScheduler()
-			r := ReconcileTasks(driver)
+			r := ReconcileTasks(driver, db)
 
 			select {
 			case <-r.done:
@@ -36,7 +40,7 @@ func TestReconcile(t *testing.T) {
 		Convey("Sends reconcile request", func() {
 			driver := NewMockScheduler()
 			driver.On("ReconcileTasks").Run(func(mock.Arguments) {
-				t, err := database.ReadTask("1234")
+				t, err := db.ReadTask("1234")
 				if err != nil {
 					panic("mock error")
 				}
@@ -44,10 +48,10 @@ func TestReconcile(t *testing.T) {
 					Status: mesos.TaskState_TASK_RUNNING.String(),
 					Time:   time.Now().Unix() + 1,
 				})
-				database.PutTask(&t)
+				db.PutTask(&t)
 			}).Once()
 
-			database.PutTask(&types.EremeticTask{
+			db.PutTask(&types.EremeticTask{
 				ID: "1234",
 				Status: []types.Status{
 					types.Status{
@@ -57,7 +61,7 @@ func TestReconcile(t *testing.T) {
 				},
 			})
 
-			r := ReconcileTasks(driver)
+			r := ReconcileTasks(driver, db)
 
 			select {
 			case <-r.done:
@@ -69,7 +73,7 @@ func TestReconcile(t *testing.T) {
 		Convey("Cancel reconciliation", func() {
 			driver := NewMockScheduler()
 
-			database.PutTask(&types.EremeticTask{
+			db.PutTask(&types.EremeticTask{
 				ID: "1234",
 				Status: []types.Status{
 					types.Status{
@@ -79,7 +83,7 @@ func TestReconcile(t *testing.T) {
 				},
 			})
 
-			r := ReconcileTasks(driver)
+			r := ReconcileTasks(driver, db)
 			r.Cancel()
 
 			select {

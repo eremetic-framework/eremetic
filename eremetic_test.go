@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os/user"
 	"testing"
 
@@ -46,5 +48,29 @@ func TestMain(t *testing.T) {
 	Convey("setupLogging", t, func() {
 		setupLogging()
 		So(logrus.GetLevel(), ShouldEqual, logrus.DebugLevel)
+	})
+
+	Convey("setupDB", t, func() {
+		Convey("BoltDB", func() {
+			dir, _ := ioutil.TempDir("", "eremetic")
+			testDB := fmt.Sprintf("%s/test.db", dir)
+			viper.Set("database_driver", "boltdb")
+			viper.Set("database", testDB)
+
+			db, err := setupDB()
+
+			So(db, ShouldNotBeNil)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Invalid configuration", func() {
+			viper.Set("database_driver", nil)
+			viper.Set("database", nil)
+
+			db, err := setupDB()
+
+			So(db, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+		})
 	})
 }

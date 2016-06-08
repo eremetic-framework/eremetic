@@ -10,31 +10,33 @@ import (
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/assets"
+	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/handler"
 	"github.com/klarna/eremetic/types"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Create is used to create a new router
-func Create(scheduler types.Scheduler) *mux.Router {
+func Create(scheduler types.Scheduler, database database.TaskDB) *mux.Router {
+	h := handler.Create(scheduler, database)
 	routes := types.Routes{
 		types.Route{
 			Name:    "AddTask",
 			Method:  "POST",
 			Pattern: "/task",
-			Handler: handler.AddTask(scheduler),
+			Handler: h.AddTask(),
 		},
 		types.Route{
 			Name:    "Status",
 			Method:  "GET",
 			Pattern: "/task/{taskId}",
-			Handler: handler.GetTaskInfo(scheduler),
+			Handler: h.GetTaskInfo(),
 		},
 		types.Route{
 			Name:    "ListRunningTasks",
 			Method:  "GET",
 			Pattern: "/task",
-			Handler: handler.ListRunningTasks(scheduler),
+			Handler: h.ListRunningTasks(),
 		},
 	}
 

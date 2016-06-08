@@ -24,7 +24,7 @@ func (r *Reconcile) Cancel() {
 	close(r.cancel)
 }
 
-func ReconcileTasks(driver sched.SchedulerDriver) *Reconcile {
+func ReconcileTasks(driver sched.SchedulerDriver, database database.TaskDB) *Reconcile {
 	cancel := make(chan struct{})
 	done := make(chan struct{})
 

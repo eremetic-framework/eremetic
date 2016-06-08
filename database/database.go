@@ -1,54 +1,22 @@
 package database
 
-import (
-	"fmt"
-	"os"
-	"path/filepath"
+import "github.com/klarna/eremetic/types"
 
-	"github.com/boltdb/bolt"
-	"github.com/spf13/viper"
-)
-
-var boltdb *bolt.DB
-
-// NewDB is used to load the database handler into memory.
-// It will create a new database file if it doesn't already exist.
-func NewDB(file string) error {
-	if !filepath.IsAbs(file) {
-		dir, _ := os.Getwd()
-		file = fmt.Sprintf("%s/../%s", dir, file)
-	}
-	os.MkdirAll(filepath.Dir(file), 0755)
-
-	db, err := bolt.Open(file, 0600, nil)
-	boltdb = db
-	return err
+type TaskDB interface {
+	Clean() error
+	Close()
+	PutTask(task *types.EremeticTask) error
+	ReadTask(id string) (types.EremeticTask, error)
+	ReadUnmaskedTask(id string) (types.EremeticTask, error)
+	ListNonTerminalTasks() ([]*types.EremeticTask, error)
 }
 
-// Clean is used to delete the tasks bucket
-func Clean() error {
-	return boltdb.Update(func(tx *bolt.Tx) error {
-		if err := tx.DeleteBucket([]byte("tasks")); err != nil {
-			return err
-		}
-		if _, err := tx.CreateBucketIfNotExists([]byte("tasks")); err != nil {
-			return err
-		}
-		return nil
-	})
+func NewDB(driver string, location string) (TaskDB, error) {
+	return boltDB(location)
 }
 
-// Close is used to Close the database
-func Close() {
-	if boltdb != nil {
-		boltdb.Close()
+func applyMask(task *types.EremeticTask) {
+	for k := range task.MaskedEnvironment {
+		task.MaskedEnvironment[k] = "*******"
 	}
-}
-
-func ensureDB() error {
-	if boltdb == nil {
-		err := NewDB(viper.GetString("database"))
-		return err
-	}
-	return nil
 }
