@@ -8,35 +8,36 @@ import (
 	"testing"
 	"time"
 
+	"github.com/klarna/eremetic/mocks"
 	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var (
-	testDB string
-	db     boltDriver
-)
+func TestBoltDatabase(t *testing.T) {
+	var (
+		testDB string
+		db     boltDriver
+	)
 
-func setup() error {
-	dir, _ := ioutil.TempDir("", "eremetic")
-	testDB = fmt.Sprintf("%s/test.db", dir)
-	adb, err := NewDB("boltdb", testDB)
+	setup := func() error {
+		dir, _ := ioutil.TempDir("", "eremetic")
+		testDB = fmt.Sprintf("%s/test.db", dir)
+		adb, err := NewDB("boltdb", testDB)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+
+		db = adb.(boltDriver)
+
+		return nil
 	}
 
-	db = adb.(boltDriver)
+	teardown := func() {
+		os.Remove(testDB)
+	}
 
-	return nil
-}
-
-func teardown() {
-	os.Remove(testDB)
-}
-
-func TestDatabase(t *testing.T) {
 	status := []types.Status{
 		types.Status{
 			Status: mesos.TaskState_TASK_RUNNING.String(),
@@ -52,6 +53,20 @@ func TestDatabase(t *testing.T) {
 
 			So(db.database.Path(), ShouldNotBeEmpty)
 			So(filepath.IsAbs(db.database.Path()), ShouldBeTrue)
+		})
+	})
+
+	Convey("createBoltDriver", t, func() {
+		Convey("Error", func() {
+			setup()
+			defer teardown()
+			defer db.Close()
+
+			connector := new(mocks.BoltConnectorInterface)
+			_, err := createBoltDriver(connector, "")
+
+			So(err, ShouldNotBeNil)
+			So(err.Error(), ShouldEqual, "Missing BoltDB database loctation.")
 		})
 	})
 
@@ -189,4 +204,50 @@ func TestDatabase(t *testing.T) {
 		task := tasks[0]
 		So(task.ID, ShouldEqual, "2345")
 	})
+
+	Convey("Count", t, func() {
+		setup()
+		defer teardown()
+		defer db.Close()
+
+		db.Clean()
+
+		// A terminated task
+		db.PutTask(&types.EremeticTask{
+			ID: "1234",
+			Status: []types.Status{
+				types.Status{
+					Status: mesos.TaskState_TASK_STAGING.String(),
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: mesos.TaskState_TASK_RUNNING.String(),
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: mesos.TaskState_TASK_FINISHED.String(),
+					Time:   time.Now().Unix(),
+				},
+			},
+		})
+
+		// A running task
+		db.PutTask(&types.EremeticTask{
+			ID: "2345",
+			Status: []types.Status{
+				types.Status{
+					Status: mesos.TaskState_TASK_STAGING.String(),
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: mesos.TaskState_TASK_RUNNING.String(),
+					Time:   time.Now().Unix(),
+				},
+			},
+		})
+
+		c := db.Count()
+		So(c, ShouldEqual, 2)
+	})
+
 }

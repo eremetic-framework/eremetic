@@ -26,11 +26,18 @@ func readConfig() {
 	viper.SetDefault("loglevel", "debug")
 	viper.SetDefault("logformat", "text")
 	viper.SetDefault("database_driver", "boltdb")
-	viper.SetDefault("database", "db/eremetic.db")
 	viper.SetDefault("checkpoint", "true")
 	viper.SetDefault("failover_timeout", 2592000.0)
 	viper.SetDefault("queue_size", 100)
 	viper.ReadInConfig()
+
+	driver := viper.GetString("database_driver")
+	location := viper.GetString("database")
+	if driver == "zk" && location == "" {
+		viper.Set("database", "")
+	} else if driver == "boltdb" && location == "" {
+		viper.Set("database", "db/eremetic.db")
+	}
 }
 
 func setupLogging() {
@@ -69,10 +76,9 @@ func getSchedulerSettings() *scheduler.Settings {
 }
 
 func setupDB() (database.TaskDB, error) {
-	return database.NewDB(
-		viper.GetString("database_driver"),
-		viper.GetString("database"),
-	)
+	driver := viper.GetString("database_driver")
+	location := viper.GetString("database")
+	return database.NewDB(driver, location)
 }
 
 func main() {

@@ -283,6 +283,10 @@ func (s *eremeticScheduler) Error(_ sched.SchedulerDriver, err string) {
 }
 
 func nextID(s *eremeticScheduler) int {
+	if s.database.Count() > s.tasksCreated {
+		s.tasksCreated = s.database.Count() + 1
+	}
+
 	id := s.tasksCreated
 	s.tasksCreated++
 	return id
