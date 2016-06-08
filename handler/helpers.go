@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -16,9 +18,8 @@ import (
 )
 
 // getFile handles the actual fetching of file from the agent.
-func getFile(file string, task types.EremeticTask) (int, interface{}) {
+func getFile(file string, task types.EremeticTask) (int, io.ReadCloser) {
 	if task.SandboxPath == "" {
-		// writeJSON(http.StatusNoContent, nil, w)
 		return http.StatusNoContent, nil
 	}
 
@@ -36,10 +37,10 @@ func getFile(file string, task types.EremeticTask) (int, interface{}) {
 
 	if err != nil {
 		logrus.WithError(err).Errorf("Unable to fetch %s from agent %s.", file, task.SlaveId)
-		return http.StatusInternalServerError, "Unable to fetch upstream file."
+		return http.StatusInternalServerError, ioutil.NopCloser(strings.NewReader("Unable to fetch upstream file."))
 	}
 
-	return http.StatusOK, response
+	return http.StatusOK, response.Body
 }
 
 func handleError(err error, w http.ResponseWriter, message string) {

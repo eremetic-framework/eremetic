@@ -84,11 +84,10 @@ func (h Handler) GetFromSandbox(file string) http.HandlerFunc {
 			return
 		}
 
-		response := data.(*http.Response)
-		defer response.Body.Close()
+		defer data.Close()
 		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
-		io.Copy(w, response.Body)
+		io.Copy(w, data)
 	}
 }
 
