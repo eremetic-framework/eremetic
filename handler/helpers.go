@@ -1,68 +1,45 @@
-package Handler
+package handler
 
 import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/assets"
 	"github.com/klarna/eremetic/formatter"
 	"github.com/klarna/eremetic/types"
 )
 
-func fetchFromSandbox(file string) (http.Response, error) {
-  vars := mux.Vars(r)
-  taskID := vars["taskId"]
-  task, _ := h.database.ReadTask(taskID)
-
-  if task.SandboxPath == "" {
-    writeJSON(http.StatusNoContent, nil, w)
-    return
-  }
-
-  url := fmt.Sprintf(
-    "http://%s:%d/files/download?path=%s/%s",
-    task.AgentIP,
-    task.AgentPort,
-    task.SandboxPath,
-    file,
-  )
-
-  logrus.WithField("url", url).Debug("Fetching file from sandbox")
-
-  return http.Get(url)
-}
-
 // getFile handles the actual fetching of file from the agent.
-func getFile(file string) {
-    response, err := fetchFromSandbox(file)
-
-		if err != nil {
-			logrus.WithError(err).Errorf("Unable to fetch %s from agent %s.", file, task.SlaveId)
-			writeJSON(http.StatusInternalServerError, "Unable to fetch upstream file.", w)
-			return
-		}
-
-		defer response.Body.Close()
-
-		body, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			logrus.WithError(err).Error("Unable to deserialize file.")
-			writeJSON(http.StatusInternalServerError, "Unable to deserialize file.", w)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-		w.WriteHeader(http.StatusOK)
-		w.Write(body)
+func getFile(file string, task types.EremeticTask) (int, interface{}) {
+	if task.SandboxPath == "" {
+		// writeJSON(http.StatusNoContent, nil, w)
+		return http.StatusNoContent, nil
 	}
+
+	url := fmt.Sprintf(
+		"http://%s:%d/files/download?path=%s/%s",
+		task.AgentIP,
+		task.AgentPort,
+		task.SandboxPath,
+		file,
+	)
+
+	logrus.WithField("url", url).Debug("Fetching file from sandbox")
+
+	response, err := http.Get(url)
+
+	if err != nil {
+		logrus.WithError(err).Errorf("Unable to fetch %s from agent %s.", file, task.SlaveId)
+		return http.StatusInternalServerError, "Unable to fetch upstream file."
+	}
+
+	return http.StatusOK, response
 }
 
 func handleError(err error, w http.ResponseWriter, message string) {

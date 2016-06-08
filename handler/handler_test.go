@@ -240,7 +240,7 @@ func TestHandling(t *testing.T) {
 
 		Convey("stdout", func() {
 			r, _ := http.NewRequest("GET", "/task/eremetic-task.1234/stdout", nil)
-			m.HandleFunc("/task/{taskId}/stdout", h.GetSTDOUT())
+			m.HandleFunc("/task/{taskId}/stdout", h.GetFromSandbox("stdout"))
 			m.ServeHTTP(wr, r)
 
 			So(wr.Code, ShouldEqual, http.StatusOK)
@@ -252,7 +252,7 @@ func TestHandling(t *testing.T) {
 
 		Convey("stderr", func() {
 			r, _ := http.NewRequest("GET", "/task/eremetic-task.1234/stderr", nil)
-			m.HandleFunc("/task/{taskId}/stderr", h.GetSTDERR())
+			m.HandleFunc("/task/{taskId}/stderr", h.GetFromSandbox("stderr"))
 
 			m.ServeHTTP(wr, r)
 
@@ -265,7 +265,7 @@ func TestHandling(t *testing.T) {
 
 		Convey("No Sandbox path", func() {
 			r, _ := http.NewRequest("GET", "/task/eremetic-task.1234/stdout", nil)
-			m.HandleFunc("/task/{taskId}/stdout", h.GetSTDOUT())
+			m.HandleFunc("/task/{taskId}/stdout", h.GetFromSandbox("stdout"))
 
 			task := types.EremeticTask{
 				TaskCPUs:    0.2,

@@ -70,14 +70,26 @@ func (h Handler) AddTask() http.HandlerFunc {
 	}
 }
 
-// GetSTDOUT fetches the stdout logs from the agent that ran the task
-func (h Handler) GetSTDOUT() http.HandlerFunc {
-	return getFile("stdout")
-}
+// GetFromSandbox fetches a file from the sandbox of the agent that ran the task
+func (h Handler) GetFromSandbox(file string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		taskID := vars["taskId"]
+		task, _ := h.database.ReadTask(taskID)
 
-// GetSTDERR fetches the stderr logs from the agent that ran the task
-func (h Handler) GetSTDERR() http.HandlerFunc {
-	return getFile("stderr")
+		status, data := getFile(file, task)
+
+		if status != http.StatusOK {
+			writeJSON(status, data, w)
+			return
+		}
+
+		response := data.(*http.Response)
+		defer response.Body.Close()
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+		io.Copy(w, response.Body)
+	}
 }
 
 // GetTaskInfo returns information about the given task.
