@@ -26,6 +26,7 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 	task.FrameworkId = *offer.FrameworkId.Value
 	task.SlaveId = *offer.SlaveId.Value
 	task.Hostname = *offer.Hostname
+	task.Port = *offer.Url.Address.Port
 
 	var environment []*mesos.Environment_Variable
 	for k, v := range task.Environment {

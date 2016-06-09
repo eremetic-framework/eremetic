@@ -183,6 +183,7 @@ func makeMap(task types.EremeticTask) map[string]interface{} {
 	data["Hostname"] = task.Hostname
 	data["Name"] = task.Name
 	data["SlaveID"] = task.SlaveId
+	data["SlaveConstraints"] = task.SlaveConstraints
 	data["Status"] = task.Status
 	data["CPU"] = fmt.Sprintf("%.2f", task.TaskCPUs)
 	data["Memory"] = fmt.Sprintf("%.2f", task.TaskMem)

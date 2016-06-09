@@ -68,6 +68,11 @@ func TestScheduler(t *testing.T) {
 					Value: proto.String("slave-id"),
 				},
 				Hostname: proto.String("hostname"),
+				Url: &mesos.URL{
+					Address: &mesos.Address{
+						Port: proto.Int32(5050),
+					},
+				},
 			}
 			taskData, mesosTask := s.newTask(task, &offer)
 

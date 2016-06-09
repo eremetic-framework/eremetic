@@ -10,7 +10,7 @@ import (
 )
 
 func TestRoutes(t *testing.T) {
-	routes := []string{"AddTask", "Status"}
+	routes := []string{"AddTask", "Status", "ListRunningTasks"}
 
 	dir, _ := os.Getwd()
 	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))

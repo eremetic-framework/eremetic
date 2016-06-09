@@ -38,6 +38,11 @@ func TestTask(t *testing.T) {
 				Value: proto.String("slave-id"),
 			},
 			Hostname: proto.String("hostname"),
+			Url: &mesos.URL{
+				Address: &mesos.Address{
+					Port: proto.Int32(5050),
+				},
+			},
 		}
 
 		Convey("No volume or environment specified", func() {
