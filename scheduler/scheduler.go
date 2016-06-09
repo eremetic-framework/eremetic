@@ -290,8 +290,9 @@ func nextID(s *eremeticScheduler) int {
 
 func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) {
 	logrus.WithFields(logrus.Fields{
-		"docker_image": request.DockerImage,
-		"command":      request.Command,
+		"docker_image":      request.DockerImage,
+		"command":           request.Command,
+		"slave_constraints": request.SlaveConstraints,
 	}).Debug("Adding task to queue")
 
 	task, err := types.NewEremeticTask(request, fmt.Sprintf("Eremetic task %d", nextID(s)))

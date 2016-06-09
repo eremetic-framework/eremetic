@@ -71,3 +71,27 @@ arbitrary dockerfiles by url.
     ]
 }
 ```
+
+## Running a task with certain attributes
+
+This configures a task to run the `busybox` image with a basic loop outputting
+the time on any Mesos Slave with the attribute "role" set to "build".
+
+```json
+{
+    "docker_image": "busybox",
+    "command": "for i in $(seq 1 5); do echo \"`date` $i\"; sleep 5; done",
+    "task_cpus": 0.1,
+    "task_mem": 100.0,
+    "slave_constraints": [
+        {
+            "attribute_name": "role",
+            "attribute_value": "build"
+        }
+    ]
+}
+```
+
+Mesos slaves can be configured with arbitrary attributes. See the
+[documentation](https://open.mesosphere.com/reference/mesos-slave/) for more
+information on how to configure attributes.
