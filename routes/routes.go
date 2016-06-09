@@ -33,6 +33,18 @@ func Create(scheduler types.Scheduler, database database.TaskDB) *mux.Router {
 			Handler: h.GetTaskInfo(),
 		},
 		types.Route{
+			Name:    "STDOUT",
+			Method:  "GET",
+			Pattern: "/task/{taskId}/stdout",
+			Handler: h.GetFromSandbox("stdout"),
+		},
+		types.Route{
+			Name:    "STDERR",
+			Method:  "GET",
+			Pattern: "/task/{taskId}/stderr",
+			Handler: h.GetFromSandbox("stderr"),
+		},
+		types.Route{
 			Name:    "ListRunningTasks",
 			Method:  "GET",
 			Pattern: "/task",
@@ -63,9 +75,9 @@ func Create(scheduler types.Scheduler, database database.TaskDB) *mux.Router {
 
 	router.PathPrefix("/static/").
 		Handler(
-		http.StripPrefix(
-			"/static/", http.FileServer(
-				&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, AssetInfo: assets.AssetInfo, Prefix: "static"})))
+			http.StripPrefix(
+				"/static/", http.FileServer(
+					&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, AssetInfo: assets.AssetInfo, Prefix: "static"})))
 
 	router.NotFoundHandler = http.HandlerFunc(notFound)
 

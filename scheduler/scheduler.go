@@ -162,6 +162,11 @@ loop:
 func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
 	id := status.TaskId.GetValue()
 
+	sandboxPath, err := extractSandboxPath(status)
+	if err != nil {
+		logrus.WithError(err).Debug("Unable to extract sandbox path")
+	}
+
 	logrus.WithFields(logrus.Fields{
 		"task_id": id,
 		"status":  status.State.String(),
@@ -170,6 +175,10 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 	task, err := s.database.ReadUnmaskedTask(id)
 	if err != nil {
 		logrus.WithError(err).WithField("task_id", id).Debug("Unable to read task from database")
+	}
+
+	if task.SandboxPath == "" || (task.SandboxPath != sandboxPath && sandboxPath != "") {
+		task.SandboxPath = sandboxPath
 	}
 
 	if task.ID == "" {

@@ -7,9 +7,11 @@
         <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
         <script src="/static/js/jquery-2.1.4.min.js"></script>
         <script src="/static/js/semantic.min.js"></script>
+        <script src="/static/js/task_view.js"></script>
+        <script src="/static/js/ansi_up.js"></script>
         <title>Task {{.Name}} | Eremetic</title>
     </head>
-    <body>
+    <body data-task="{{.TaskID}}">
         <div class="ui fixed inverted menu">
             <div class="ui container">
                 <div class="header item">
@@ -111,6 +113,21 @@
                         {{end}}
                     </div>
                 </div>
+            </div>
+            <div class="ui divider"></div>
+            <div class="ui stackable one column logs">
+              <h2 class="ui">STDOUT</h2>
+              <div id='show_stdout'></div>
+              <div id="stdout">
+                no content
+              </div>
+            </div>
+            <div class="ui divider"></div>
+            <div class="ui stackable one column">
+              <h2 class="ui">STDERR</h2>
+              <div id="stderr">
+                no content
+              </div>
             </div>
         </div>
     </body>

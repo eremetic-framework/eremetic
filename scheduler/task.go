@@ -26,6 +26,8 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 	task.FrameworkId = *offer.FrameworkId.Value
 	task.SlaveId = *offer.SlaveId.Value
 	task.Hostname = *offer.Hostname
+	task.AgentIP = offer.GetUrl().GetAddress().GetIp()
+	task.AgentPort = offer.GetUrl().GetAddress().GetPort()
 
 	var environment []*mesos.Environment_Variable
 	for k, v := range task.Environment {
@@ -96,6 +98,5 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 			mesosutil.NewScalarResource("mem", task.TaskMem),
 		},
 	}
-
 	return task, taskInfo
 }

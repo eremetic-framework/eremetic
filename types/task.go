@@ -31,6 +31,9 @@ type EremeticTask struct {
 	Retry             int               `json:"retry"`
 	CallbackURI       string            `json:"callback_uri"`
 	URIs              []string          `json:"uris"`
+	SandboxPath       string            `json:"sandbox_path"`
+	AgentIP           string            `json:"agent_ip"`
+	AgentPort         int32             `json:"agent_port"`
 }
 
 func NewEremeticTask(request Request, name string) (EremeticTask, error) {
