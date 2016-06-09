@@ -53,7 +53,13 @@ docker-clean: docker/Dockerfile docker/marathon.sh
 	$(DOCKER_GOLANG_RUN_CMD) "make docker/eremetic"
 	docker build -t ${DOCKERTAG} docker
 
-publish-docker: docker
+publish-docker:
+ifeq ($(strip $(shell docker images --format "{{.Repository}}:{{.Tag}}" $(DOCKERTAG))),)
+	$(warning Docker tag does not exist:)
+	$(warning ${DOCKERTAG})
+	$(warning )
+	$(error Cannot publish the docker image. Please run `make docker` or `make docker-clean` first.)
+endif
 	docker push ${DOCKERTAG}
 	git describe HEAD --exact 2>/dev/null && \
 		docker tag ${DOCKERTAG} ${DOCKERNAME}:latest && \
