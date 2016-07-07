@@ -148,9 +148,3 @@ func (z zkDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
 
 	return tasks, nil
 }
-
-func (z zkDriver) Count() int {
-	_, s, _ := z.connection.Children(z.path)
-
-	return int(s.NumChildren)
-}

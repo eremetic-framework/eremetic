@@ -11,7 +11,6 @@ import (
 type TaskDB interface {
 	Clean() error
 	Close()
-	Count() int
 	PutTask(task *types.EremeticTask) error
 	ReadTask(id string) (types.EremeticTask, error)
 	ReadUnmaskedTask(id string) (types.EremeticTask, error)

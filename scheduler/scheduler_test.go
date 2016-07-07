@@ -399,6 +399,19 @@ func TestScheduler(t *testing.T) {
 			})
 		})
 	})
+
+	Convey("nextID", t, func() {
+		scheduler := &eremeticScheduler{
+			tasks:    make(chan string, 100),
+			database: db,
+		}
+
+		Convey("Generates a random string", func() {
+			str := nextID(scheduler)
+
+			So(str, ShouldNotBeEmpty)
+		})
+	})
 }
 
 //------------------ Mock Scheduler ------------------------------------------//

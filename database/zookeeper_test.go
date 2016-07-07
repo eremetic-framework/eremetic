@@ -284,30 +284,6 @@ func TestZKDatabase(t *testing.T) {
 		})
 	})
 
-	Convey("Count", t, func() {
-		Convey("Success", func() {
-			setup()
-			defer teardown()
-
-			object.On("Children", mock.AnythingOfType("string")).Return([]string{"1234"}, &zk.Stat{NumChildren: 1}, nil)
-
-			count := db.Count()
-
-			So(count, ShouldEqual, 1)
-			So(object.AssertCalled(t, "Children", "/testdb"), ShouldBeTrue)
-		})
-
-		Convey("Error", func() {
-			setup()
-			defer teardown()
-
-			object.On("Children", mock.AnythingOfType("string")).Return([]string{"1234"}, &zk.Stat{NumChildren: 0}, errors.New("Unable to Read"))
-
-			count := db.Count()
-			So(count, ShouldEqual, 0)
-		})
-	})
-
 	Convey("parsePath", t, func() {
 		masters := make(map[string]string)
 		masters["master1.local:1111,master2.local:1111,master3.local:1111"] =

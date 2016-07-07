@@ -135,23 +135,3 @@ func (db boltDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
 
 	return tasks, err
 }
-
-func (db boltDriver) Count() int {
-	var tasks []*types.EremeticTask
-
-	db.database.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("tasks"))
-		if b == nil {
-			return bolt.ErrBucketNotFound
-		}
-		b.ForEach(func(_, v []byte) error {
-			var task types.EremeticTask
-			json.Unmarshal(v, &task)
-			tasks = append(tasks, &task)
-			return nil
-		})
-		return nil
-	})
-
-	return len(tasks)
-}
