@@ -92,15 +92,24 @@ create /etc/eremetic/eremetic.yml with:
     loglevel: DEBUG
     logformat: json
 
-## Database Backing
-Eremetic uses a BoltDB based database to store task information. The location of
-it can be set by adding
+## Database
+Eremetic uses a database to store task information. The driver can be configured
+by setting the `database_driver` value.
 
-    database: '/tmp/eremeticdb/eremetic.db'
+Allowed values are: `zk`, `boltdb`
 
-to the eremetic.yml
+The location of the database can be configured by setting the `database` value.
 
-### Authentication
+### BoltDB
+The default database that will be used unless anything is configured.
+
+The default value of the `database` field is `db/eremetic.db`
+
+### ZooKeeper
+If you use `zk` as a database driver, the `database` field must be provided as a
+complete zk-uri (zk://zk1:1234,zk2:1234/my/database).
+
+## Authentication
 To enable mesos framework authentication add the location of credential file to your configuration:
 
     credential_file: /var/mesos_secret
@@ -140,6 +149,13 @@ curl -X POST -H 'Content-Type: application/json' $MARATHON/v2/apps -d@misc/ereme
 
 ## Running tests
 The tests rely on [GoConvey](http://goconvey.co/), and can be run either by running `goconvey` or `go test ./...` from the project root.
+
+## Running with minimesos
+Using [minimesos](https://www.minimesos.org/) is a very simple way to test and play with eremetic.
+
+```bash
+docker run -e MASTER=$MINIMESOS_ZOOKEEPER -e HOST=0.0.0.0 -e DATABASE_DRIVER=zk -e PORT=8000 -p 8000:8000 alde/eremetic:latest
+```
 
 ## Contributors
 - Rickard Dybeck

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -282,10 +283,17 @@ func (s *eremeticScheduler) Error(_ sched.SchedulerDriver, err string) {
 	logrus.WithError(errors.New(err)).Debug("Received an error")
 }
 
-func nextID(s *eremeticScheduler) int {
-	id := s.tasksCreated
+func nextID(s *eremeticScheduler) string {
+	letters := []rune("bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ123456789")
+	rand.Seed(time.Now().UnixNano())
+	b := make([]rune, 8)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+
 	s.tasksCreated++
-	return id
+
+	return string(b)
 }
 
 func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) {
@@ -295,7 +303,7 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 		"slave_constraints": request.SlaveConstraints,
 	}).Debug("Adding task to queue")
 
-	task, err := types.NewEremeticTask(request, fmt.Sprintf("Eremetic task %d", nextID(s)))
+	task, err := types.NewEremeticTask(request, fmt.Sprintf("Eremetic task %s", nextID(s)))
 	if err != nil {
 		return "", err
 	}

@@ -7,36 +7,39 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
 	"github.com/klarna/eremetic/types"
 )
 
 type boltDriver struct {
-	database *bolt.DB
+	database types.BoltConnection
 }
 
-func boltDB(file string) (TaskDB, error) {
-	if file == "" {
-		return nil, errors.New("Missing BoltDB database loctation.")
-	}
+type boltConnector struct{}
 
+func (b boltConnector) Open(file string) (types.BoltConnection, error) {
 	if !filepath.IsAbs(file) {
 		dir, _ := os.Getwd()
 		file = fmt.Sprintf("%s/../%s", dir, file)
 	}
 	os.MkdirAll(filepath.Dir(file), 0755)
 
-	db, err := bolt.Open(file, 0600, nil)
-
-	wrapped := wrap(db)
-
-	return wrapped, err
+	return bolt.Open(file, 0600, nil)
 }
 
-func wrap(db *bolt.DB) TaskDB {
-	return boltDriver{
-		database: db,
+func createBoltConnector() types.BoltConnectorInterface {
+	return types.BoltConnectorInterface(boltConnector{})
+}
+
+func createBoltDriver(connector types.BoltConnectorInterface, file string) (TaskDB, error) {
+	if file == "" {
+		return nil, errors.New("Missing BoltDB database loctation.")
 	}
+
+	db, err := connector.Open(file)
+
+	return boltDriver{database: db}, err
 }
 
 // Close is used to Close the database
@@ -67,12 +70,13 @@ func (db boltDriver) PutTask(task *types.EremeticTask) error {
 			return err
 		}
 
-		encoded, err := json.Marshal(task)
+		encoded, err := encode(task)
 		if err != nil {
+			logrus.WithError(err).Error("Unable to encode task to byte-array.")
 			return err
 		}
 
-		return b.Put([]byte(task.ID), []byte(encoded))
+		return b.Put([]byte(task.ID), encoded)
 	})
 }
 
@@ -81,9 +85,7 @@ func (db boltDriver) PutTask(task *types.EremeticTask) error {
 func (db boltDriver) ReadTask(id string) (types.EremeticTask, error) {
 	task, err := db.ReadUnmaskedTask(id)
 
-	for k := range task.MaskedEnvironment {
-		task.MaskedEnvironment[k] = "*******"
-	}
+	applyMask(&task)
 
 	return task, err
 }
