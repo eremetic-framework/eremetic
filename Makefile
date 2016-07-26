@@ -54,7 +54,7 @@ docker-clean: docker/Dockerfile docker/marathon.sh
 	docker build -t ${DOCKERTAG} docker
 
 publish-docker:
-ifeq ($(strip $(shell docker images --format "{{.Repository}}:{{.Tag}}" $(DOCKERTAG))),)
+ifeq ($(strip $(shell docker images --format="{{.Repository}}:{{.Tag}}" $(DOCKERTAG))),)
 	$(warning Docker tag does not exist:)
 	$(warning ${DOCKERTAG})
 	$(warning )
