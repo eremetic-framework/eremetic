@@ -25,6 +25,13 @@ type SlaveConstraint struct {
 	AttributeValue string `json:"attribute_value"`
 }
 
+type URI struct {
+	URI        string `json:"uri"`
+	Executable bool   `json:"executable"`
+	Extract    bool   `json:"extract,omitempty"`
+	Cache      bool   `json:"cache,omitempty"`
+}
+
 type EremeticTask struct {
 	TaskCPUs          float64           `json:"task_cpus"`
 	TaskMem           float64           `json:"task_mem"`
@@ -44,6 +51,7 @@ type EremeticTask struct {
 	Retry             int               `json:"retry"`
 	CallbackURI       string            `json:"callback_uri"`
 	URIs              []string          `json:"uris"`
+	Fetch             []URI             `json:"fetch"`
 	SandboxPath       string            `json:"sandbox_path"`
 	AgentIP           string            `json:"agent_ip"`
 	AgentPort         int32             `json:"agent_port"`
@@ -79,6 +87,7 @@ func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 		Volumes:           request.Volumes,
 		CallbackURI:       request.CallbackURI,
 		URIs:              request.URIs,
+		Fetch:             request.Fetch,
 	}
 	return task, nil
 }

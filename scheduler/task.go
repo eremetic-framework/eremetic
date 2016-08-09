@@ -65,6 +65,15 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 		})
 	}
 
+	for _, v := range task.Fetch {
+		uris = append(uris, &mesos.CommandInfo_URI{
+			Value:      proto.String(v.URI),
+			Extract:    proto.Bool(v.Extract),
+			Executable: proto.Bool(v.Executable),
+			Cache:      proto.Bool(v.Cache),
+		})
+	}
+
 	commandInfo := &mesos.CommandInfo{
 		User: proto.String(task.User),
 		Environment: &mesos.Environment{

@@ -55,6 +55,17 @@ JSON format:
   "uris": [
     "http://server.local/resource"
   ],
+  // URIs and attributes of resource to download
+  // Please note that `uris` auto-extract archive files based on their extension
+  // with `fetch`, you need to explicitly define `"extract"` to unarchive files.
+  "fetch": [
+    {
+      "uri" : "http://server.local/another_resource",
+      "extract": false,
+      "executable": false,
+      "cache": false
+    }
+  ],
   // Constraints for which slave the task can run on (beyond cpu/memory).
   // Matching is strict and only attributes are currently supported. If
   // multiple constraints exist, they are evaluated using AND (ie: all or none).
