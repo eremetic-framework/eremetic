@@ -3,7 +3,6 @@ package scheduler
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/Sirupsen/logrus"
 	ogle "github.com/jacobsa/oglematchers"
@@ -17,7 +16,7 @@ type resourceMatcher struct {
 }
 
 type attributeMatcher struct {
-	SlaveConstraints []types.SlaveConstraint
+	constraint types.SlaveConstraint
 }
 
 func (m *resourceMatcher) Matches(o interface{}) error {
@@ -52,46 +51,35 @@ func MemoryAvailable(v float64) ogle.Matcher {
 	return &resourceMatcher{"mem", v}
 }
 
-func (m *attributeMatcher) Matches(o interface{}) (err error) {
+func (m *attributeMatcher) Matches(o interface{}) error {
 	offer := o.(*mesos.Offer)
-	matched := int(0)
 
-	for _, constraint := range m.SlaveConstraints {
-		for _, attr := range offer.Attributes {
-			if attr.GetName() == constraint.AttributeName {
-				if attr.GetType() != mesos.Value_TEXT ||
-					attr.Text.GetValue() != constraint.AttributeValue {
-					err = errors.New("")
-
-					// Match all constraints, not just one.
-					return
-				}
-				matched += 1
+	for _, attr := range offer.Attributes {
+		if attr.GetName() == m.constraint.AttributeName {
+			if attr.GetType() != mesos.Value_TEXT ||
+				attr.Text.GetValue() != m.constraint.AttributeValue {
+				return errors.New("")
 			}
+			return nil
 		}
 	}
 
-	if matched != len(m.SlaveConstraints) {
-		err = errors.New("")
-	}
-	return
+	return errors.New("")
 }
 
 func (m *attributeMatcher) Description() string {
-	descriptions := []string{}
-	for _, constraint := range m.SlaveConstraints {
-		descriptions = append(descriptions,
-			fmt.Sprintf("slave attribute constraint %s=%s",
-				constraint.AttributeName,
-				constraint.AttributeValue,
-			),
-		)
-	}
-	return strings.Join(descriptions, ", ")
+	return fmt.Sprintf("slave attribute constraint %s=%s",
+		m.constraint.AttributeName,
+		m.constraint.AttributeValue,
+	)
 }
 
 func AttributeMatch(slaveConstraints []types.SlaveConstraint) ogle.Matcher {
-	return &attributeMatcher{slaveConstraints}
+	var submatchers []ogle.Matcher
+	for _, constraint := range slaveConstraints {
+		submatchers = append(submatchers, &attributeMatcher{constraint})
+	}
+	return ogle.AllOf(submatchers...)
 }
 
 func createMatcher(task types.EremeticTask) ogle.Matcher {
