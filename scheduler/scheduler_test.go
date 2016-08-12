@@ -296,6 +296,19 @@ func TestScheduler(t *testing.T) {
 						So(c.Status, ShouldEqual, "TASK_FINISHED")
 					}
 				})
+
+				Convey("Updates sandbox", func() {
+					id := "eremetic-task.1003"
+					s.StatusUpdate(nil, &mesos.TaskStatus{
+						TaskId: &mesos.TaskID{
+							Value: proto.String(id),
+						},
+						Data:  []byte(`[{"Mounts":[{"Source":"/tmp/mesos/slaves/<agent_id>/frameworks/<framework_id>/executors/<task_id>/runs/<container_id>","Destination":"/mnt/mesos/sandbox","Mode":"","RW":true}]}]`),
+						State: mesos.TaskState_TASK_RUNNING.Enum(),
+					})
+					task, _ := db.ReadTask(id)
+					So(task.SandboxPath, ShouldNotBeEmpty)
+				})
 			})
 
 			Convey("FrameworkMessage", func() {
