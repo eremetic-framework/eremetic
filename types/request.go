@@ -12,4 +12,5 @@ type Request struct {
 	SlaveConstraints  []SlaveConstraint `json:"slave_constraints"`
 	CallbackURI       string            `json:"callback_uri"`
 	URIs              []string          `json:"uris"`
+	Fetch             []URI             `json:"fetch"`
 }
