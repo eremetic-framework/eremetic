@@ -98,7 +98,8 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 		Container: &mesos.ContainerInfo{
 			Type: mesos.ContainerInfo_DOCKER.Enum(),
 			Docker: &mesos.ContainerInfo_DockerInfo{
-				Image: proto.String(task.Image),
+				Image:          proto.String(task.Image),
+				ForcePullImage: proto.Bool(task.ForcePullImage),
 			},
 			Volumes: volumes,
 		},

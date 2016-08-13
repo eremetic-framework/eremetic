@@ -50,6 +50,7 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Container.GetType().String(), ShouldEqual, "DOCKER")
 			So(taskInfo.Container.Docker.GetImage(), ShouldEqual, "busybox")
 			So(net.SlaveId, ShouldEqual, "slave-id")
+			So(taskInfo.Container.Docker.GetForcePullImage(), ShouldBeFalse)
 		})
 
 		Convey("Given no Command", func() {
@@ -172,6 +173,14 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.Uris[0].GetExecutable(), ShouldBeTrue)
 			So(taskInfo.Command.Uris[0].GetExtract(), ShouldBeFalse)
 			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeFalse)
+		})
+
+		Convey("Force pull of docker image", func() {
+			eremeticTask.ForcePullImage = true
+			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
+			So(taskInfo.Container.Docker.GetForcePullImage(), ShouldBeTrue)
 		})
 	})
 }

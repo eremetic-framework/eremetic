@@ -13,4 +13,5 @@ type Request struct {
 	CallbackURI       string            `json:"callback_uri"`
 	URIs              []string          `json:"uris"`
 	Fetch             []URI             `json:"fetch"`
+	ForcePullImage    bool              `json:"force_pull_image"`
 }
