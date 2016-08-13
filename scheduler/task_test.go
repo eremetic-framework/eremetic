@@ -85,91 +85,65 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.Environment.Variables[1].GetValue(), ShouldEqual, eremeticTask.ID)
 		})
 
-		Convey("Given picture to download", func() {
-			eremeticTask.URIs = []string{"http://foobar.local/kitten.jpg"}
-
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
-
-			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
-			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
-			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.URIs[0])
-			So(taskInfo.Command.Uris[0].GetExecutable(), ShouldBeFalse)
-			So(taskInfo.Command.Uris[0].GetExtract(), ShouldBeFalse)
-			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeFalse)
-		})
-
-		Convey("Given archive to download", func() {
-			eremeticTask.URIs = []string{"http://foobar.local/cats.zip"}
-
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
-
-			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
-			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
-			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.URIs[0])
-			So(taskInfo.Command.Uris[0].GetExecutable(), ShouldBeFalse)
-			So(taskInfo.Command.Uris[0].GetExtract(), ShouldBeTrue)
-			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeFalse)
-		})
-
 		Convey("Given archive to fetch", func() {
-			fetch := []types.URI{types.URI{
+			URI := []types.URI{types.URI{
 				URI:     "http://foobar.local/cats.zip",
 				Extract: true,
 			}}
-			eremeticTask.Fetch = fetch
+			eremeticTask.FetchURIs = URI
 			_, taskInfo := createTaskInfo(eremeticTask, &offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
-			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.Fetch[0].URI)
+			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.FetchURIs[0].URI)
 			So(taskInfo.Command.Uris[0].GetExecutable(), ShouldBeFalse)
 			So(taskInfo.Command.Uris[0].GetExtract(), ShouldBeTrue)
 			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeFalse)
 		})
 
 		Convey("Given archive to fetch and cache", func() {
-			fetch := []types.URI{types.URI{
+			URI := []types.URI{types.URI{
 				URI:     "http://foobar.local/cats.zip",
 				Extract: true,
 				Cache:   true,
 			}}
-			eremeticTask.Fetch = fetch
+			eremeticTask.FetchURIs = URI
 			_, taskInfo := createTaskInfo(eremeticTask, &offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
-			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.Fetch[0].URI)
+			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.FetchURIs[0].URI)
 			So(taskInfo.Command.Uris[0].GetExecutable(), ShouldBeFalse)
 			So(taskInfo.Command.Uris[0].GetExtract(), ShouldBeTrue)
 			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeTrue)
 		})
 
 		Convey("Given image to fetch", func() {
-			fetch := []types.URI{types.URI{
+			URI := []types.URI{types.URI{
 				URI: "http://foobar.local/cats.jpeg",
 			}}
-			eremeticTask.Fetch = fetch
+			eremeticTask.FetchURIs = URI
 			_, taskInfo := createTaskInfo(eremeticTask, &offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
-			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.Fetch[0].URI)
+			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.FetchURIs[0].URI)
 			So(taskInfo.Command.Uris[0].GetExecutable(), ShouldBeFalse)
 			So(taskInfo.Command.Uris[0].GetExtract(), ShouldBeFalse)
 			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeFalse)
 		})
 
 		Convey("Given script to fetch", func() {
-			fetch := []types.URI{types.URI{
+			URI := []types.URI{types.URI{
 				URI:        "http://foobar.local/cats.sh",
 				Executable: true,
 			}}
-			eremeticTask.Fetch = fetch
+			eremeticTask.FetchURIs = URI
 			_, taskInfo := createTaskInfo(eremeticTask, &offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
-			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.Fetch[0].URI)
+			So(taskInfo.Command.Uris[0].GetValue(), ShouldEqual, eremeticTask.FetchURIs[0].URI)
 			So(taskInfo.Command.Uris[0].GetExecutable(), ShouldBeTrue)
 			So(taskInfo.Command.Uris[0].GetExtract(), ShouldBeFalse)
 			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeFalse)
