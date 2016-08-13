@@ -1,5 +1,14 @@
 ## Changelog
 
+### v0.23.0 / 2016-08-13
+- [#106](https://github.com/klarna/eremetic/pull/106) Add ability to force docker to pull image before launching each task (@sheepkiller)
+- [#105](https://github.com/klarna/eremetic/pull/105) Set sandbox path from reconcile status update (@keis)
+- [#104](https://github.com/klarna/eremetic/pull/104) Internal refactor of offer matching on attr (@keis)
+- [#102](https://github.com/klarna/eremetic/pull/102) Add `fetch` to minic marathon management of URIs, i.e. fine managemen… (@sheepkiller)
+
+### v0.22.0 / 2016-07-15
+- [#94](https://github.com/klarna/eremetic/pull/94) Add zookeeper database backend (@alde)
+
 ### v0.21.0 / 2016-06-14
 - [#92](https://github.com/klarna/eremetic/pull/92) Task attribute constraints (@chuckg)
 
