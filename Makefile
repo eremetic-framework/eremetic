@@ -4,7 +4,7 @@ VERSION?=$(shell git describe HEAD | sed s/^v//)
 DATE?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 DOCKERNAME?=alde/eremetic
 DOCKERTAG?=${DOCKERNAME}:${VERSION}
-LDFLAGS=-X main.Version '${VERSION}' -X main.BuildDate '${DATE}'
+LDFLAGS=-X main.Version='${VERSION}' -X main.BuildDate='${DATE}'
 TOOLS=${GOPATH}/bin/go-bindata \
       ${GOPATH}/bin/go-bindata-assetfs \
       ${GOPATH}/bin/goconvey
