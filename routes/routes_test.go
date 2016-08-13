@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -20,7 +21,7 @@ func TestRoutes(t *testing.T) {
 
 	Convey("Create", t, func() {
 		Convey("Should build the expected routes", func() {
-			m := Create(nil, db)
+			m := Create(nil, &config.Config{Database: db})
 			for _, name := range routes {
 				So(m.GetRoute(name), ShouldNotBeNil)
 			}

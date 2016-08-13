@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
@@ -98,7 +99,7 @@ func TestHandling(t *testing.T) {
 		wr := httptest.NewRecorder()
 		r, _ := http.NewRequest("GET", "/task/eremetic-task.1234", nil)
 		m := mux.NewRouter()
-		m.HandleFunc("/task/{taskId}", h.GetTaskInfo())
+		m.HandleFunc("/task/{taskId}", h.GetTaskInfo(&config.Config{}))
 
 		Convey("Not Found", func() {
 			id := "eremetic-task.5678"
@@ -302,7 +303,7 @@ func TestHandling(t *testing.T) {
 		wr := httptest.NewRecorder()
 		r, _ := http.NewRequest("GET", "/task/eremetic-task.1234", nil)
 
-		renderHTML(wr, r, task, id)
+		renderHTML(wr, r, task, id, &config.Config{Version: "test"})
 
 		body, _ := ioutil.ReadAll(wr.Body)
 		So(body, ShouldNotBeEmpty)

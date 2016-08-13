@@ -10,15 +10,15 @@ import (
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/assets"
-	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/handler"
 	"github.com/klarna/eremetic/types"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Create is used to create a new router
-func Create(scheduler types.Scheduler, database database.TaskDB) *mux.Router {
-	h := handler.Create(scheduler, database)
+func Create(scheduler types.Scheduler, conf *config.Config) *mux.Router {
+	h := handler.Create(scheduler, conf.Database)
 	routes := types.Routes{
 		types.Route{
 			Name:    "AddTask",
@@ -30,7 +30,7 @@ func Create(scheduler types.Scheduler, database database.TaskDB) *mux.Router {
 			Name:    "Status",
 			Method:  "GET",
 			Pattern: "/task/{taskId}",
-			Handler: h.GetTaskInfo(),
+			Handler: h.GetTaskInfo(conf),
 		},
 		types.Route{
 			Name:    "STDOUT",
@@ -49,6 +49,12 @@ func Create(scheduler types.Scheduler, database database.TaskDB) *mux.Router {
 			Method:  "GET",
 			Pattern: "/task",
 			Handler: h.ListRunningTasks(),
+		},
+		types.Route{
+			Name:    "Index",
+			Method:  "GET",
+			Pattern: "/",
+			Handler: h.IndexHandler(conf),
 		},
 	}
 
@@ -69,9 +75,13 @@ func Create(scheduler types.Scheduler, database database.TaskDB) *mux.Router {
 
 	router.
 		Methods("GET").
-		Path("/").
-		Name("Index").
-		HandlerFunc(indexHandler)
+		Path("/version").
+		Name("Version").
+		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(conf.Version)
+		})
 
 	router.PathPrefix("/static/").
 		Handler(
@@ -97,21 +107,5 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusNotFound)
-	json.NewEncoder(w).Encode(nil)
-}
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	if strings.Contains(r.Header.Get("Accept"), "text/html") {
-		src, _ := assets.Asset("templates/index.html")
-		tpl, err := template.New("index").Parse(string(src))
-		if err == nil {
-			tpl.Execute(w, nil)
-			return
-		}
-		logrus.WithError(err).WithField("template", "index.html").Error("Unable to load template")
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusNoContent)
 	json.NewEncoder(w).Encode(nil)
 }
