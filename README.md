@@ -33,6 +33,8 @@ JSON format:
   "task_mem":       22.0,
   // String, full tag or hash of container to run
   "docker_image":   "busybox",
+  // Boolean, if set to true, docker image will be pulled before each task launch.
+  "force_pull_image": false,
   // String, command to run in the docker container
   "command": "echo date",
   // Array of Objects, volumes to mount in the container

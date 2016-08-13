@@ -55,6 +55,7 @@ type EremeticTask struct {
 	SandboxPath       string            `json:"sandbox_path"`
 	AgentIP           string            `json:"agent_ip"`
 	AgentPort         int32             `json:"agent_port"`
+	ForcePullImage    bool              `json:"force_pull_image"`
 }
 
 func NewEremeticTask(request Request, name string) (EremeticTask, error) {
