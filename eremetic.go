@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/braintree/manners"
 	"github.com/kardianos/osext"
+	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/routes"
 	"github.com/klarna/eremetic/scheduler"
@@ -95,11 +97,17 @@ func main() {
 	}
 	defer db.Close()
 
+	config := &config.Config{
+		Version:   strings.Trim(Version, "'"),
+		BuildDate: BuildDate,
+		Database:  db,
+	}
+
 	schedulerSettings := getSchedulerSettings()
 
 	bind := fmt.Sprintf("%s:%d", viper.GetString("address"), viper.GetInt("port"))
 
-	sched := scheduler.Create(schedulerSettings, db)
+	sched := scheduler.Create(schedulerSettings, config)
 	go func() {
 		scheduler.Run(sched, schedulerSettings)
 		manners.Close()
@@ -118,11 +126,12 @@ func main() {
 		sched.Stop()
 	}()
 
-	router := routes.Create(sched, db)
+	router := routes.Create(sched, config)
 	logrus.WithFields(logrus.Fields{
+		"version": config.Version,
 		"address": viper.GetString("address"),
 		"port":    viper.GetInt("port"),
-	}).Infof("listening to %s", bind)
+	}).Infof("Launching Eremetic version %s!\nListening to %s", config.Version, bind)
 	err = manners.ListenAndServe(bind, router)
 
 	if err != nil {

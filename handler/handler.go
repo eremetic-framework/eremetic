@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	"github.com/klarna/eremetic/assets"
+	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/scheduler"
 	"github.com/klarna/eremetic/types"
@@ -92,7 +95,7 @@ func (h Handler) GetFromSandbox(file string) http.HandlerFunc {
 }
 
 // GetTaskInfo returns information about the given task.
-func (h Handler) GetTaskInfo() http.HandlerFunc {
+func (h Handler) GetTaskInfo(conf *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["taskId"]
@@ -100,7 +103,7 @@ func (h Handler) GetTaskInfo() http.HandlerFunc {
 		task, _ := h.database.ReadTask(id)
 
 		if strings.Contains(r.Header.Get("Accept"), "text/html") {
-			renderHTML(w, r, task, id)
+			renderHTML(w, r, task, id, conf)
 		} else {
 			if reflect.DeepEqual(task, (types.EremeticTask{})) {
 				writeJSON(http.StatusNotFound, nil, w)
@@ -120,5 +123,26 @@ func (h Handler) ListRunningTasks() http.HandlerFunc {
 			handleError(err, w, "Unable to fetch running tasks from the database")
 		}
 		writeJSON(200, tasks, w)
+	}
+}
+
+// IndexHandler returns the index template, or no content.
+func (h Handler) IndexHandler(conf *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.Header.Get("Accept"), "text/html") {
+			src, _ := assets.Asset("templates/index.html")
+			tpl, err := template.New("index").Parse(string(src))
+			data := make(map[string]interface{})
+			data["Version"] = conf.Version
+			if err == nil {
+				tpl.Execute(w, data)
+				return
+			}
+			logrus.WithError(err).WithField("template", "index.html").Error("Unable to load template")
+		}
+
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusNoContent)
+		json.NewEncoder(w).Encode(nil)
 	}
 }

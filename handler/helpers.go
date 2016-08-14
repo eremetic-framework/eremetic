@@ -13,6 +13,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/klarna/eremetic/assets"
+	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/formatter"
 	"github.com/klarna/eremetic/types"
 )
@@ -64,7 +65,7 @@ func writeJSON(status int, data interface{}, w http.ResponseWriter) error {
 	return json.NewEncoder(w).Encode(data)
 }
 
-func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask, taskID string) {
+func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask, taskID string, conf *config.Config) {
 	var templateFile string
 
 	data := make(map[string]interface{})
@@ -79,6 +80,7 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask,
 	} else {
 		templateFile = "task.html"
 		data = makeMap(task)
+		data["Version"] = conf.Version
 	}
 
 	source, _ := assets.Asset(fmt.Sprintf("templates/%s", templateFile))
