@@ -171,9 +171,15 @@ docker run -e MASTER=$MINIMESOS_ZOOKEEPER -e HOST=0.0.0.0 -e DATABASE_DRIVER=zk 
 ```
 
 ## Contributors
+
+These are the fine folks who helped build eremetic
+
 - Rickard Dybeck
 - David Keijser
 - Aidan McGinley
+- William Strucke
+- Charles G.
+- Clément Laforet
 
 ## Acknowledgements
 Thanks to Sebastian Norde for the awesome logo!
