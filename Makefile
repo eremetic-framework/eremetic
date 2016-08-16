@@ -1,4 +1,4 @@
-.PHONY: all test test-server test-docker docker docker-clean publish-docker 
+.PHONY: all test test-server test-docker docker docker-clean publish-docker
 
 VERSION?=$(shell git describe HEAD | sed s/^v//)
 DATE?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
@@ -14,6 +14,8 @@ STATIC=$(shell find static templates)
 DOCKER_GO_SRC_PATH=/go/src/github.com/klarna/eremetic
 DOCKER_GOLANG_RUN_CMD=docker run --rm -v "$(PWD)":$(DOCKER_GO_SRC_PATH) -w $(DOCKER_GO_SRC_PATH) golang:1.6 bash -c
 
+PACKAGES=$(shell go list ./... | grep -v /vendor/)
+
 all: test
 
 ${TOOLS}:
@@ -22,7 +24,7 @@ ${TOOLS}:
 	go get github.com/smartystreets/goconvey
 
 test: eremetic
-	go test -v ./...
+	go test -race -v ${PACKAGES}
 
 test-server: ${TOOLS}
 	${GOPATH}/bin/goconvey
@@ -36,12 +38,10 @@ assets/assets.go: generate.go ${STATIC}
 
 eremetic: ${TOOLS} assets/assets.go
 eremetic: ${SRC}
-	go get -t ./...
 	go build -ldflags "${LDFLAGS}" -o $@
 
 docker/eremetic: ${TOOLS} assets/assets.go
 docker/eremetic: ${SRC}
-	go get -t ./...
 	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@
 
 docker: docker/eremetic docker/Dockerfile docker/marathon.sh

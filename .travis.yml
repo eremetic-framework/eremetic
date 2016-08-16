@@ -5,7 +5,7 @@ go:
  - 1.6
 
 env:
- - PUBLISH_VERSION=1.6
+ - PUBLISH_VERSION=1.6 GO15VENDOREXPERIMENT=1
 
 services:
  - docker
