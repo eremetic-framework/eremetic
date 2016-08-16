@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/m4rw3r/uuid"
@@ -28,8 +29,8 @@ type SlaveConstraint struct {
 type URI struct {
 	URI        string `json:"uri"`
 	Executable bool   `json:"executable"`
-	Extract    bool   `json:"extract,omitempty"`
-	Cache      bool   `json:"cache,omitempty"`
+	Extract    bool   `json:"extract"`
+	Cache      bool   `json:"cache"`
 }
 
 type EremeticTask struct {
@@ -50,12 +51,42 @@ type EremeticTask struct {
 	Hostname          string            `json:"hostname"`
 	Retry             int               `json:"retry"`
 	CallbackURI       string            `json:"callback_uri"`
-	URIs              []string          `json:"uris"`
-	Fetch             []URI             `json:"fetch"`
 	SandboxPath       string            `json:"sandbox_path"`
 	AgentIP           string            `json:"agent_ip"`
 	AgentPort         int32             `json:"agent_port"`
 	ForcePullImage    bool              `json:"force_pull_image"`
+	FetchURIs         []URI             `json:"fetch"`
+}
+
+func isArchive(url string) bool {
+	var archiveSfx = []string{".tgz", ".tar.gz", ".tbz2", ".tar.bz2", ".txz", ".tar.xz", ".zip"}
+	for _, s := range archiveSfx {
+		if strings.HasSuffix(url, s) {
+			return true
+		}
+	}
+	return false
+}
+
+func mergeURIs(request Request) []URI {
+	var URIs []URI
+	for _, v := range request.URIs {
+		URIs = append(URIs, URI{
+			URI:        v,
+			Extract:    isArchive(v),
+			Cache:      false,
+			Executable: false,
+		})
+	}
+	for _, v := range request.Fetch {
+		URIs = append(URIs, URI{
+			URI:        v.URI,
+			Extract:    v.Extract,
+			Cache:      v.Cache,
+			Executable: v.Executable,
+		})
+	}
+	return URIs
 }
 
 func NewEremeticTask(request Request, name string) (EremeticTask, error) {
@@ -87,8 +118,7 @@ func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 		Image:             request.DockerImage,
 		Volumes:           request.Volumes,
 		CallbackURI:       request.CallbackURI,
-		URIs:              request.URIs,
-		Fetch:             request.Fetch,
+		FetchURIs:         mergeURIs(request),
 	}
 	return task, nil
 }

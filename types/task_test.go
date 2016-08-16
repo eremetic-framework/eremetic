@@ -192,14 +192,63 @@ func TestTask(t *testing.T) {
 			So(task.MaskedEnvironment["foo"], ShouldEqual, "bar")
 		})
 
-		Convey("Given uri to download", func() {
+		Convey("Given URI (via uris) to download", func() {
 			request.URIs = []string{"http://foobar.local/kitten.jpg"}
 
 			task, err := NewEremeticTask(request, "")
 
 			So(err, ShouldBeNil)
-			So(task.URIs, ShouldHaveLength, 1)
-			So(task.URIs, ShouldContain, request.URIs[0])
+			So(task.FetchURIs, ShouldHaveLength, 1)
+			So(task.FetchURIs[0].URI, ShouldEqual, request.URIs[0])
+			So(task.FetchURIs[0].Executable, ShouldBeFalse)
+			So(task.FetchURIs[0].Extract, ShouldBeFalse)
+			So(task.FetchURIs[0].Cache, ShouldBeFalse)
+		})
+
+		Convey("Given URI (via uris) to download and extract", func() {
+			request.URIs = []string{"http://foobar.local/kittens.tar.gz"}
+
+			task, err := NewEremeticTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.FetchURIs, ShouldHaveLength, 1)
+			So(task.FetchURIs[0].URI, ShouldEqual, request.URIs[0])
+			So(task.FetchURIs[0].Executable, ShouldBeFalse)
+			So(task.FetchURIs[0].Extract, ShouldBeTrue)
+			So(task.FetchURIs[0].Cache, ShouldBeFalse)
+		})
+
+		Convey("Given URI (via fetch) to download and extract", func() {
+			request.Fetch = []URI{URI{
+				URI:     "http://foobar.local/kittens.tar.gz",
+				Extract: true,
+			}}
+
+			task, err := NewEremeticTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.FetchURIs, ShouldHaveLength, 1)
+			So(task.FetchURIs[0].URI, ShouldEqual, request.Fetch[0].URI)
+			So(task.FetchURIs[0].Executable, ShouldBeFalse)
+			So(task.FetchURIs[0].Extract, ShouldBeTrue)
+			So(task.FetchURIs[0].Cache, ShouldBeFalse)
+		})
+
+		Convey("Given URI (via fetch) to download, cache and set executable", func() {
+			request.Fetch = []URI{URI{
+				URI:        "http://foobar.local/kittens.sh",
+				Executable: true,
+				Cache:      true,
+			}}
+
+			task, err := NewEremeticTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.FetchURIs, ShouldHaveLength, 1)
+			So(task.FetchURIs[0].URI, ShouldEqual, request.Fetch[0].URI)
+			So(task.FetchURIs[0].Executable, ShouldBeTrue)
+			So(task.FetchURIs[0].Extract, ShouldBeFalse)
+			So(task.FetchURIs[0].Cache, ShouldBeTrue)
 		})
 
 		Convey("Given no Command", func() {

@@ -1,26 +1,11 @@
 package scheduler
 
 import (
-	"strings"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
 )
-
-var (
-	archiveSfx = []string{".tgz", ".tar.gz", ".tbz2", ".tar.bz2", ".txz", ".tar.xz", ".zip"}
-)
-
-func isArchive(url string) bool {
-	for _, s := range archiveSfx {
-		if strings.HasSuffix(url, s) {
-			return true
-		}
-	}
-	return false
-}
 
 func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
 	task.FrameworkId = *offer.FrameworkId.Value
@@ -58,14 +43,7 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 	}
 
 	var uris []*mesos.CommandInfo_URI
-	for _, v := range task.URIs {
-		uris = append(uris, &mesos.CommandInfo_URI{
-			Value:   proto.String(v),
-			Extract: proto.Bool(isArchive(v)),
-		})
-	}
-
-	for _, v := range task.Fetch {
+	for _, v := range task.FetchURIs {
 		uris = append(uris, &mesos.CommandInfo_URI{
 			Value:      proto.String(v.URI),
 			Extract:    proto.Bool(v.Extract),
