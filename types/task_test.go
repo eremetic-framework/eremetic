@@ -260,6 +260,15 @@ func TestTask(t *testing.T) {
 			So(task.Command, ShouldBeEmpty)
 		})
 
+		Convey("Given Force Pull image", func() {
+			request.ForcePullImage = true
+
+			task, err := NewEremeticTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.ForcePullImage, ShouldBeTrue)
+		})
+
 		Convey("New task from empty request", func() {
 			req := Request{}
 			task, err := NewEremeticTask(req, "")
