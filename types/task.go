@@ -29,8 +29,8 @@ type SlaveConstraint struct {
 type URI struct {
 	URI        string `json:"uri"`
 	Executable bool   `json:"executable"`
-	Extract    bool   `json:"extract,omitempty"`
-	Cache      bool   `json:"cache,omitempty"`
+	Extract    bool   `json:"extract"`
+	Cache      bool   `json:"cache"`
 }
 
 type EremeticTask struct {
