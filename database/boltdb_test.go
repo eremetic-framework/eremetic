@@ -204,4 +204,33 @@ func TestBoltDatabase(t *testing.T) {
 		task := tasks[0]
 		So(task.ID, ShouldEqual, "2345")
 	})
+
+	Convey("List non-terminal tasks no running task", t, func() {
+		setup()
+		defer teardown()
+		defer db.Close()
+
+		db.Clean()
+		db.PutTask(&types.EremeticTask{
+			ID: "1234",
+			Status: []types.Status{
+				types.Status{
+					Status: mesos.TaskState_TASK_STAGING.String(),
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: mesos.TaskState_TASK_RUNNING.String(),
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: mesos.TaskState_TASK_FINISHED.String(),
+					Time:   time.Now().Unix(),
+				},
+			},
+		})
+		tasks, err := db.ListNonTerminalTasks()
+		So(err, ShouldBeNil)
+		So(tasks, ShouldBeEmpty)
+		So(tasks, ShouldNotBeNil)
+	})
 }

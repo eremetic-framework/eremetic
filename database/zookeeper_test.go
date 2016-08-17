@@ -279,6 +279,7 @@ func TestZKDatabase(t *testing.T) {
 
 			list, _ := db.ListNonTerminalTasks()
 			So(list, ShouldBeEmpty)
+			So(list, ShouldNotBeNil)
 			So(object.AssertCalled(t, "Get", "/testdb/1234"), ShouldBeTrue)
 			So(object.AssertCalled(t, "Children", "/testdb"), ShouldBeTrue)
 		})
