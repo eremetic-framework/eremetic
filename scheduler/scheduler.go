@@ -207,7 +207,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		}
 	}
 
-	if types.IsTerminal(status.State) {
+	if types.IsTerminal(status.State.String()) {
 		var seq string
 		if shouldRetry {
 			seq = "retry"
@@ -239,7 +239,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 			QueueSize.Inc()
 			s.tasks <- id
 		}()
-	} else if types.IsTerminal(status.State) {
+	} else if types.IsTerminal(status.State.String()) {
 		NotifyCallback(&task)
 	}
 

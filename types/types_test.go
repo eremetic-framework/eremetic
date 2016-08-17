@@ -28,30 +28,14 @@ func TestTypes(t *testing.T) {
 			for _, state := range terminalStates {
 				test := fmt.Sprintf("Should be true for %s", state.String())
 				Convey(test, func() {
-					So(IsTerminal(&state), ShouldBeTrue)
+					So(IsTerminal(state.String()), ShouldBeTrue)
 				})
 			}
 
 			for _, state := range nonTerminalStates {
 				test := fmt.Sprintf("Should be false for %s", state.String())
 				Convey(test, func() {
-					So(IsTerminal(&state), ShouldBeFalse)
-				})
-			}
-		})
-
-		Convey("IsTerminalString", func() {
-			for _, state := range terminalStates {
-				test := fmt.Sprintf("Should be true for %s", state.String())
-				Convey(test, func() {
-					So(IsTerminalString(state.String()), ShouldBeTrue)
-				})
-			}
-
-			for _, state := range nonTerminalStates {
-				test := fmt.Sprintf("Should be false for %s", state.String())
-				Convey(test, func() {
-					So(IsTerminalString(state.String()), ShouldBeFalse)
+					So(IsTerminal(state.String()), ShouldBeFalse)
 				})
 			}
 		})

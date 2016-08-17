@@ -138,7 +138,7 @@ func (task *EremeticTask) IsTerminated() bool {
 		return true
 	}
 	st := task.Status[len(task.Status)-1]
-	return IsTerminalString(st.Status)
+	return IsTerminal(st.Status)
 }
 
 func (task *EremeticTask) IsRunning() bool {
