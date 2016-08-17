@@ -10,7 +10,6 @@ import (
 
 	"github.com/klarna/eremetic/mocks"
 	"github.com/klarna/eremetic/types"
-	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -40,7 +39,7 @@ func TestBoltDatabase(t *testing.T) {
 
 	status := []types.Status{
 		types.Status{
-			Status: mesos.TaskState_TASK_RUNNING.String(),
+			Status: types.TaskState_TASK_RUNNING,
 			Time:   time.Now().Unix(),
 		},
 	}
@@ -169,15 +168,15 @@ func TestBoltDatabase(t *testing.T) {
 			ID: "1234",
 			Status: []types.Status{
 				types.Status{
-					Status: mesos.TaskState_TASK_STAGING.String(),
+					Status: types.TaskState_TASK_STAGING,
 					Time:   time.Now().Unix(),
 				},
 				types.Status{
-					Status: mesos.TaskState_TASK_RUNNING.String(),
+					Status: types.TaskState_TASK_RUNNING,
 					Time:   time.Now().Unix(),
 				},
 				types.Status{
-					Status: mesos.TaskState_TASK_FINISHED.String(),
+					Status: types.TaskState_TASK_FINISHED,
 					Time:   time.Now().Unix(),
 				},
 			},
@@ -188,11 +187,11 @@ func TestBoltDatabase(t *testing.T) {
 			ID: "2345",
 			Status: []types.Status{
 				types.Status{
-					Status: mesos.TaskState_TASK_STAGING.String(),
+					Status: types.TaskState_TASK_STAGING,
 					Time:   time.Now().Unix(),
 				},
 				types.Status{
-					Status: mesos.TaskState_TASK_RUNNING.String(),
+					Status: types.TaskState_TASK_RUNNING,
 					Time:   time.Now().Unix(),
 				},
 			},
@@ -215,15 +214,15 @@ func TestBoltDatabase(t *testing.T) {
 			ID: "1234",
 			Status: []types.Status{
 				types.Status{
-					Status: mesos.TaskState_TASK_STAGING.String(),
+					Status: types.TaskState_TASK_STAGING,
 					Time:   time.Now().Unix(),
 				},
 				types.Status{
-					Status: mesos.TaskState_TASK_RUNNING.String(),
+					Status: types.TaskState_TASK_RUNNING,
 					Time:   time.Now().Unix(),
 				},
 				types.Status{
-					Status: mesos.TaskState_TASK_FINISHED.String(),
+					Status: types.TaskState_TASK_FINISHED,
 					Time:   time.Now().Unix(),
 				},
 			},

@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/m4rw3r/uuid"
-	mesos "github.com/mesos/mesos-go/mesosproto"
 )
 
 type Status struct {
-	Time   int64  `json:"time"`
-	Status string `json:"status"`
+	Time   int64     `json:"time"`
+	Status TaskState `json:"status"`
 }
 
 // Volume is a mapping between ContainerPath and HostPath, to allow Docker
@@ -99,7 +98,7 @@ func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 
 	status := []Status{
 		Status{
-			Status: mesos.TaskState_TASK_STAGING.String(),
+			Status: TaskState_TASK_STAGING,
 			Time:   time.Now().Unix(),
 		},
 	}
@@ -126,7 +125,7 @@ func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 
 func (task *EremeticTask) WasRunning() bool {
 	for _, s := range task.Status {
-		if s.Status == mesos.TaskState_TASK_RUNNING.String() {
+		if s.Status == TaskState_TASK_RUNNING {
 			return true
 		}
 	}
@@ -146,7 +145,7 @@ func (task *EremeticTask) IsRunning() bool {
 		return false
 	}
 	st := task.Status[len(task.Status)-1]
-	return st.Status == mesos.TaskState_TASK_RUNNING.String()
+	return st.Status == TaskState_TASK_RUNNING
 }
 
 func (task *EremeticTask) LastUpdated() time.Time {

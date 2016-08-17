@@ -8,7 +8,6 @@ import (
 
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
-	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
 )
@@ -45,7 +44,7 @@ func TestReconcile(t *testing.T) {
 					panic("mock error")
 				}
 				t.UpdateStatus(types.Status{
-					Status: mesos.TaskState_TASK_RUNNING.String(),
+					Status: types.TaskState_TASK_RUNNING,
 					Time:   time.Now().Unix() + 1,
 				})
 				db.PutTask(&t)
@@ -55,7 +54,7 @@ func TestReconcile(t *testing.T) {
 				ID: "1234",
 				Status: []types.Status{
 					types.Status{
-						Status: mesos.TaskState_TASK_STAGING.String(),
+						Status: types.TaskState_TASK_STAGING,
 						Time:   time.Now().Unix(),
 					},
 				},
@@ -77,7 +76,7 @@ func TestReconcile(t *testing.T) {
 				ID: "1234",
 				Status: []types.Status{
 					types.Status{
-						Status: mesos.TaskState_TASK_STAGING.String(),
+						Status: types.TaskState_TASK_STAGING,
 						Time:   time.Now().Unix(),
 					},
 				},

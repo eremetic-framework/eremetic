@@ -175,7 +175,7 @@ func TestScheduler(t *testing.T) {
 					})
 					task, _ := db.ReadTask(id)
 					So(len(task.Status), ShouldEqual, 1)
-					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
+					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_RUNNING)
 
 					s.StatusUpdate(nil, &mesos.TaskStatus{
 						TaskId: &mesos.TaskID{
@@ -186,8 +186,8 @@ func TestScheduler(t *testing.T) {
 					task, _ = db.ReadTask(id)
 
 					So(len(task.Status), ShouldEqual, 2)
-					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
-					So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
+					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_RUNNING)
+					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_FAILED)
 				})
 
 				Convey("Failing immediately", func() {
@@ -200,8 +200,8 @@ func TestScheduler(t *testing.T) {
 					})
 					task, _ := db.ReadTask(id)
 					So(len(task.Status), ShouldEqual, 2)
-					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
-					So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_STAGING.String())
+					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_FAILED)
+					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_STAGING)
 
 					select {
 					case c := <-s.tasks:

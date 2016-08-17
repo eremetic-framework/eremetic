@@ -24,7 +24,7 @@ func NotifyCallback(task *types.EremeticTask) {
 
 	cbData := callbackData{
 		Time:   task.Status[len(task.Status)-1].Time,
-		Status: task.Status[len(task.Status)-1].Status,
+		Status: string(task.Status[len(task.Status)-1].Status),
 		TaskID: task.ID,
 	}
 
