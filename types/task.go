@@ -118,6 +118,7 @@ func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 		Image:             request.DockerImage,
 		Volumes:           request.Volumes,
 		CallbackURI:       request.CallbackURI,
+		ForcePullImage:    request.ForcePullImage,
 		FetchURIs:         mergeURIs(request),
 	}
 	return task, nil
