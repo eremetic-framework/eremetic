@@ -132,7 +132,7 @@ func (z zkDriver) ReadUnmaskedTask(id string) (types.EremeticTask, error) {
 }
 
 func (z zkDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
-	var tasks []*types.EremeticTask
+	tasks := []*types.EremeticTask{}
 	paths, _, _ := z.connection.Children(z.path)
 	for _, p := range paths {
 		t, err := z.ReadTask(p)

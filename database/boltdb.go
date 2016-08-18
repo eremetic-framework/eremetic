@@ -114,7 +114,7 @@ func (db boltDriver) ReadUnmaskedTask(id string) (types.EremeticTask, error) {
 // ListNonTerminalTasks returns a list of tasks that are not yet finished in one
 // way or another.
 func (db boltDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
-	var tasks []*types.EremeticTask
+	tasks := []*types.EremeticTask{}
 
 	err := db.database.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("tasks"))
