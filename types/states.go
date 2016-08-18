@@ -3,6 +3,7 @@ package types
 type TaskState string
 
 const (
+	// Standard mesos states
 	TaskState_TASK_STAGING  TaskState = "TASK_STAGING"
 	TaskState_TASK_STARTING TaskState = "TASK_STARTING"
 	TaskState_TASK_RUNNING  TaskState = "TASK_RUNNING"
@@ -11,6 +12,8 @@ const (
 	TaskState_TASK_KILLED   TaskState = "TASK_KILLED"
 	TaskState_TASK_LOST     TaskState = "TASK_LOST"
 	TaskState_TASK_ERROR    TaskState = "TASK_ERROR"
+	// Custom eremetic states
+	TaskState_TASK_QUEUED TaskState = "TASK_QUEUED"
 )
 
 // IsTerminal takes a string representation of a state and returns whether it

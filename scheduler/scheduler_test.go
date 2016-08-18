@@ -130,7 +130,7 @@ func TestScheduler(t *testing.T) {
 					}
 					driver.On("LaunchTasks").Return("launched").Once()
 
-					_, err := s.ScheduleTask(types.Request{
+					taskID, err := s.ScheduleTask(types.Request{
 						TaskCPUs:    0.5,
 						TaskMem:     22.0,
 						DockerImage: "busybox",
@@ -140,8 +140,12 @@ func TestScheduler(t *testing.T) {
 					So(err, ShouldBeNil)
 					s.ResourceOffers(driver, offers)
 
+					task, err := db.ReadTask(taskID)
 					So(driver.AssertNotCalled(t, "DeclineOffer"), ShouldBeTrue)
 					So(driver.AssertCalled(t, "LaunchTasks"), ShouldBeTrue)
+					So(task.Status, ShouldHaveLength, 2)
+					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_QUEUED)
+					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_STAGING)
 				})
 
 				Convey("One task unable to launch", func() {
@@ -201,7 +205,7 @@ func TestScheduler(t *testing.T) {
 					task, _ := db.ReadTask(id)
 					So(len(task.Status), ShouldEqual, 2)
 					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_FAILED)
-					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_STAGING)
+					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_QUEUED)
 
 					select {
 					case c := <-s.tasks:

@@ -144,6 +144,10 @@ loop:
 			}).Debug("Preparing to launch task")
 
 			t, task := s.newTask(t, offer)
+			t.UpdateStatus(types.Status{
+				Status: types.TaskState_TASK_STAGING,
+				Time:   time.Now().Unix(),
+			})
 			s.database.PutTask(&t)
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
 			TasksLaunched.Inc()
@@ -232,7 +236,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 	if shouldRetry {
 		logrus.WithField("task_id", id).Info("Re-scheduling task that never ran.")
 		task.UpdateStatus(types.Status{
-			Status: types.TaskState_TASK_STAGING,
+			Status: types.TaskState_TASK_QUEUED,
 			Time:   time.Now().Unix(),
 		})
 		task.Retry++

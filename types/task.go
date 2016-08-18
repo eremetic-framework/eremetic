@@ -98,7 +98,7 @@ func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 
 	status := []Status{
 		Status{
-			Status: TaskState_TASK_STAGING,
+			Status: TaskState_TASK_QUEUED,
 			Time:   time.Now().Unix(),
 		},
 	}
