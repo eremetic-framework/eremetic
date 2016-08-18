@@ -76,10 +76,6 @@ func (s *eremeticScheduler) Reconcile(driver sched.SchedulerDriver) {
 	s.reconcile = ReconcileTasks(driver, s.database)
 }
 
-func (s *eremeticScheduler) newTask(spec types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
-	return createTaskInfo(spec, offer)
-}
-
 // Registered is called when the Scheduler is Registered
 func (s *eremeticScheduler) Registered(driver sched.SchedulerDriver, frameworkID *mesos.FrameworkID, masterInfo *mesos.MasterInfo) {
 	logrus.WithFields(logrus.Fields{
@@ -143,7 +139,7 @@ loop:
 				"offer_id": offer.Id.GetValue(),
 			}).Debug("Preparing to launch task")
 
-			t, task := s.newTask(t, offer)
+			t, task := createTaskInfo(t, offer)
 			t.UpdateStatus(types.Status{
 				Status: types.TaskState_TASK_STAGING,
 				Time:   time.Now().Unix(),

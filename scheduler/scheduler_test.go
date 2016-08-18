@@ -57,25 +57,6 @@ func TestScheduler(t *testing.T) {
 		id := "eremetic-task.9999"
 		db.PutTask(&types.EremeticTask{ID: id})
 
-		Convey("newTask", func() {
-			task := types.EremeticTask{
-				ID: "eremetic-task.1234",
-			}
-			offer := mesos.Offer{
-				FrameworkId: &mesos.FrameworkID{
-					Value: proto.String("framework-id"),
-				},
-				SlaveId: &mesos.SlaveID{
-					Value: proto.String("slave-id"),
-				},
-				Hostname: proto.String("hostname"),
-			}
-			taskData, mesosTask := s.newTask(task, &offer)
-
-			So(mesosTask.GetTaskId().GetValue(), ShouldEqual, task.ID)
-			So(taskData.SlaveId, ShouldEqual, "slave-id")
-		})
-
 		Convey("Create", func() {
 			s := Create(&Settings{MaxQueueSize: 200}, &config.Config{Database: db})
 			So(s.tasksCreated, ShouldEqual, 0)
