@@ -19,7 +19,6 @@ import (
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
-	mesos "github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -54,7 +53,7 @@ func TestHandling(t *testing.T) {
 	scheduler := &mockScheduler{}
 	status := []types.Status{
 		types.Status{
-			Status: mesos.TaskState_TASK_RUNNING.String(),
+			Status: types.TaskState_TASK_RUNNING,
 			Time:   time.Now().Unix(),
 		},
 	}

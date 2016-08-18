@@ -76,10 +76,6 @@ func (s *eremeticScheduler) Reconcile(driver sched.SchedulerDriver) {
 	s.reconcile = ReconcileTasks(driver, s.database)
 }
 
-func (s *eremeticScheduler) newTask(spec types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
-	return createTaskInfo(spec, offer)
-}
-
 // Registered is called when the Scheduler is Registered
 func (s *eremeticScheduler) Registered(driver sched.SchedulerDriver, frameworkID *mesos.FrameworkID, masterInfo *mesos.MasterInfo) {
 	logrus.WithFields(logrus.Fields{
@@ -143,7 +139,11 @@ loop:
 				"offer_id": offer.Id.GetValue(),
 			}).Debug("Preparing to launch task")
 
-			t, task := s.newTask(t, offer)
+			t, task := createTaskInfo(t, offer)
+			t.UpdateStatus(types.Status{
+				Status: types.TaskState_TASK_STAGING,
+				Time:   time.Now().Unix(),
+			})
 			s.database.PutTask(&t)
 			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
 			TasksLaunched.Inc()
@@ -164,6 +164,7 @@ loop:
 // StatusUpdate takes care of updating the status
 func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
 	id := status.TaskId.GetValue()
+	newState := types.TaskState(status.State.String())
 
 	logrus.WithFields(logrus.Fields{
 		"task_id": id,
@@ -191,12 +192,12 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		task.SandboxPath = sandboxPath
 	}
 
-	if *status.State == mesos.TaskState_TASK_RUNNING && !task.IsRunning() {
+	if newState == types.TaskState_TASK_RUNNING && !task.IsRunning() {
 		TasksRunning.Inc()
 	}
 
 	var shouldRetry bool
-	if *status.State == mesos.TaskState_TASK_FAILED && !task.WasRunning() {
+	if newState == types.TaskState_TASK_FAILED && !task.WasRunning() {
 		if task.Retry >= maxRetries {
 			logrus.WithFields(logrus.Fields{
 				"task_id": id,
@@ -207,7 +208,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		}
 	}
 
-	if types.IsTerminal(status.State) {
+	if types.IsTerminal(newState) {
 		var seq string
 		if shouldRetry {
 			seq = "retry"
@@ -215,7 +216,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 			seq = "final"
 		}
 		TasksTerminated.With(prometheus.Labels{
-			"status":   status.State.String(),
+			"status":   string(newState),
 			"sequence": seq,
 		}).Inc()
 		if task.WasRunning() {
@@ -224,14 +225,14 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 	}
 
 	task.UpdateStatus(types.Status{
-		Status: status.State.String(),
+		Status: newState,
 		Time:   time.Now().Unix(),
 	})
 
 	if shouldRetry {
 		logrus.WithField("task_id", id).Info("Re-scheduling task that never ran.")
 		task.UpdateStatus(types.Status{
-			Status: mesos.TaskState_TASK_STAGING.String(),
+			Status: types.TaskState_TASK_QUEUED,
 			Time:   time.Now().Unix(),
 		})
 		task.Retry++
@@ -239,7 +240,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 			QueueSize.Inc()
 			s.tasks <- id
 		}()
-	} else if types.IsTerminal(status.State) {
+	} else if types.IsTerminal(newState) {
 		NotifyCallback(&task)
 	}
 

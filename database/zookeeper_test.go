@@ -8,7 +8,6 @@ import (
 
 	"github.com/klarna/eremetic/mocks"
 	"github.com/klarna/eremetic/types"
-	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/samuel/go-zookeeper/zk"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
@@ -40,7 +39,7 @@ func TestZKDatabase(t *testing.T) {
 
 	status := []types.Status{
 		types.Status{
-			Status: mesos.TaskState_TASK_RUNNING.String(),
+			Status: types.TaskState_TASK_RUNNING,
 			Time:   time.Now().Unix(),
 		},
 	}

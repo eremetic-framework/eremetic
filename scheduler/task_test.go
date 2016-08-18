@@ -14,7 +14,7 @@ func TestTask(t *testing.T) {
 
 	status := []types.Status{
 		types.Status{
-			Status: mesos.TaskState_TASK_RUNNING.String(),
+			Status: types.TaskState_TASK_RUNNING,
 			Time:   time.Now().Unix(),
 		},
 	}

@@ -57,25 +57,6 @@ func TestScheduler(t *testing.T) {
 		id := "eremetic-task.9999"
 		db.PutTask(&types.EremeticTask{ID: id})
 
-		Convey("newTask", func() {
-			task := types.EremeticTask{
-				ID: "eremetic-task.1234",
-			}
-			offer := mesos.Offer{
-				FrameworkId: &mesos.FrameworkID{
-					Value: proto.String("framework-id"),
-				},
-				SlaveId: &mesos.SlaveID{
-					Value: proto.String("slave-id"),
-				},
-				Hostname: proto.String("hostname"),
-			}
-			taskData, mesosTask := s.newTask(task, &offer)
-
-			So(mesosTask.GetTaskId().GetValue(), ShouldEqual, task.ID)
-			So(taskData.SlaveId, ShouldEqual, "slave-id")
-		})
-
 		Convey("Create", func() {
 			s := Create(&Settings{MaxQueueSize: 200}, &config.Config{Database: db})
 			So(s.tasksCreated, ShouldEqual, 0)
@@ -130,7 +111,7 @@ func TestScheduler(t *testing.T) {
 					}
 					driver.On("LaunchTasks").Return("launched").Once()
 
-					_, err := s.ScheduleTask(types.Request{
+					taskID, err := s.ScheduleTask(types.Request{
 						TaskCPUs:    0.5,
 						TaskMem:     22.0,
 						DockerImage: "busybox",
@@ -140,8 +121,12 @@ func TestScheduler(t *testing.T) {
 					So(err, ShouldBeNil)
 					s.ResourceOffers(driver, offers)
 
+					task, err := db.ReadTask(taskID)
 					So(driver.AssertNotCalled(t, "DeclineOffer"), ShouldBeTrue)
 					So(driver.AssertCalled(t, "LaunchTasks"), ShouldBeTrue)
+					So(task.Status, ShouldHaveLength, 2)
+					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_QUEUED)
+					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_STAGING)
 				})
 
 				Convey("One task unable to launch", func() {
@@ -175,7 +160,7 @@ func TestScheduler(t *testing.T) {
 					})
 					task, _ := db.ReadTask(id)
 					So(len(task.Status), ShouldEqual, 1)
-					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
+					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_RUNNING)
 
 					s.StatusUpdate(nil, &mesos.TaskStatus{
 						TaskId: &mesos.TaskID{
@@ -186,8 +171,8 @@ func TestScheduler(t *testing.T) {
 					task, _ = db.ReadTask(id)
 
 					So(len(task.Status), ShouldEqual, 2)
-					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_RUNNING.String())
-					So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
+					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_RUNNING)
+					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_FAILED)
 				})
 
 				Convey("Failing immediately", func() {
@@ -200,8 +185,8 @@ func TestScheduler(t *testing.T) {
 					})
 					task, _ := db.ReadTask(id)
 					So(len(task.Status), ShouldEqual, 2)
-					So(task.Status[0].Status, ShouldEqual, mesos.TaskState_TASK_FAILED.String())
-					So(task.Status[1].Status, ShouldEqual, mesos.TaskState_TASK_STAGING.String())
+					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_FAILED)
+					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_QUEUED)
 
 					select {
 					case c := <-s.tasks:

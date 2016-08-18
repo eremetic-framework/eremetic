@@ -157,7 +157,8 @@ func TestTask(t *testing.T) {
 			So(task.Environment, ShouldBeEmpty)
 			So(task.Image, ShouldEqual, "busybox")
 			So(task.Volumes, ShouldBeEmpty)
-			So(task.Status[0].Status, ShouldEqual, "TASK_STAGING")
+			So(task.Status, ShouldHaveLength, 1)
+			So(task.Status[0].Status, ShouldEqual, TaskState_TASK_QUEUED)
 		})
 
 		Convey("Given a volume and environment", func() {

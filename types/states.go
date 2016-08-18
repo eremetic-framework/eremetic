@@ -1,24 +1,24 @@
 package types
 
-import mesos "github.com/mesos/mesos-go/mesosproto"
+type TaskState string
 
-// IsTerminal determines if a TaskState is a terminal state, i.e. if it singals
-// that the task has stopped running.
-func IsTerminal(state *mesos.TaskState) bool {
-	switch *state {
-	case mesos.TaskState_TASK_FINISHED,
-		mesos.TaskState_TASK_FAILED,
-		mesos.TaskState_TASK_KILLED,
-		mesos.TaskState_TASK_LOST:
-		return true
-	default:
-		return false
-	}
-}
+const (
+	// Standard mesos states
+	TaskState_TASK_STAGING  TaskState = "TASK_STAGING"
+	TaskState_TASK_STARTING TaskState = "TASK_STARTING"
+	TaskState_TASK_RUNNING  TaskState = "TASK_RUNNING"
+	TaskState_TASK_FINISHED TaskState = "TASK_FINISHED"
+	TaskState_TASK_FAILED   TaskState = "TASK_FAILED"
+	TaskState_TASK_KILLED   TaskState = "TASK_KILLED"
+	TaskState_TASK_LOST     TaskState = "TASK_LOST"
+	TaskState_TASK_ERROR    TaskState = "TASK_ERROR"
+	// Custom eremetic states
+	TaskState_TASK_QUEUED TaskState = "TASK_QUEUED"
+)
 
-// IsTerminalString takes a string representation of a state and returns whether
-// it is terminal or not.
-func IsTerminalString(state string) bool {
+// IsTerminal takes a string representation of a state and returns whether it
+// is terminal or not.
+func IsTerminal(state TaskState) bool {
 	switch state {
 	case "TASK_LOST", "TASK_KILLED", "TASK_FAILED", "TASK_FINISHED":
 		return true
