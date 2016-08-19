@@ -126,6 +126,19 @@ func (h Handler) ListRunningTasks() http.HandlerFunc {
 	}
 }
 
+// ListTerminatedTasks returns information about finished tasks in the database,
+// aka history
+func (h Handler) ListTerminatedTasks() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logrus.Debug("Fetching all terminated tasks")
+		tasks, err := h.database.ListTerminatedTasks()
+		if err != nil {
+			handleError(err, w, "Unable to fetch running tasks from the database")
+		}
+		writeJSON(200, tasks, w)
+	}
+}
+
 // IndexHandler returns the index template, or no content.
 func (h Handler) IndexHandler(conf *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

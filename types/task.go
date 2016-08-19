@@ -159,3 +159,14 @@ func (task *EremeticTask) LastUpdated() time.Time {
 func (task *EremeticTask) UpdateStatus(status Status) {
 	task.Status = append(task.Status, status)
 }
+
+func (task *EremeticTask) IsExpired(retentionPeriod int64) bool {
+	if task.IsTerminated() {
+		st := task.Status[len(task.Status)-1]
+		delta := time.Now().Unix() - st.Time
+		if delta > retentionPeriod {
+			return true
+		}
+	}
+	return false
+}

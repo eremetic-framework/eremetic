@@ -11,6 +11,7 @@ import (
 	"github.com/kardianos/osext"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/janitor"
 	"github.com/klarna/eremetic/routes"
 	"github.com/klarna/eremetic/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
@@ -31,6 +32,9 @@ func readConfig() {
 	viper.SetDefault("checkpoint", "true")
 	viper.SetDefault("failover_timeout", 2592000.0)
 	viper.SetDefault("queue_size", 100)
+	viper.SetDefault("janitor", "false")
+	viper.SetDefault("janitor_retention_period", 0)
+	viper.SetDefault("janitor_pause", 300)
 	viper.ReadInConfig()
 
 	driver := viper.GetString("database_driver")
@@ -83,6 +87,12 @@ func setupDB() (database.TaskDB, error) {
 	return database.NewDB(driver, location)
 }
 
+func setupJanitor(db database.TaskDB) janitor.Janitor {
+	enabled := viper.GetBool("janitor")
+	retentionPeriod := viper.GetInt64("janitor_retention_period")
+	pause := viper.GetInt64("janitor_pause")
+	return janitor.NewJanitor(db, enabled, retentionPeriod, pause)
+}
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
 		fmt.Println(Version)
@@ -111,6 +121,12 @@ func main() {
 	go func() {
 		scheduler.Run(sched, schedulerSettings)
 		manners.Close()
+	}()
+
+	// The GrimReaper
+	grimreaper := setupJanitor(db)
+	go func() {
+		grimreaper.Run()
 	}()
 
 	// Catch interrupt

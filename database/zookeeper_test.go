@@ -58,6 +58,23 @@ func TestZKDatabase(t *testing.T) {
 		t.Fail()
 	}
 
+	statusFinished := []types.Status{
+		types.Status{
+			Status: types.TaskState_TASK_FINISHED,
+			Time:   time.Now().Unix() - 3600,
+		},
+	}
+
+	taskFinished := &types.EremeticTask{
+		ID:                "2345",
+		MaskedEnvironment: maskedEnv,
+		Status:            statusFinished,
+	}
+
+	taskBytesFinished, err := encode(taskFinished)
+	if err != nil {
+		t.Fail()
+	}
 	Convey("Creating", t, func() {
 		Convey("Errors", func() {
 			Convey("Missing path", func() {
@@ -268,7 +285,6 @@ func TestZKDatabase(t *testing.T) {
 			So(object.AssertCalled(t, "Get", "/testdb/1234"), ShouldBeTrue)
 			So(object.AssertCalled(t, "Children", "/testdb"), ShouldBeTrue)
 		})
-
 		Convey("Error", func() {
 			setup()
 			defer teardown()
@@ -280,6 +296,26 @@ func TestZKDatabase(t *testing.T) {
 			So(list, ShouldBeEmpty)
 			So(list, ShouldNotBeNil)
 			So(object.AssertCalled(t, "Get", "/testdb/1234"), ShouldBeTrue)
+			So(object.AssertCalled(t, "Children", "/testdb"), ShouldBeTrue)
+		})
+	})
+
+	Convey("ListTerminatedTasks", t, func() {
+		Convey("Success", func() {
+			setup()
+			defer teardown()
+
+			object.On("Children", mock.AnythingOfType("string")).Return([]string{"2345"}, nil, nil)
+			object.On("Get", mock.AnythingOfType("string")).Return(taskBytesFinished, &zk.Stat{}, nil)
+
+			list, err := db.ListTerminatedTasks()
+
+			So(err, ShouldBeNil)
+			So(list, ShouldHaveLength, 1)
+			So(list[0], ShouldHaveSameTypeAs, taskFinished)
+			So(list[0].ID, ShouldEqual, taskFinished.ID)
+			So(list[0].MaskedEnvironment["foo"], ShouldEqual, masking)
+			So(object.AssertCalled(t, "Get", "/testdb/2345"), ShouldBeTrue)
 			So(object.AssertCalled(t, "Children", "/testdb"), ShouldBeTrue)
 		})
 	})

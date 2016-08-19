@@ -51,6 +51,12 @@ func Create(scheduler types.Scheduler, conf *config.Config) *mux.Router {
 			Handler: h.ListRunningTasks(),
 		},
 		types.Route{
+			Name:    "ListFinishedTasks",
+			Method:  "GET",
+			Pattern: "/history",
+			Handler: h.ListTerminatedTasks(),
+		},
+		types.Route{
 			Name:    "Index",
 			Method:  "GET",
 			Pattern: "/",
