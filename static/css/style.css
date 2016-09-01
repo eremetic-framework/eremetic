@@ -126,6 +126,8 @@
 .volumes .field input,
 .env .field input,
 .uri .field input,
+.ports .field input,
+.ports .field select,
 .slave_constraints .field input {
   width: auto !important;
 }

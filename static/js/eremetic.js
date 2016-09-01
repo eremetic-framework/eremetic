@@ -34,6 +34,13 @@ $(document).ready(function() {
       }, []);
     }
 
+    if (typeof json.ports !== "undefined") {
+      json.ports = json.ports.reduce(function(collector, element) {
+        collector.push({ 'container_port': parseInt(element.container_port), 'protocol': element.protocol });
+        return collector;
+      }, []);
+    }
+
     json.task_cpus = parseFloat(json.task_cpus);
     json.task_mem = parseFloat(json.task_mem);
 
@@ -143,6 +150,36 @@ $(document).ready(function() {
 
   }
 
+  function addPorts(e) {
+    var   $cont = $('#ports')
+        , index = $cont.data('count') + 1
+        , $input
+        ;
+
+    e.preventDefault();
+
+    $input = $(
+      '<div class="field ui action input ports">' +
+        '<div class="field">' +
+          '<input name="ports[' + index + '][container_port]" placeholder="Container Port" type="number"/>' +
+        '</div>' +
+        '<div class="field">' +
+            '<select name="ports[' + index + '][protocol]">' +
+                '<option value="tcp" selected="selected">tcp</option>' +
+                '<option value="udp">udp</option>' +
+            '</select>' +
+        '</div>' +
+        '&nbsp;<button class="ui icon button">' +
+          '<i class="minus red icon"></i>' +
+        '</button>' +
+      '</div>'
+    );
+
+    $cont.append($input);
+    $cont.data('count', index);
+
+  }
+
   function addEnvironments(e) {
     var   $cont = $('#env')
         , index = $cont.data('count') + 1
@@ -200,6 +237,7 @@ $(document).ready(function() {
   $('#new_task').on('submit', submitHandler);
   $('#new_task #submit').on('click', submitHandler);
   $('#new_task #volumes .plus').on('click', addVolumes);
+  $('#new_task #ports .plus').on('click', addPorts);
   $('#new_task #env .plus').on('click', addEnvironments);
   $('#new_task #uris .plus').on('click', addURIs);
   $('#new_task #slave_constraints .plus').on('click', addSlaveConstraints);
