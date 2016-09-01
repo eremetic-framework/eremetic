@@ -1,15 +1,9 @@
 package routes
 
 import (
-	"encoding/json"
-	"html/template"
 	"net/http"
-	"strings"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
-	"github.com/klarna/eremetic/assets"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/handler"
 	"github.com/klarna/eremetic/types"
@@ -19,7 +13,27 @@ import (
 // Create is used to create a new router
 func Create(scheduler types.Scheduler, conf *config.Config) *mux.Router {
 	h := handler.Create(scheduler, conf.Database)
-	routes := types.Routes{
+	router := mux.NewRouter().StrictSlash(true)
+
+	for _, route := range routes(h, conf) {
+		router.
+			Methods(route.Method).
+			Path(route.Pattern).
+			Name(route.Name).
+			Handler(prometheus.InstrumentHandler(route.Name, route.Handler))
+	}
+
+	router.
+		PathPrefix("/static/").
+		Handler(h.StaticAssets())
+
+	router.NotFoundHandler = http.HandlerFunc(h.NotFound())
+
+	return router
+}
+
+func routes(h handler.Handler, conf *config.Config) types.Routes {
+	return types.Routes{
 		types.Route{
 			Name:    "AddTask",
 			Method:  "POST",
@@ -56,56 +70,17 @@ func Create(scheduler types.Scheduler, conf *config.Config) *mux.Router {
 			Pattern: "/",
 			Handler: h.IndexHandler(conf),
 		},
+		types.Route{
+			Name:    "Version",
+			Method:  "GET",
+			Pattern: "/version",
+			Handler: h.Version(conf),
+		},
+		types.Route{
+			Name:    "Metrics",
+			Method:  "GET",
+			Pattern: "/metrics",
+			Handler: prometheus.Handler(),
+		},
 	}
-
-	router := mux.NewRouter().StrictSlash(true)
-	for _, route := range routes {
-		router.
-			Methods(route.Method).
-			Path(route.Pattern).
-			Name(route.Name).
-			Handler(prometheus.InstrumentHandler(route.Name, route.Handler))
-	}
-
-	router.
-		Methods("GET").
-		Path("/metrics").
-		Name("Metrics").
-		Handler(prometheus.Handler())
-
-	router.
-		Methods("GET").
-		Path("/version").
-		Name("Version").
-		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(conf.Version)
-		})
-
-	router.PathPrefix("/static/").
-		Handler(
-			http.StripPrefix(
-				"/static/", http.FileServer(
-					&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, AssetInfo: assets.AssetInfo, Prefix: "static"})))
-
-	router.NotFoundHandler = http.HandlerFunc(notFound)
-
-	return router
-}
-
-func notFound(w http.ResponseWriter, r *http.Request) {
-	if strings.Contains(r.Header.Get("Accept"), "text/html") {
-		src, _ := assets.Asset("templates/error_404.html")
-		tpl, err := template.New("404").Parse(string(src))
-		if err == nil {
-			tpl.Execute(w, nil)
-			return
-		}
-		logrus.WithError(err).WithField("template", "error_404.html").Error("Unable to load template")
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusNotFound)
-	json.NewEncoder(w).Encode(nil)
 }

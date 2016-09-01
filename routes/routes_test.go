@@ -1,30 +1,28 @@
 package routes
 
 import (
-	"fmt"
-	"os"
 	"testing"
 
 	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/handler"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestRoutes(t *testing.T) {
-	routes := []string{"AddTask", "Status", "ListRunningTasks"}
-
-	dir, _ := os.Getwd()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
-	if err != nil {
-		t.Fail()
-	}
+	routes := routes(handler.Handler{}, &config.Config{})
 
 	Convey("Create", t, func() {
 		Convey("Should build the expected routes", func() {
-			m := Create(nil, &config.Config{Database: db})
-			for _, name := range routes {
-				So(m.GetRoute(name), ShouldNotBeNil)
+			m := Create(nil, &config.Config{})
+			for _, r := range routes {
+				So(m.GetRoute(r.Name), ShouldNotBeNil)
 			}
 		})
+	})
+
+	Convey("Expected number of routes", t, func() {
+		ExpectedNumberOfRoutes := 8 // Magic numbers FTW
+
+		So(len(routes), ShouldEqual, ExpectedNumberOfRoutes)
 	})
 }

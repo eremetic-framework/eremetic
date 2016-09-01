@@ -10,6 +10,7 @@ TOOLS=${GOPATH}/bin/go-bindata \
       ${GOPATH}/bin/goconvey
 SRC=$(shell find . -name '*.go')
 STATIC=$(shell find static templates)
+TESTFLAGS="-v"
 
 DOCKER_GO_SRC_PATH=/go/src/github.com/klarna/eremetic
 DOCKER_GOLANG_RUN_CMD=docker run --rm -v "$(PWD)":$(DOCKER_GO_SRC_PATH) -w $(DOCKER_GO_SRC_PATH) golang:1.6 bash -c
@@ -24,7 +25,7 @@ ${TOOLS}:
 	go get github.com/smartystreets/goconvey
 
 test: eremetic
-	go test -race -v ${PACKAGES}
+	go test ${TESTFLAGS} ${PACKAGES}
 
 test-server: ${TOOLS}
 	${GOPATH}/bin/goconvey

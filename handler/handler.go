@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/assets"
 	"github.com/klarna/eremetic/config"
@@ -145,4 +146,28 @@ func (h Handler) IndexHandler(conf *config.Config) http.HandlerFunc {
 		w.WriteHeader(http.StatusNoContent)
 		json.NewEncoder(w).Encode(nil)
 	}
+}
+
+// Version returns the currently running Eremetic version.
+func (h Handler) Version(conf *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(conf.Version)
+	}
+}
+
+// NotFound is in charge of reporting that a task can not be found.
+func (h Handler) NotFound() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Proxy to the notFound helper function
+		notFound(w, r)
+	}
+}
+
+// StaticAssets handles the serving of compiled static assets.
+func (h Handler) StaticAssets() http.Handler {
+	return http.StripPrefix(
+		"/static/", http.FileServer(
+			&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, AssetInfo: assets.AssetInfo, Prefix: "static"}))
 }
