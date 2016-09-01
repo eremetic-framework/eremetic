@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
+	"github.com/mesos/mesos-go/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -30,6 +31,8 @@ func TestTask(t *testing.T) {
 			Name:     "Eremetic task 17",
 		}
 
+
+		portres := "ports"
 		offer := mesos.Offer{
 			FrameworkId: &mesos.FrameworkID{
 				Value: proto.String("framework-id"),
@@ -38,6 +41,15 @@ func TestTask(t *testing.T) {
 				Value: proto.String("slave-id"),
 			},
 			Hostname: proto.String("hostname"),
+			Resources: []*mesos.Resource{&mesos.Resource{
+				Name: &portres,
+				Type: mesos.Value_RANGES.Enum(),
+				Ranges: &mesos.Value_Ranges{
+					Range: []*mesos.Value_Range{
+						mesosutil.NewValueRange(31000, 31010),
+						},
+					},
+				}},
 		}
 
 		Convey("No volume or environment specified", func() {
@@ -83,6 +95,29 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.Environment.Variables[0].GetValue(), ShouldEqual, "bar")
 			So(taskInfo.Command.Environment.Variables[1].GetName(), ShouldEqual, "MESOS_TASK_ID")
 			So(taskInfo.Command.Environment.Variables[1].GetValue(), ShouldEqual, eremeticTask.ID)
+		})
+
+		Convey("Given a portMapping", func() {
+			var ports []types.Port
+
+			ports = append(ports,
+				types.Port{
+					ContainerPort: 80,
+					Protocol: "tcp",
+				},
+			)
+
+			eremeticTask.Ports = ports
+
+			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(len(taskInfo.Container.Docker.PortMappings), ShouldEqual, 1)
+			So(taskInfo.Container.Docker.GetPortMappings()[0].GetContainerPort(), ShouldEqual, ports[0].ContainerPort)
+			So(taskInfo.GetResources()[2].GetName(), ShouldEqual, "ports")
+
+			expected_range := mesosutil.NewValueRange(31000, 31001)
+			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetBegin(), ShouldEqual, expected_range.GetBegin())
+			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetEnd(), ShouldEqual, expected_range.GetEnd())
 		})
 
 		Convey("Given archive to fetch", func() {
