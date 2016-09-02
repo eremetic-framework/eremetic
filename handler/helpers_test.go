@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -38,9 +39,7 @@ func TestHandlingHelpers(t *testing.T) {
 		wr := httptest.NewRecorder()
 
 		Convey("It should return an error status code", func() {
-			var err = mockError{
-				message: "Error",
-			}
+			err := errors.New("Error")
 
 			handleError(err, wr, "A test error")
 

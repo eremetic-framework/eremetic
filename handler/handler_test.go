@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -18,38 +19,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
+	"github.com/klarna/eremetic/mocks"
 	"github.com/klarna/eremetic/types"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-type mockError struct {
-	message string
-}
-
-func (m mockError) Error() string {
-	return m.message
-}
-
-type mockScheduler struct {
-	nextError *error
-}
-
-func (s *mockScheduler) ScheduleTask(request types.Request) (string, error) {
-	if err := s.nextError; err != nil {
-		s.nextError = nil
-		return "", *err
-	}
-	return "eremetic-task.mock", nil
-}
-
-type errorReader struct{}
-
-func (r *errorReader) Read(p []byte) (int, error) {
-	return 0, errors.New("oh no")
-}
-
 func TestHandling(t *testing.T) {
-	scheduler := &mockScheduler{}
+	scheduler := &mocks.Scheduler{}
 	status := []types.Status{
 		types.Status{
 			Status: types.TaskState_TASK_RUNNING,
@@ -57,8 +33,8 @@ func TestHandling(t *testing.T) {
 		},
 	}
 
-	dir, _ := os.Getwd()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
+	dir := os.TempDir()
+	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/eremetic_test.db", dir))
 	if err != nil {
 		t.Fail()
 	}
@@ -69,24 +45,32 @@ func TestHandling(t *testing.T) {
 	Convey("Routes", t, func() {
 		db.Clean()
 
+		id := "eremetic-task.1234"
+
+		maskedEnv := make(map[string]string)
+		maskedEnv["foo"] = "bar"
+		task := types.EremeticTask{
+			TaskCPUs:          0.2,
+			TaskMem:           0.5,
+			Command:           "test",
+			Image:             "test",
+			Status:            status,
+			ID:                id,
+			MaskedEnvironment: maskedEnv,
+		}
+
 		wr := httptest.NewRecorder()
 		m := mux.NewRouter()
+		r, _ := http.NewRequest("GET", fmt.Sprintf("/task/%s", id), nil)
 
 		Convey("GetTaskInfo", func() {
-			r, _ := http.NewRequest("GET", "/task/eremetic-task.1234", nil)
 			m.HandleFunc("/task/{taskId}", h.GetTaskInfo(&config.Config{}))
 
 			Convey("JSON request", func() {
 				Convey("Not Found", func() {
-					id := "eremetic-task.5678"
-					task := types.EremeticTask{
-						TaskCPUs: 0.2,
-						TaskMem:  0.5,
-						Command:  "test",
-						Image:    "test",
-						Status:   status,
-						ID:       id,
-					}
+					id = "eremetic-task.5678"
+					r.URL, _ = url.Parse(fmt.Sprintf("/task/%s", id))
+
 					db.PutTask(&task)
 					m.ServeHTTP(wr, r)
 
@@ -94,15 +78,6 @@ func TestHandling(t *testing.T) {
 				})
 
 				Convey("Found", func() {
-					id := "eremetic-task.1234"
-					task := types.EremeticTask{
-						TaskCPUs: 0.2,
-						TaskMem:  0.5,
-						Command:  "test",
-						Image:    "test",
-						Status:   status,
-						ID:       id,
-					}
 					db.PutTask(&task)
 					m.ServeHTTP(wr, r)
 
@@ -110,27 +85,13 @@ func TestHandling(t *testing.T) {
 				})
 
 				Convey("Task with MaskedEnv gets masked", func() {
-					r, _ := http.NewRequest("GET", "/task/eremetic-task.987", nil)
-					id := "eremetic-task.987"
-					maskedEnv := make(map[string]string)
-					maskedEnv["foo"] = "bar"
-					task := types.EremeticTask{
-						TaskCPUs:          0.2,
-						TaskMem:           0.5,
-						Command:           "test",
-						Image:             "test",
-						Status:            status,
-						ID:                id,
-						MaskedEnvironment: maskedEnv,
-					}
-
 					db.PutTask(&task)
 					m.ServeHTTP(wr, r)
 
 					var retrievedTask types.EremeticTask
 					body, _ := ioutil.ReadAll(io.LimitReader(wr.Body, 1048576))
-
 					json.Unmarshal(body, &retrievedTask)
+
 					So(retrievedTask.MaskedEnvironment, ShouldContainKey, "foo")
 					So(retrievedTask.MaskedEnvironment["foo"], ShouldNotEqual, "bar")
 					So(retrievedTask.MaskedEnvironment["foo"], ShouldEqual, "*******")
@@ -142,34 +103,20 @@ func TestHandling(t *testing.T) {
 				r.Header.Add("Accept", "text/html")
 
 				Convey("Not Found", func() {
-					id := "eremetic-task.9876"
-					task := types.EremeticTask{
-						TaskCPUs: 0.2,
-						TaskMem:  0.5,
-						Command:  "test",
-						Image:    "test",
-						Status:   status,
-						ID:       id,
-					}
+					id = "eremetic-task.5678"
+					r.URL, _ = url.Parse(fmt.Sprintf("/task/%s", id))
+
 					db.PutTask(&task)
 					m.ServeHTTP(wr, r)
 
 					b, _ := ioutil.ReadAll(wr.Body)
 					body := string(b)
+
 					So(wr.Code, ShouldEqual, http.StatusNotFound)
 					So(body, ShouldContainSubstring, "<title>404 Not Found | Eremetic</title>")
 				})
 
 				Convey("Found", func() {
-					id := "eremetic-task.1234"
-					task := types.EremeticTask{
-						TaskCPUs: 0.2,
-						TaskMem:  0.5,
-						Command:  "test",
-						Image:    "test",
-						Status:   status,
-						ID:       id,
-					}
 					db.PutTask(&task)
 					m.ServeHTTP(wr, r)
 
@@ -183,11 +130,11 @@ func TestHandling(t *testing.T) {
 		})
 
 		Convey("AddTask", func() {
-			Convey("It should respond with a location header", func() {
-				data := []byte(`{"task_mem":22.0, "docker_image": "busybox", "command": "echo hello", "task_cpus":0.5, "tasks_to_launch": 1}`)
-				r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
-				r.Host = "localhost"
+			data := []byte(`{"task_mem":22.0, "docker_image": "busybox", "command": "echo hello", "task_cpus":0.5, "tasks_to_launch": 1}`)
+			r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
+			r.Host = "localhost"
 
+			Convey("It should respond with a location header", func() {
 				handler := h.AddTask()
 				handler(wr, r)
 
@@ -197,11 +144,8 @@ func TestHandling(t *testing.T) {
 			})
 
 			Convey("Failed to schedule", func() {
-				data := []byte(`{"task_mem":22.0, "docker_image": "busybox", "command": "echo hello", "task_cpus":0.5, "tasks_to_launch": 1}`)
-				r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
-				r.Host = "localhost"
 				err := errors.New("A random error")
-				scheduler.nextError = &err
+				scheduler.NextError = &err
 
 				handler := h.AddTask()
 				handler(wr, r)
@@ -210,8 +154,7 @@ func TestHandling(t *testing.T) {
 			})
 
 			Convey("Error on bad input stream", func() {
-				r, _ := http.NewRequest("POST", "/task", &errorReader{})
-				r.Host = "localhost"
+				r.Body = ioutil.NopCloser(&mocks.ErrorReader{})
 
 				handler := h.AddTask()
 				handler(wr, r)
@@ -220,9 +163,8 @@ func TestHandling(t *testing.T) {
 			})
 
 			Convey("Error on malformed json", func() {
-				data := []byte(`{"key:123}`)
-				r, _ := http.NewRequest("POST", "/task", bytes.NewBuffer(data))
-				r.Host = "localhost"
+				data = []byte(`{"key:123}`)
+				r.Body = ioutil.NopCloser(bytes.NewBuffer(data))
 
 				handler := h.AddTask()
 				handler(wr, r)
@@ -316,8 +258,9 @@ func TestHandling(t *testing.T) {
 		})
 
 		Convey("Index", func() {
+			r, _ := http.NewRequest("GET", "/", nil)
+
 			Convey("Renders nothing for json", func() {
-				r, _ := http.NewRequest("GET", "/", nil)
 				m.HandleFunc("/", h.IndexHandler(&config.Config{Version: "test"}))
 				m.ServeHTTP(wr, r)
 
@@ -325,13 +268,13 @@ func TestHandling(t *testing.T) {
 			})
 
 			Convey("Renders the html template for html requests", func() {
-				r, _ := http.NewRequest("GET", "/", nil)
 				r.Header.Add("Accept", "text/html")
 				m.HandleFunc("/", h.IndexHandler(&config.Config{Version: "test"}))
 				m.ServeHTTP(wr, r)
 
 				b, _ := ioutil.ReadAll(wr.Body)
 				body := string(b)
+
 				So(wr.Code, ShouldEqual, http.StatusOK)
 				So(body, ShouldContainSubstring, "<html>")
 				So(body, ShouldContainSubstring, "<div id='eremetic-version'>test</div>")
