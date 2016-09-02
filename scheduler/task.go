@@ -14,6 +14,8 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 	task.AgentIP = offer.GetUrl().GetAddress().GetIp()
 	task.AgentPort = offer.GetUrl().GetAddress().GetPort()
 
+	portMapping, portResources := buildPorts(task, offer)
+
 	taskInfo := &mesos.TaskInfo{
 		TaskId:  &mesos.TaskID{Value: proto.String(task.ID)},
 		SlaveId: offer.SlaveId,
@@ -24,12 +26,15 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 			Docker: &mesos.ContainerInfo_DockerInfo{
 				Image:          proto.String(task.Image),
 				ForcePullImage: proto.Bool(task.ForcePullImage),
+				PortMappings:   portMapping,
+				Network:        mesos.ContainerInfo_DockerInfo_BRIDGE.Enum(),
 			},
 			Volumes: buildVolumes(task),
 		},
 		Resources: []*mesos.Resource{
 			mesosutil.NewScalarResource("cpus", task.TaskCPUs),
 			mesosutil.NewScalarResource("mem", task.TaskMem),
+			mesosutil.NewRangesResource("ports", portResources),
 		},
 	}
 	return task, taskInfo
@@ -69,6 +74,61 @@ func buildVolumes(task types.EremeticTask) []*mesos.Volume {
 	}
 
 	return volumes
+}
+
+func buildPorts(task types.EremeticTask, offer *mesos.Offer) ([]*mesos.ContainerInfo_DockerInfo_PortMapping, []*mesos.Value_Range) {
+	var portResources []*mesos.Value_Range
+	var portMapping   []*mesos.ContainerInfo_DockerInfo_PortMapping
+
+	if(len(task.Ports) > 0) {
+		lastIndex := len(task.Ports)
+
+		for _, v := range offer.Resources {
+			if(lastIndex == 0) {
+				break
+			}
+
+			if(*v.Name != "ports") {
+				continue
+			}
+
+			for _, p_v := range v.Ranges.Range {
+				if(lastIndex == 0) {
+					break
+				}
+
+				startPort, endPort := *p_v.Begin, int(*p_v.Begin)
+				for portnumber := int(*p_v.Begin); portnumber <= int(*p_v.End); portnumber++ {
+					if(lastIndex == 0) {
+						break
+					}
+
+					lastIndex--
+					ask_port := &task.Ports[lastIndex]
+
+					if(ask_port.ContainerPort == 0) {
+						continue
+					}
+
+					endPort = portnumber + 1
+
+					ask_port.HostPort = uint32(portnumber)
+
+					portMapping = append(portMapping, &mesos.ContainerInfo_DockerInfo_PortMapping{
+						ContainerPort: proto.Uint32(ask_port.ContainerPort),
+						HostPort:      proto.Uint32(ask_port.HostPort),
+						Protocol:      proto.String(ask_port.Protocol),
+					})
+
+				}
+				if(int(startPort) != endPort) {
+					portResources = append(portResources, mesosutil.NewValueRange(startPort,uint64(endPort)))
+				}
+			}
+		}
+	}
+
+	return portMapping, portResources
 }
 
 func buildURIs(task types.EremeticTask) []*mesos.CommandInfo_URI {

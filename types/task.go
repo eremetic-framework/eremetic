@@ -20,6 +20,12 @@ type Volume struct {
 	HostPath      string `json:"host_path"`
 }
 
+type Port struct {
+	ContainerPort uint32 `json:"container_port"`
+	HostPort      uint32 `json:"host_port"`
+	Protocol      string `json:"protocol"`
+}
+
 type SlaveConstraint struct {
 	AttributeName  string `json:"attribute_name"`
 	AttributeValue string `json:"attribute_value"`
@@ -41,6 +47,7 @@ type EremeticTask struct {
 	MaskedEnvironment map[string]string `json:"masked_env"`
 	Image             string            `json:"image"`
 	Volumes           []Volume          `json:"volumes"`
+	Ports             []Port            `json:"ports"`
 	Status            []Status          `json:"status"`
 	ID                string            `json:"id"`
 	Name              string            `json:"name"`
@@ -116,6 +123,7 @@ func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 		SlaveConstraints:  request.SlaveConstraints,
 		Image:             request.DockerImage,
 		Volumes:           request.Volumes,
+		Ports:             request.Ports,
 		CallbackURI:       request.CallbackURI,
 		ForcePullImage:    request.ForcePullImage,
 		FetchURIs:         mergeURIs(request),

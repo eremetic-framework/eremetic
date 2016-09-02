@@ -19,7 +19,7 @@ curl -H "Content-Type: application/json" \
      http://eremetic_server:8080/task
 ```
 
-These basic fields are required but you can also specify volumes, environment
+These basic fields are required but you can also specify volumes, ports, environment
 variables, and URIs for the mesos fetcher to download. See
 [examples.md](examples.md) for more examples on how to use eremetic.
 
@@ -42,6 +42,13 @@ JSON format:
     {
       "container_path": "/var/run/docker.sock",
       "host_path": "/var/run/docker.sock"
+    }
+  ],
+  // Array of Objects, ports to forward to the container
+  "ports": [
+    {
+      "container_port": 80,
+      "protocol": "tcp"
     }
   ],
   // Object, Environment variables to pass to the container

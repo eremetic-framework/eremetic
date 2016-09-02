@@ -304,6 +304,7 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 		"docker_image":      request.DockerImage,
 		"command":           request.Command,
 		"slave_constraints": request.SlaveConstraints,
+		"ports":             request.Ports,
 	}).Debug("Adding task to queue")
 
 	task, err := types.NewEremeticTask(request, fmt.Sprintf("Eremetic task %s", nextID(s)))

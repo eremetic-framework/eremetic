@@ -7,6 +7,7 @@ type Request struct {
 	DockerImage       string            `json:"docker_image"`
 	Command           string            `json:"command"`
 	Volumes           []Volume          `json:"volumes"`
+	Ports             []Port            `json:"ports"`
 	Environment       map[string]string `json:"env"`
 	MaskedEnvironment map[string]string `json:"masked_env"`
 	SlaveConstraints  []SlaveConstraint `json:"slave_constraints"`
