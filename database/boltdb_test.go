@@ -232,4 +232,34 @@ func TestBoltDatabase(t *testing.T) {
 		So(tasks, ShouldBeEmpty)
 		So(tasks, ShouldNotBeNil)
 	})
+
+	Convey("List terminated tasks", t, func() {
+		setup()
+		defer teardown()
+		defer db.Close()
+
+		db.Clean()
+		db.PutTask(&types.EremeticTask{
+			ID: "1234",
+			Status: []types.Status{
+				types.Status{
+					Status: types.TaskState_TASK_STAGING,
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: types.TaskState_TASK_RUNNING,
+					Time:   time.Now().Unix(),
+				},
+				types.Status{
+					Status: types.TaskState_TASK_FINISHED,
+					Time:   time.Now().Unix(),
+				},
+			},
+		})
+		tasks, err := db.ListTerminatedTasks()
+		So(err, ShouldBeNil)
+		So(tasks, ShouldHaveLength, 1)
+		task := tasks[0]
+		So(task.ID, ShouldEqual, "1234")
+	})
 }

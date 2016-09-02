@@ -135,3 +135,38 @@ func (db boltDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
 
 	return tasks, err
 }
+
+// ListNonTerminalTasks returns a list of tasks that are not yet finished in one
+// way or another.
+func (db boltDriver) ListTerminatedTasks() ([]*types.EremeticTask, error) {
+	tasks := []*types.EremeticTask{}
+
+	err := db.database.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("tasks"))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
+		b.ForEach(func(_, v []byte) error {
+			var task types.EremeticTask
+			json.Unmarshal(v, &task)
+			if task.IsTerminated() {
+				applyMask(&task)
+				tasks = append(tasks, &task)
+			}
+			return nil
+		})
+		return nil
+	})
+
+	return tasks, err
+}
+
+func (db boltDriver) RemoveTask(id string) error {
+	return db.database.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("tasks"))
+		if err != nil {
+			return err
+		}
+		return b.Delete([]byte(id))
+	})
+}

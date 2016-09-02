@@ -148,3 +148,32 @@ func (z zkDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
 
 	return tasks, nil
 }
+
+func (z zkDriver) ListTerminatedTasks() ([]*types.EremeticTask, error) {
+	tasks := []*types.EremeticTask{}
+	paths, _, _ := z.connection.Children(z.path)
+	for _, p := range paths {
+		t, err := z.ReadTask(p)
+		if err != nil {
+			logrus.WithError(err).Error("Unable to read task from database, skipping")
+			continue
+		}
+		if t.IsTerminated() {
+			applyMask(&t)
+			tasks = append(tasks, &t)
+		}
+	}
+
+	return tasks, nil
+}
+
+func (z zkDriver) RemoveTask(id string) error {
+	path := fmt.Sprintf("%s/%s", z.path, id)
+	_, stat, err := z.connection.Exists(path)
+	if err != nil {
+		logrus.WithError(err).Error("Unable to check existance of database.")
+		return err
+	}
+
+	return z.connection.Delete(path, stat.Version)
+}

@@ -15,6 +15,8 @@ type TaskDB interface {
 	ReadTask(id string) (types.EremeticTask, error)
 	ReadUnmaskedTask(id string) (types.EremeticTask, error)
 	ListNonTerminalTasks() ([]*types.EremeticTask, error)
+	ListTerminatedTasks() ([]*types.EremeticTask, error)
+	RemoveTask(id string) error
 }
 
 const masking = "*******"
