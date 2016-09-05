@@ -119,7 +119,7 @@
                     <div class="ui list big">
                         {{range .Status}}
                             <div class="item content">
-                                <div class="ui {{.Status | ToLower}} label">
+                                <div class="ui {{.Status.String | ToLower}} label">
                                     {{.Status}}
                                 </div>
                                 <div class="content">
