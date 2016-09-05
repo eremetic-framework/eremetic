@@ -88,11 +88,14 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask,
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		logrus.WithError(err).WithField("template", templateFile).Error("Unable to render template")
+		logrus.WithError(err).WithField("template", templateFile).Error("Unable to load template")
 		return
 	}
 
 	err = tpl.Execute(w, data)
+	if err != nil {
+		logrus.WithError(err).WithField("template", templateFile).Error("Unable to execute template")
+	}
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
@@ -101,11 +104,13 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 	if strings.Contains(r.Header.Get("Accept"), "text/html") {
 		src, _ := assets.Asset("templates/error_404.html")
 		tpl, err := template.New("404").Parse(string(src))
-		if err == nil {
-			tpl.Execute(w, nil)
-			return
+		if err != nil {
+			logrus.WithError(err).WithField("template", "error_404.html").Error("Unable to load template")
 		}
-		logrus.WithError(err).WithField("template", "error_404.html").Error("Unable to load template")
+		err = tpl.Execute(w, nil)
+		if err != nil {
+			logrus.WithError(err).WithField("template", "error_404.html").Error("Unable to execute template")
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
