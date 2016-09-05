@@ -75,8 +75,8 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask,
 	}
 
 	if reflect.DeepEqual(task, (types.EremeticTask{})) {
-		templateFile = "error_404.html"
-		data["TaskID"] = taskID
+		notFound(w, r)
+		return
 	} else {
 		templateFile = "task.html"
 		data = makeMap(task)
@@ -93,6 +93,23 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask,
 	}
 
 	err = tpl.Execute(w, data)
+}
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+
+	if strings.Contains(r.Header.Get("Accept"), "text/html") {
+		src, _ := assets.Asset("templates/error_404.html")
+		tpl, err := template.New("404").Parse(string(src))
+		if err == nil {
+			tpl.Execute(w, nil)
+			return
+		}
+		logrus.WithError(err).WithField("template", "error_404.html").Error("Unable to load template")
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	json.NewEncoder(w).Encode(nil)
 }
 
 func makeMap(task types.EremeticTask) map[string]interface{} {
