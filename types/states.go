@@ -26,3 +26,7 @@ func IsTerminal(state TaskState) bool {
 		return false
 	}
 }
+
+func (s TaskState) String() string {
+	return string(s)
+}

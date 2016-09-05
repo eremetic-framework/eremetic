@@ -125,6 +125,8 @@ func TestHandling(t *testing.T) {
 					So(wr.Code, ShouldEqual, http.StatusOK)
 					lookup := fmt.Sprintf("<body data-task=\"%s\">", id)
 					So(body, ShouldContainSubstring, lookup)
+					status := "<div class=\"ui task_running label\">"
+					So(body, ShouldContainSubstring, status)
 				})
 			})
 		})
