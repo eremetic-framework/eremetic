@@ -13,7 +13,6 @@ import (
 	sched "github.com/mesos/mesos-go/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
 )
@@ -61,11 +60,11 @@ type Settings struct {
 }
 
 // Create a new eremeticScheduler
-func Create(settings *Settings, conf *config.Config) *eremeticScheduler {
+func Create(settings *Settings, db database.TaskDB) *eremeticScheduler {
 	return &eremeticScheduler{
 		shutdown: make(chan struct{}),
 		tasks:    make(chan string, settings.MaxQueueSize),
-		database: conf.Database,
+		database: db,
 	}
 }
 

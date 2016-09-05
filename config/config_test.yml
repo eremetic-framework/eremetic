@@ -1,0 +1,10 @@
+address: 0.0.0.0
+port: 8080
+master: zk://10.10.10.10:2182/mesos
+messenger_address: <callback address for mesos>
+messenger_port: <port for mesos to communicate on>
+loglevel: info
+logformat: json
+database: db/eremetic.db
+credential_file: /tmp/secret_file
+queue_size: 100
