@@ -13,11 +13,7 @@ func TestConfig(t *testing.T) {
 	wd, _ := os.Getwd()
 
 	Convey("The Config Builders", t, func() {
-		conf := DefaultConfig("test", "today")
-		Convey("DefaultConfig", func() {
-			So(conf.Version, ShouldEqual, "test")
-			So(conf.BuildDate, ShouldEqual, "today")
-		})
+		conf := DefaultConfig()
 
 		Convey("ReadConfigFile", func() {
 			ReadConfigFile(conf, fmt.Sprintf("%s/config_test.yml", wd))

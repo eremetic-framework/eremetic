@@ -11,11 +11,12 @@ import (
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/routes"
 	"github.com/klarna/eremetic/scheduler"
+	"github.com/klarna/eremetic/version"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func setup() *config.Config {
-	cfg := config.DefaultConfig(Version, BuildDate)
+	cfg := config.DefaultConfig()
 	config.ReadConfigFile(cfg, config.GetConfigFilePath())
 	config.ReadEnvironment(cfg)
 
@@ -59,7 +60,7 @@ func getSchedulerSettings(config *config.Config) *scheduler.Settings {
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
-		fmt.Println(Version)
+		fmt.Println(version.Version)
 		os.Exit(0)
 	}
 	config := setup()
@@ -97,10 +98,10 @@ func main() {
 
 	bind := fmt.Sprintf("%s:%d", config.Address, config.Port)
 	logrus.WithFields(logrus.Fields{
-		"version": config.Version,
+		"version": version.Version,
 		"address": config.Address,
 		"port":    config.Port,
-	}).Infof("Launching Eremetic version %s!\nListening to %s", config.Version, bind)
+	}).Infof("Launching Eremetic version %s!\nListening to %s", version.Version, bind)
 	err = manners.ListenAndServe(bind, router)
 
 	if err != nil {

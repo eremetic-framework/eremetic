@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/kardianos/osext"
 	"github.com/kelseyhightower/envconfig"
@@ -13,10 +12,6 @@ import (
 
 // The Config struct holds the Eremetic Configuration
 type Config struct {
-	// General
-	Version   string `yaml:"-"`
-	BuildDate string `yaml:"-"`
-
 	// Logging
 	LogLevel  string `yaml:"loglevel"`
 	LogFormat string `yaml:"logformat"`
@@ -43,11 +38,8 @@ type Config struct {
 }
 
 // DefaultConfig returns a Config struct with the default settings
-func DefaultConfig(version, buildDate string) *Config {
+func DefaultConfig() *Config {
 	return &Config{
-		Version:   strings.Trim(version, "'"),
-		BuildDate: buildDate,
-
 		LogLevel:  "debug",
 		LogFormat: "text",
 
