@@ -5,14 +5,15 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/klarna/eremetic/config"
+	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/handler"
 	"github.com/klarna/eremetic/types"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Create is used to create a new router
-func Create(scheduler types.Scheduler, conf *config.Config) *mux.Router {
-	h := handler.Create(scheduler, conf.Database)
+func Create(scheduler types.Scheduler, conf *config.Config, db database.TaskDB) *mux.Router {
+	h := handler.Create(scheduler, db)
 	router := mux.NewRouter().StrictSlash(true)
 
 	for _, route := range routes(h, conf) {

@@ -4,49 +4,29 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/braintree/manners"
-	"github.com/kardianos/osext"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/routes"
 	"github.com/klarna/eremetic/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spf13/viper"
 )
 
-func readConfig() {
-	path, _ := osext.ExecutableFolder()
-	viper.AddConfigPath("/etc/eremetic")
-	viper.AddConfigPath(path)
-	viper.AutomaticEnv()
-	viper.SetConfigName("eremetic")
-	viper.SetDefault("name", "Eremetic")
-	viper.SetDefault("user", "root")
-	viper.SetDefault("loglevel", "debug")
-	viper.SetDefault("logformat", "text")
-	viper.SetDefault("database_driver", "boltdb")
-	viper.SetDefault("checkpoint", "true")
-	viper.SetDefault("failover_timeout", 2592000.0)
-	viper.SetDefault("queue_size", 100)
-	viper.ReadInConfig()
+func setup() *config.Config {
+	cfg := config.DefaultConfig(Version, BuildDate)
+	config.ReadConfigFile(cfg, config.GetConfigFilePath())
+	config.ReadEnvironment(cfg)
 
-	driver := viper.GetString("database_driver")
-	location := viper.GetString("database")
-	if driver == "zk" && location == "" {
-		viper.Set("database", "")
-	} else if driver == "boltdb" && location == "" {
-		viper.Set("database", "db/eremetic.db")
-	}
+	return cfg
 }
 
-func setupLogging() {
-	if viper.GetString("logformat") == "json" {
+func setupLogging(logFormat, logLevel string) {
+	if logFormat == "json" {
 		logrus.SetFormatter(&logrus.JSONFormatter{})
 	}
-	level, err := logrus.ParseLevel(viper.GetString("loglevel"))
+	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
 		level = logrus.InfoLevel
 	}
@@ -62,25 +42,19 @@ func setupMetrics() {
 	prometheus.MustRegister(scheduler.QueueSize)
 }
 
-func getSchedulerSettings() *scheduler.Settings {
+func getSchedulerSettings(config *config.Config) *scheduler.Settings {
 	return &scheduler.Settings{
-		MaxQueueSize:     viper.GetInt("queue_size"),
-		Master:           viper.GetString("master"),
-		FrameworkID:      viper.GetString("framework_id"),
-		CredentialFile:   viper.GetString("credential_file"),
-		Name:             viper.GetString("name"),
-		User:             viper.GetString("user"),
-		MessengerAddress: viper.GetString("messenger_address"),
-		MessengerPort:    uint16(viper.GetInt("messenger_port")),
-		Checkpoint:       viper.GetBool("checkpoint"),
-		FailoverTimeout:  viper.GetFloat64("failover_timeout"),
+		MaxQueueSize:     config.QueueSize,
+		Master:           config.Master,
+		FrameworkID:      config.FrameworkID,
+		CredentialFile:   config.CredentialsFile,
+		Name:             config.Name,
+		User:             config.User,
+		MessengerAddress: config.MessengerAddress,
+		MessengerPort:    uint16(config.MessengerPort),
+		Checkpoint:       config.Checkpoint,
+		FailoverTimeout:  config.FailoverTimeout,
 	}
-}
-
-func setupDB() (database.TaskDB, error) {
-	driver := viper.GetString("database_driver")
-	location := viper.GetString("database")
-	return database.NewDB(driver, location)
 }
 
 func main() {
@@ -88,26 +62,19 @@ func main() {
 		fmt.Println(Version)
 		os.Exit(0)
 	}
-	readConfig()
-	setupLogging()
+	config := setup()
+
+	setupLogging(config.LogFormat, config.LogLevel)
 	setupMetrics()
-	db, err := setupDB()
+	db, err := database.NewDB(config.DatabaseDriver, config.DatabasePath)
+
 	if err != nil {
 		logrus.WithError(err).Fatal("Unable to set up database.")
 	}
 	defer db.Close()
 
-	config := &config.Config{
-		Version:   strings.Trim(Version, "'"),
-		BuildDate: BuildDate,
-		Database:  db,
-	}
-
-	schedulerSettings := getSchedulerSettings()
-
-	bind := fmt.Sprintf("%s:%d", viper.GetString("address"), viper.GetInt("port"))
-
-	sched := scheduler.Create(schedulerSettings, config)
+	schedulerSettings := getSchedulerSettings(config)
+	sched := scheduler.Create(schedulerSettings, db)
 	go func() {
 		scheduler.Run(sched, schedulerSettings)
 		manners.Close()
@@ -126,11 +93,13 @@ func main() {
 		sched.Stop()
 	}()
 
-	router := routes.Create(sched, config)
+	router := routes.Create(sched, config, db)
+
+	bind := fmt.Sprintf("%s:%d", config.Address, config.Port)
 	logrus.WithFields(logrus.Fields{
 		"version": config.Version,
-		"address": viper.GetString("address"),
-		"port":    viper.GetInt("port"),
+		"address": config.Address,
+		"port":    config.Port,
 	}).Infof("Launching Eremetic version %s!\nListening to %s", config.Version, bind)
 	err = manners.ListenAndServe(bind, router)
 

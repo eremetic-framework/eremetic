@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
@@ -58,7 +57,7 @@ func TestScheduler(t *testing.T) {
 		db.PutTask(&types.EremeticTask{ID: id})
 
 		Convey("Create", func() {
-			s := Create(&Settings{MaxQueueSize: 200}, &config.Config{Database: db})
+			s = Create(&Settings{MaxQueueSize: 200}, db)
 			So(s.tasksCreated, ShouldEqual, 0)
 			So(cap(s.tasks), ShouldEqual, 200)
 		})

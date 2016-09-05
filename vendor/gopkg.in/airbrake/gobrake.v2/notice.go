@@ -3,7 +3,39 @@ package gobrake
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
 )
+
+var defaultContext map[string]interface{}
+
+func getDefaultContext() map[string]interface{} {
+	if defaultContext != nil {
+		return defaultContext
+	}
+
+	defaultContext = map[string]interface{}{
+		"notifier": map[string]interface{}{
+			"name":    "gobrake",
+			"version": "2.0.4",
+			"url":     "https://github.com/airbrake/gobrake",
+		},
+
+		"language":     runtime.Version(),
+		"os":           runtime.GOOS,
+		"architecture": runtime.GOARCH,
+	}
+	if s, err := os.Hostname(); err == nil {
+		defaultContext["hostname"] = s
+	}
+	if s, ok := os.LookupEnv("GOPATH"); ok {
+		list := filepath.SplitList(s)
+		// TODO: multiple root dirs?
+		defaultContext["rootDirectory"] = list[0]
+	}
+	return defaultContext
+}
 
 type Error struct {
 	Type      string       `json:"type"`
@@ -28,25 +60,20 @@ func (n *Notice) String() string {
 }
 
 func NewNotice(e interface{}, req *http.Request, depth int) *Notice {
-	stack := stack(depth)
 	notice := &Notice{
-		Errors: []Error{
-			{
-				Type:      fmt.Sprintf("%T", e),
-				Message:   fmt.Sprint(e),
-				Backtrace: stack,
-			},
-		},
-		Context: map[string]interface{}{
-			"notifier": map[string]interface{}{
-				"name":    "gobrake",
-				"version": "2.0.3",
-				"url":     "https://github.com/airbrake/gobrake",
-			},
-		},
+		Errors: []Error{{
+			Type:      fmt.Sprintf("%T", e),
+			Message:   fmt.Sprint(e),
+			Backtrace: stack(depth),
+		}},
+		Context: map[string]interface{}{},
 		Env:     map[string]interface{}{},
 		Session: map[string]interface{}{},
 		Params:  map[string]interface{}{},
+	}
+
+	for k, v := range getDefaultContext() {
+		notice.Context[k] = v
 	}
 
 	if req != nil {

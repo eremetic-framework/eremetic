@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/m4rw3r/uuid"
+	"github.com/pborman/uuid"
 )
 
 type Status struct {
@@ -96,12 +96,7 @@ func mergeURIs(request Request) []URI {
 }
 
 func NewEremeticTask(request Request, name string) (EremeticTask, error) {
-	uuid, err := uuid.V4()
-	if err != nil {
-		return EremeticTask{}, err
-	}
-
-	taskID := fmt.Sprintf("eremetic-task.%s", uuid)
+	taskID := fmt.Sprintf("eremetic-task.%s", uuid.New())
 
 	status := []Status{
 		Status{
