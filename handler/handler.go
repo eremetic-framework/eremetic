@@ -18,6 +18,7 @@ import (
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/scheduler"
 	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic/version"
 )
 
 type ErrorDocument struct {
@@ -134,7 +135,7 @@ func (h Handler) IndexHandler(conf *config.Config) http.HandlerFunc {
 			src, _ := assets.Asset("templates/index.html")
 			tpl, err := template.New("index").Parse(string(src))
 			data := make(map[string]interface{})
-			data["Version"] = conf.Version
+			data["Version"] = version.Version
 			if err == nil {
 				tpl.Execute(w, data)
 				return
@@ -153,7 +154,7 @@ func (h Handler) Version(conf *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(conf.Version)
+		json.NewEncoder(w).Encode(version.Version)
 	}
 }
 

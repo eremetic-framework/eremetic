@@ -16,6 +16,7 @@ import (
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/formatter"
 	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic/version"
 )
 
 // getFile handles the actual fetching of file from the agent.
@@ -80,7 +81,7 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask,
 	} else {
 		templateFile = "task.html"
 		data = makeMap(task)
-		data["Version"] = conf.Version
+		data["Version"] = version.Version
 	}
 
 	source, _ := assets.Asset(fmt.Sprintf("templates/%s", templateFile))

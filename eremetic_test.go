@@ -10,7 +10,7 @@ import (
 )
 
 func TestMain(t *testing.T) {
-	conf := config.DefaultConfig("test", "today")
+	conf := config.DefaultConfig()
 	Convey("GetSchedulerSettings", t, func() {
 		Convey("Contains defaults", func() {
 			s := getSchedulerSettings(conf)

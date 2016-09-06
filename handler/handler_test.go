@@ -21,6 +21,7 @@ import (
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/mocks"
 	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic/version"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -251,8 +252,9 @@ func TestHandling(t *testing.T) {
 		})
 
 		Convey("Version", func() {
+			version.Version = "test"
 			r, _ := http.NewRequest("GET", "/version", nil)
-			m.HandleFunc("/version", h.Version(&config.Config{Version: "test"}))
+			m.HandleFunc("/version", h.Version(&config.Config{}))
 			m.ServeHTTP(wr, r)
 
 			body, _ := ioutil.ReadAll(wr.Body)
@@ -263,7 +265,7 @@ func TestHandling(t *testing.T) {
 			r, _ := http.NewRequest("GET", "/", nil)
 
 			Convey("Renders nothing for json", func() {
-				m.HandleFunc("/", h.IndexHandler(&config.Config{Version: "test"}))
+				m.HandleFunc("/", h.IndexHandler(&config.Config{}))
 				m.ServeHTTP(wr, r)
 
 				So(wr.Code, ShouldEqual, http.StatusNoContent)
@@ -271,7 +273,7 @@ func TestHandling(t *testing.T) {
 
 			Convey("Renders the html template for html requests", func() {
 				r.Header.Add("Accept", "text/html")
-				m.HandleFunc("/", h.IndexHandler(&config.Config{Version: "test"}))
+				m.HandleFunc("/", h.IndexHandler(&config.Config{}))
 				m.ServeHTTP(wr, r)
 
 				b, _ := ioutil.ReadAll(wr.Body)

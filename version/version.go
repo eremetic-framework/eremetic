@@ -1,4 +1,4 @@
-package main
+package version
 
 var (
 	// Version contains the Eremetic application version

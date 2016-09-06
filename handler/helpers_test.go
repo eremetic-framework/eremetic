@@ -63,7 +63,7 @@ func TestHandlingHelpers(t *testing.T) {
 		wr := httptest.NewRecorder()
 		r, _ := http.NewRequest("GET", "/task/eremetic-task.1234", nil)
 
-		renderHTML(wr, r, task, id, &config.Config{Version: "test"})
+		renderHTML(wr, r, task, id, &config.Config{})
 
 		body, _ := ioutil.ReadAll(wr.Body)
 		So(body, ShouldNotBeEmpty)
