@@ -9,16 +9,16 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 )
 
 type boltDriver struct {
-	database types.BoltConnection
+	database eremetic.BoltConnection
 }
 
 type boltConnector struct{}
 
-func (b boltConnector) Open(file string) (types.BoltConnection, error) {
+func (b boltConnector) Open(file string) (eremetic.BoltConnection, error) {
 	if !filepath.IsAbs(file) {
 		dir, _ := os.Getwd()
 		file = fmt.Sprintf("%s/../%s", dir, file)
@@ -28,11 +28,11 @@ func (b boltConnector) Open(file string) (types.BoltConnection, error) {
 	return bolt.Open(file, 0600, nil)
 }
 
-func createBoltConnector() types.BoltConnectorInterface {
-	return types.BoltConnectorInterface(boltConnector{})
+func createBoltConnector() eremetic.BoltConnectorInterface {
+	return eremetic.BoltConnectorInterface(boltConnector{})
 }
 
-func createBoltDriver(connector types.BoltConnectorInterface, file string) (TaskDB, error) {
+func createBoltDriver(connector eremetic.BoltConnectorInterface, file string) (TaskDB, error) {
 	if file == "" {
 		return nil, errors.New("Missing BoltDB database loctation.")
 	}
@@ -63,7 +63,7 @@ func (db boltDriver) Clean() error {
 }
 
 // PutTask stores a requested task in the database
-func (db boltDriver) PutTask(task *types.EremeticTask) error {
+func (db boltDriver) PutTask(task *eremetic.Task) error {
 	return db.database.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("tasks"))
 		if err != nil {
@@ -82,7 +82,7 @@ func (db boltDriver) PutTask(task *types.EremeticTask) error {
 
 // ReadTask fetches a task from the database and applies a mask to the
 // MaskedEnvironment field
-func (db boltDriver) ReadTask(id string) (types.EremeticTask, error) {
+func (db boltDriver) ReadTask(id string) (eremetic.Task, error) {
 	task, err := db.ReadUnmaskedTask(id)
 
 	applyMask(&task)
@@ -95,8 +95,8 @@ func (db boltDriver) ReadTask(id string) (types.EremeticTask, error) {
 // This function should be considered internal to Eremetic, and is used where
 // we need to fetch a task and then re-save it to the database. It should not
 // be returned to the API.
-func (db boltDriver) ReadUnmaskedTask(id string) (types.EremeticTask, error) {
-	var task types.EremeticTask
+func (db boltDriver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
+	var task eremetic.Task
 
 	err := db.database.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("tasks"))
@@ -113,8 +113,8 @@ func (db boltDriver) ReadUnmaskedTask(id string) (types.EremeticTask, error) {
 
 // ListNonTerminalTasks returns a list of tasks that are not yet finished in one
 // way or another.
-func (db boltDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
-	tasks := []*types.EremeticTask{}
+func (db boltDriver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
+	tasks := []*eremetic.Task{}
 
 	err := db.database.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("tasks"))
@@ -122,7 +122,7 @@ func (db boltDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
 			return bolt.ErrBucketNotFound
 		}
 		b.ForEach(func(_, v []byte) error {
-			var task types.EremeticTask
+			var task eremetic.Task
 			json.Unmarshal(v, &task)
 			if !task.IsTerminated() {
 				applyMask(&task)

@@ -1,4 +1,4 @@
-package types
+package eremetic
 
 type TaskState string
 

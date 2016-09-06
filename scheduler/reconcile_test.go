@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/types"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
 )
@@ -43,18 +43,18 @@ func TestReconcile(t *testing.T) {
 				if err != nil {
 					panic("mock error")
 				}
-				t.UpdateStatus(types.Status{
-					Status: types.TaskState_TASK_RUNNING,
+				t.UpdateStatus(eremetic.Status{
+					Status: eremetic.TaskState_TASK_RUNNING,
 					Time:   time.Now().Unix() + 1,
 				})
 				db.PutTask(&t)
 			}).Once()
 
-			db.PutTask(&types.EremeticTask{
+			db.PutTask(&eremetic.Task{
 				ID: "1234",
-				Status: []types.Status{
-					types.Status{
-						Status: types.TaskState_TASK_STAGING,
+				Status: []eremetic.Status{
+					eremetic.Status{
+						Status: eremetic.TaskState_TASK_STAGING,
 						Time:   time.Now().Unix(),
 					},
 				},
@@ -72,11 +72,11 @@ func TestReconcile(t *testing.T) {
 		Convey("Cancel reconciliation", func() {
 			driver := NewMockScheduler()
 
-			db.PutTask(&types.EremeticTask{
+			db.PutTask(&eremetic.Task{
 				ID: "1234",
-				Status: []types.Status{
-					types.Status{
-						Status: types.TaskState_TASK_STAGING,
+				Status: []eremetic.Status{
+					eremetic.Status{
+						Status: eremetic.TaskState_TASK_STAGING,
 						Time:   time.Now().Unix(),
 					},
 				},

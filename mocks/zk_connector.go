@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -11,15 +11,15 @@ type ZkConnectorInterface struct {
 }
 
 // Connect provides a mock function with given fields: path
-func (_m *ZkConnectorInterface) Connect(path string) (types.ZkConnection, error) {
+func (_m *ZkConnectorInterface) Connect(path string) (eremetic.ZkConnection, error) {
 	ret := _m.Called(path)
 
-	var r0 types.ZkConnection
-	if rf, ok := ret.Get(0).(func(string) types.ZkConnection); ok {
+	var r0 eremetic.ZkConnection
+	if rf, ok := ret.Get(0).(func(string) eremetic.ZkConnection); ok {
 		r0 = rf(path)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(types.ZkConnection)
+			r0 = ret.Get(0).(eremetic.ZkConnection)
 		}
 	}
 

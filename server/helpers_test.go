@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"errors"
@@ -9,17 +9,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/types"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestHandlingHelpers(t *testing.T) {
 
-	status := []types.Status{
-		types.Status{
-			Status: types.TaskState_TASK_RUNNING,
+	status := []eremetic.Status{
+		eremetic.Status{
+			Status: eremetic.TaskState_TASK_RUNNING,
 			Time:   time.Now().Unix(),
 		},
 	}
@@ -51,7 +51,7 @@ func TestHandlingHelpers(t *testing.T) {
 	Convey("renderHTML", t, func() {
 		id := "eremetic-task.1234"
 
-		task := types.EremeticTask{
+		task := eremetic.Task{
 			TaskCPUs: 0.2,
 			TaskMem:  0.5,
 			Command:  "test",
@@ -71,7 +71,7 @@ func TestHandlingHelpers(t *testing.T) {
 	})
 
 	Convey("makeMap", t, func() {
-		task := types.EremeticTask{
+		task := eremetic.Task{
 			TaskCPUs: 0.2,
 			TaskMem:  0.5,
 			Command:  "test",

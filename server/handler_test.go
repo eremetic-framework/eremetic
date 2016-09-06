@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"bytes"
@@ -17,19 +17,19 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/mocks"
-	"github.com/klarna/eremetic/types"
 	"github.com/klarna/eremetic/version"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestHandling(t *testing.T) {
 	scheduler := &mocks.Scheduler{}
-	status := []types.Status{
-		types.Status{
-			Status: types.TaskState_TASK_RUNNING,
+	status := []eremetic.Status{
+		eremetic.Status{
+			Status: eremetic.TaskState_TASK_RUNNING,
 			Time:   time.Now().Unix(),
 		},
 	}
@@ -39,7 +39,7 @@ func TestHandling(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	h := Create(scheduler, db)
+	h := NewHandler(scheduler, db)
 
 	defer db.Close()
 
@@ -50,7 +50,7 @@ func TestHandling(t *testing.T) {
 
 		maskedEnv := make(map[string]string)
 		maskedEnv["foo"] = "bar"
-		task := types.EremeticTask{
+		task := eremetic.Task{
 			TaskCPUs:          0.2,
 			TaskMem:           0.5,
 			Command:           "test",
@@ -89,7 +89,7 @@ func TestHandling(t *testing.T) {
 					db.PutTask(&task)
 					m.ServeHTTP(wr, r)
 
-					var retrievedTask types.EremeticTask
+					var retrievedTask eremetic.Task
 					body, _ := ioutil.ReadAll(io.LimitReader(wr.Body, 1048576))
 					json.Unmarshal(body, &retrievedTask)
 
@@ -188,7 +188,7 @@ func TestHandling(t *testing.T) {
 				port, _ := strconv.ParseInt(addr[1], 10, 32)
 				id := "eremetic-task.1234"
 
-				task := types.EremeticTask{
+				task := eremetic.Task{
 					TaskCPUs:    0.2,
 					TaskMem:     0.5,
 					Command:     "test",
@@ -230,7 +230,7 @@ func TestHandling(t *testing.T) {
 					r, _ := http.NewRequest("GET", "/task/eremetic-task.1234/stdout", nil)
 					m.HandleFunc("/task/{taskId}/stdout", h.GetFromSandbox("stdout"))
 
-					task := types.EremeticTask{
+					task := eremetic.Task{
 						TaskCPUs:    0.2,
 						TaskMem:     0.5,
 						Command:     "test",

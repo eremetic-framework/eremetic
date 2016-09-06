@@ -10,7 +10,7 @@ TOOLS=${GOPATH}/bin/go-bindata \
       ${GOPATH}/bin/go-bindata-assetfs \
       ${GOPATH}/bin/goconvey
 SRC=$(shell find . -name '*.go')
-STATIC=$(shell find static templates)
+STATIC=$(shell find server/static server/templates)
 TESTFLAGS="-v"
 
 DOCKER_GO_SRC_PATH=/go/src/github.com/klarna/eremetic
@@ -35,14 +35,14 @@ test-server: ${TOOLS}
 test-docker:
 	$(DOCKER_GOLANG_RUN_CMD) "make test"
 
-assets/assets.go: generate.go ${STATIC}
-	go generate
+server/assets/assets.go: server/generate.go ${STATIC}
+	cd server; go generate
 
-eremetic: ${TOOLS} assets/assets.go
+eremetic: ${TOOLS} server/assets/assets.go
 eremetic: ${SRC}
-	go build -ldflags "${LDFLAGS}" -o $@
+	go build -ldflags "${LDFLAGS}" -o $@ github.com/klarna/eremetic/cmd/eremetic
 
-docker/eremetic: ${TOOLS} assets/assets.go
+docker/eremetic: ${TOOLS} server/assets/assets.go
 docker/eremetic: ${SRC}
 	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@
 

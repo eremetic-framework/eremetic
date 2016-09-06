@@ -1,19 +1,29 @@
-package routes
+package server
 
 import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/handler"
-	"github.com/klarna/eremetic/types"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// Create is used to create a new router
-func Create(scheduler types.Scheduler, conf *config.Config, db database.TaskDB) *mux.Router {
-	h := handler.Create(scheduler, db)
+// Route enforces the structure of a route
+type Route struct {
+	Name    string
+	Method  string
+	Pattern string
+	Handler http.Handler
+}
+
+// Routes is a collection of route structs
+type Routes []Route
+
+// NewRouter is used to create a new router.
+func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db database.TaskDB) *mux.Router {
+	h := NewHandler(scheduler, db)
 	router := mux.NewRouter().StrictSlash(true)
 
 	for _, route := range routes(h, conf) {
@@ -33,51 +43,51 @@ func Create(scheduler types.Scheduler, conf *config.Config, db database.TaskDB) 
 	return router
 }
 
-func routes(h handler.Handler, conf *config.Config) types.Routes {
-	return types.Routes{
-		types.Route{
+func routes(h Handler, conf *config.Config) Routes {
+	return Routes{
+		Route{
 			Name:    "AddTask",
 			Method:  "POST",
 			Pattern: "/task",
 			Handler: h.AddTask(),
 		},
-		types.Route{
+		Route{
 			Name:    "Status",
 			Method:  "GET",
 			Pattern: "/task/{taskId}",
 			Handler: h.GetTaskInfo(conf),
 		},
-		types.Route{
+		Route{
 			Name:    "STDOUT",
 			Method:  "GET",
 			Pattern: "/task/{taskId}/stdout",
 			Handler: h.GetFromSandbox("stdout"),
 		},
-		types.Route{
+		Route{
 			Name:    "STDERR",
 			Method:  "GET",
 			Pattern: "/task/{taskId}/stderr",
 			Handler: h.GetFromSandbox("stderr"),
 		},
-		types.Route{
+		Route{
 			Name:    "ListRunningTasks",
 			Method:  "GET",
 			Pattern: "/task",
 			Handler: h.ListRunningTasks(),
 		},
-		types.Route{
+		Route{
 			Name:    "Index",
 			Method:  "GET",
 			Pattern: "/",
 			Handler: h.IndexHandler(conf),
 		},
-		types.Route{
+		Route{
 			Name:    "Version",
 			Method:  "GET",
 			Pattern: "/version",
 			Handler: h.Version(conf),
 		},
-		types.Route{
+		Route{
 			Name:    "Metrics",
 			Method:  "GET",
 			Pattern: "/metrics",

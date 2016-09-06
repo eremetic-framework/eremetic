@@ -1,4 +1,4 @@
-package types
+package eremetic
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ type URI struct {
 	Cache      bool   `json:"cache"`
 }
 
-type EremeticTask struct {
+type Task struct {
 	TaskCPUs          float64           `json:"task_cpus"`
 	TaskMem           float64           `json:"task_mem"`
 	Command           string            `json:"command"`
@@ -95,7 +95,7 @@ func mergeURIs(request Request) []URI {
 	return URIs
 }
 
-func NewEremeticTask(request Request, name string) (EremeticTask, error) {
+func NewTask(request Request, name string) (Task, error) {
 	taskID := fmt.Sprintf("eremetic-task.%s", uuid.New())
 
 	status := []Status{
@@ -105,7 +105,7 @@ func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 		},
 	}
 
-	task := EremeticTask{
+	task := Task{
 		ID:                taskID,
 		TaskCPUs:          request.TaskCPUs,
 		TaskMem:           request.TaskMem,
@@ -126,7 +126,7 @@ func NewEremeticTask(request Request, name string) (EremeticTask, error) {
 	return task, nil
 }
 
-func (task *EremeticTask) WasRunning() bool {
+func (task *Task) WasRunning() bool {
 	for _, s := range task.Status {
 		if s.Status == TaskState_TASK_RUNNING {
 			return true
@@ -135,7 +135,7 @@ func (task *EremeticTask) WasRunning() bool {
 	return false
 }
 
-func (task *EremeticTask) IsTerminated() bool {
+func (task *Task) IsTerminated() bool {
 	if len(task.Status) == 0 {
 		return true
 	}
@@ -143,7 +143,7 @@ func (task *EremeticTask) IsTerminated() bool {
 	return IsTerminal(st.Status)
 }
 
-func (task *EremeticTask) IsRunning() bool {
+func (task *Task) IsRunning() bool {
 	if len(task.Status) == 0 {
 		return false
 	}
@@ -151,7 +151,7 @@ func (task *EremeticTask) IsRunning() bool {
 	return st.Status == TaskState_TASK_RUNNING
 }
 
-func (task *EremeticTask) LastUpdated() time.Time {
+func (task *Task) LastUpdated() time.Time {
 	if len(task.Status) == 0 {
 		return time.Unix(0, 0)
 	}
@@ -159,6 +159,6 @@ func (task *EremeticTask) LastUpdated() time.Time {
 	return time.Unix(st.Time, 0)
 }
 
-func (task *EremeticTask) UpdateStatus(status Status) {
+func (task *Task) UpdateStatus(status Status) {
 	task.Status = append(task.Status, status)
 }

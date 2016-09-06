@@ -1,4 +1,4 @@
-package types
+package eremetic
 
 import "github.com/samuel/go-zookeeper/zk"
 

@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 	. "github.com/smartystreets/goconvey/convey"
@@ -54,7 +54,7 @@ func TestScheduler(t *testing.T) {
 			database: db,
 		}
 		id := "eremetic-task.9999"
-		db.PutTask(&types.EremeticTask{ID: id})
+		db.PutTask(&eremetic.Task{ID: id})
 
 		Convey("Create", func() {
 			s = Create(&Settings{MaxQueueSize: 200}, db)
@@ -110,7 +110,7 @@ func TestScheduler(t *testing.T) {
 					}
 					driver.On("LaunchTasks").Return("launched").Once()
 
-					taskID, err := s.ScheduleTask(types.Request{
+					taskID, err := s.ScheduleTask(eremetic.Request{
 						TaskCPUs:    0.5,
 						TaskMem:     22.0,
 						DockerImage: "busybox",
@@ -124,8 +124,8 @@ func TestScheduler(t *testing.T) {
 					So(driver.AssertNotCalled(t, "DeclineOffer"), ShouldBeTrue)
 					So(driver.AssertCalled(t, "LaunchTasks"), ShouldBeTrue)
 					So(task.Status, ShouldHaveLength, 2)
-					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_QUEUED)
-					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_STAGING)
+					So(task.Status[0].Status, ShouldEqual, eremetic.TaskState_TASK_QUEUED)
+					So(task.Status[1].Status, ShouldEqual, eremetic.TaskState_TASK_STAGING)
 				})
 
 				Convey("One task unable to launch", func() {
@@ -134,7 +134,7 @@ func TestScheduler(t *testing.T) {
 					}
 					driver.On("DeclineOffer").Return("declined").Once()
 
-					_, err := s.ScheduleTask(types.Request{
+					_, err := s.ScheduleTask(eremetic.Request{
 						TaskCPUs:    1.5,
 						TaskMem:     22.0,
 						DockerImage: "busybox",
@@ -159,7 +159,7 @@ func TestScheduler(t *testing.T) {
 					})
 					task, _ := db.ReadTask(id)
 					So(len(task.Status), ShouldEqual, 1)
-					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_RUNNING)
+					So(task.Status[0].Status, ShouldEqual, eremetic.TaskState_TASK_RUNNING)
 
 					s.StatusUpdate(nil, &mesos.TaskStatus{
 						TaskId: &mesos.TaskID{
@@ -170,8 +170,8 @@ func TestScheduler(t *testing.T) {
 					task, _ = db.ReadTask(id)
 
 					So(len(task.Status), ShouldEqual, 2)
-					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_RUNNING)
-					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_FAILED)
+					So(task.Status[0].Status, ShouldEqual, eremetic.TaskState_TASK_RUNNING)
+					So(task.Status[1].Status, ShouldEqual, eremetic.TaskState_TASK_FAILED)
 				})
 
 				Convey("Failing immediately", func() {
@@ -184,8 +184,8 @@ func TestScheduler(t *testing.T) {
 					})
 					task, _ := db.ReadTask(id)
 					So(len(task.Status), ShouldEqual, 2)
-					So(task.Status[0].Status, ShouldEqual, types.TaskState_TASK_FAILED)
-					So(task.Status[1].Status, ShouldEqual, types.TaskState_TASK_QUEUED)
+					So(task.Status[0].Status, ShouldEqual, eremetic.TaskState_TASK_FAILED)
+					So(task.Status[1].Status, ShouldEqual, eremetic.TaskState_TASK_QUEUED)
 
 					select {
 					case c := <-s.tasks:
@@ -198,7 +198,7 @@ func TestScheduler(t *testing.T) {
 					defer ts.Close()
 
 					id := "eremetic-task.1000"
-					db.PutTask(&types.EremeticTask{
+					db.PutTask(&eremetic.Task{
 						ID:          id,
 						CallbackURI: ts.URL,
 					})
@@ -221,7 +221,7 @@ func TestScheduler(t *testing.T) {
 					defer ts.Close()
 
 					id := "eremetic-task.1001"
-					db.PutTask(&types.EremeticTask{
+					db.PutTask(&eremetic.Task{
 						ID:          id,
 						CallbackURI: ts.URL,
 					})
@@ -250,7 +250,7 @@ func TestScheduler(t *testing.T) {
 					defer ts.Close()
 
 					id := "eremetic-task.1002"
-					db.PutTask(&types.EremeticTask{
+					db.PutTask(&eremetic.Task{
 						ID:          id,
 						CallbackURI: ts.URL,
 					})
@@ -347,7 +347,7 @@ func TestScheduler(t *testing.T) {
 				database: db,
 			}
 
-			request := types.Request{
+			request := eremetic.Request{
 				TaskCPUs:    0.5,
 				TaskMem:     22.0,
 				DockerImage: "busybox",
@@ -381,7 +381,7 @@ func TestScheduler(t *testing.T) {
 			}
 			scheduler.tasks <- "dummy"
 
-			request := types.Request{
+			request := eremetic.Request{
 				TaskCPUs:    0.5,
 				TaskMem:     22.0,
 				DockerImage: "busybox",

@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 )
 
 // TaskDB defines the functions needed by the database abstraction layer
 type TaskDB interface {
 	Clean() error
 	Close()
-	PutTask(task *types.EremeticTask) error
-	ReadTask(id string) (types.EremeticTask, error)
-	ReadUnmaskedTask(id string) (types.EremeticTask, error)
-	ListNonTerminalTasks() ([]*types.EremeticTask, error)
+	PutTask(task *eremetic.Task) error
+	ReadTask(id string) (eremetic.Task, error)
+	ReadUnmaskedTask(id string) (eremetic.Task, error)
+	ListNonTerminalTasks() ([]*eremetic.Task, error)
 }
 
 const masking = "*******"
@@ -30,13 +30,13 @@ func NewDB(driver string, location string) (TaskDB, error) {
 	return nil, errors.New("Invalid driver.")
 }
 
-func applyMask(task *types.EremeticTask) {
+func applyMask(task *eremetic.Task) {
 	for k := range task.MaskedEnvironment {
 		task.MaskedEnvironment[k] = masking
 	}
 }
 
-func encode(task *types.EremeticTask) ([]byte, error) {
+func encode(task *eremetic.Task) ([]byte, error) {
 	encoded, err := json.Marshal(task)
 	return []byte(encoded), err
 }

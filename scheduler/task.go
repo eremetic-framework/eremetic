@@ -2,12 +2,12 @@ package scheduler
 
 import (
 	"github.com/golang/protobuf/proto"
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
 )
 
-func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.EremeticTask, *mesos.TaskInfo) {
+func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mesos.TaskInfo) {
 	task.FrameworkId = *offer.FrameworkId.Value
 	task.SlaveId = *offer.SlaveId.Value
 	task.Hostname = *offer.Hostname
@@ -40,7 +40,7 @@ func createTaskInfo(task types.EremeticTask, offer *mesos.Offer) (types.Eremetic
 	return task, taskInfo
 }
 
-func buildEnvironment(task types.EremeticTask) []*mesos.Environment_Variable {
+func buildEnvironment(task eremetic.Task) []*mesos.Environment_Variable {
 	var environment []*mesos.Environment_Variable
 	for k, v := range task.Environment {
 		environment = append(environment, &mesos.Environment_Variable{
@@ -63,7 +63,7 @@ func buildEnvironment(task types.EremeticTask) []*mesos.Environment_Variable {
 	return environment
 }
 
-func buildVolumes(task types.EremeticTask) []*mesos.Volume {
+func buildVolumes(task eremetic.Task) []*mesos.Volume {
 	var volumes []*mesos.Volume
 	for _, v := range task.Volumes {
 		volumes = append(volumes, &mesos.Volume{
@@ -76,37 +76,37 @@ func buildVolumes(task types.EremeticTask) []*mesos.Volume {
 	return volumes
 }
 
-func buildPorts(task types.EremeticTask, offer *mesos.Offer) ([]*mesos.ContainerInfo_DockerInfo_PortMapping, []*mesos.Value_Range) {
+func buildPorts(task eremetic.Task, offer *mesos.Offer) ([]*mesos.ContainerInfo_DockerInfo_PortMapping, []*mesos.Value_Range) {
 	var portResources []*mesos.Value_Range
-	var portMapping   []*mesos.ContainerInfo_DockerInfo_PortMapping
+	var portMapping []*mesos.ContainerInfo_DockerInfo_PortMapping
 
-	if(len(task.Ports) > 0) {
+	if len(task.Ports) > 0 {
 		lastIndex := len(task.Ports)
 
 		for _, v := range offer.Resources {
-			if(lastIndex == 0) {
+			if lastIndex == 0 {
 				break
 			}
 
-			if(*v.Name != "ports") {
+			if *v.Name != "ports" {
 				continue
 			}
 
 			for _, p_v := range v.Ranges.Range {
-				if(lastIndex == 0) {
+				if lastIndex == 0 {
 					break
 				}
 
 				startPort, endPort := *p_v.Begin, int(*p_v.Begin)
 				for portnumber := int(*p_v.Begin); portnumber <= int(*p_v.End); portnumber++ {
-					if(lastIndex == 0) {
+					if lastIndex == 0 {
 						break
 					}
 
 					lastIndex--
 					ask_port := &task.Ports[lastIndex]
 
-					if(ask_port.ContainerPort == 0) {
+					if ask_port.ContainerPort == 0 {
 						continue
 					}
 
@@ -121,8 +121,8 @@ func buildPorts(task types.EremeticTask, offer *mesos.Offer) ([]*mesos.Container
 					})
 
 				}
-				if(int(startPort) != endPort) {
-					portResources = append(portResources, mesosutil.NewValueRange(startPort,uint64(endPort)))
+				if int(startPort) != endPort {
+					portResources = append(portResources, mesosutil.NewValueRange(startPort, uint64(endPort)))
 				}
 			}
 		}
@@ -131,7 +131,7 @@ func buildPorts(task types.EremeticTask, offer *mesos.Offer) ([]*mesos.Container
 	return portMapping, portResources
 }
 
-func buildURIs(task types.EremeticTask) []*mesos.CommandInfo_URI {
+func buildURIs(task eremetic.Task) []*mesos.CommandInfo_URI {
 	var uris []*mesos.CommandInfo_URI
 	for _, v := range task.FetchURIs {
 		uris = append(uris, &mesos.CommandInfo_URI{
@@ -145,7 +145,7 @@ func buildURIs(task types.EremeticTask) []*mesos.CommandInfo_URI {
 	return uris
 }
 
-func buildCommandInfo(task types.EremeticTask) *mesos.CommandInfo {
+func buildCommandInfo(task eremetic.Task) *mesos.CommandInfo {
 	commandInfo := &mesos.CommandInfo{
 		User: proto.String(task.User),
 		Environment: &mesos.Environment{

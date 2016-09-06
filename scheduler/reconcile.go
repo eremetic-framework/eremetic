@@ -5,8 +5,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/types"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 )
@@ -52,7 +52,7 @@ func ReconcileTasks(driver sched.SchedulerDriver, database database.TaskDB) *Rec
 				return
 			case <-time.After(time.Duration(delay) * time.Second):
 				// Filter tasks that has received a status update
-				ntasks := []*types.EremeticTask{}
+				ntasks := []*eremetic.Task{}
 				for _, t := range tasks {
 					nt, err := database.ReadTask(t.ID)
 					if err != nil {

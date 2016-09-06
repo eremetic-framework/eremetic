@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/mocks"
-	"github.com/klarna/eremetic/types"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -37,9 +37,9 @@ func TestBoltDatabase(t *testing.T) {
 		os.Remove(testDB)
 	}
 
-	status := []types.Status{
-		types.Status{
-			Status: types.TaskState_TASK_RUNNING,
+	status := []eremetic.Status{
+		eremetic.Status{
+			Status: eremetic.TaskState_TASK_RUNNING,
 			Time:   time.Now().Unix(),
 		},
 	}
@@ -82,9 +82,9 @@ func TestBoltDatabase(t *testing.T) {
 		defer teardown()
 		defer db.Close()
 
-		db.PutTask(&types.EremeticTask{ID: "1234"})
+		db.PutTask(&eremetic.Task{ID: "1234"})
 		task, _ := db.ReadTask("1234")
-		So(task, ShouldNotEqual, types.EremeticTask{})
+		So(task, ShouldNotEqual, eremetic.Task{})
 		So(task.ID, ShouldNotBeEmpty)
 
 		db.Clean()
@@ -101,8 +101,8 @@ func TestBoltDatabase(t *testing.T) {
 		var maskedEnv = make(map[string]string)
 		maskedEnv["foo"] = "bar"
 
-		task1 := types.EremeticTask{ID: "1234"}
-		task2 := types.EremeticTask{
+		task1 := eremetic.Task{ID: "1234"}
+		task2 := eremetic.Task{
 			ID:                "12345",
 			TaskCPUs:          2.5,
 			TaskMem:           15.3,
@@ -134,7 +134,7 @@ func TestBoltDatabase(t *testing.T) {
 		var maskedEnv = make(map[string]string)
 		maskedEnv["foo"] = "bar"
 
-		task := types.EremeticTask{
+		task := eremetic.Task{
 			ID:                "12345",
 			TaskCPUs:          2.5,
 			TaskMem:           15.3,
@@ -164,34 +164,34 @@ func TestBoltDatabase(t *testing.T) {
 		db.Clean()
 
 		// A terminated task
-		db.PutTask(&types.EremeticTask{
+		db.PutTask(&eremetic.Task{
 			ID: "1234",
-			Status: []types.Status{
-				types.Status{
-					Status: types.TaskState_TASK_STAGING,
+			Status: []eremetic.Status{
+				eremetic.Status{
+					Status: eremetic.TaskState_TASK_STAGING,
 					Time:   time.Now().Unix(),
 				},
-				types.Status{
-					Status: types.TaskState_TASK_RUNNING,
+				eremetic.Status{
+					Status: eremetic.TaskState_TASK_RUNNING,
 					Time:   time.Now().Unix(),
 				},
-				types.Status{
-					Status: types.TaskState_TASK_FINISHED,
+				eremetic.Status{
+					Status: eremetic.TaskState_TASK_FINISHED,
 					Time:   time.Now().Unix(),
 				},
 			},
 		})
 
 		// A running task
-		db.PutTask(&types.EremeticTask{
+		db.PutTask(&eremetic.Task{
 			ID: "2345",
-			Status: []types.Status{
-				types.Status{
-					Status: types.TaskState_TASK_STAGING,
+			Status: []eremetic.Status{
+				eremetic.Status{
+					Status: eremetic.TaskState_TASK_STAGING,
 					Time:   time.Now().Unix(),
 				},
-				types.Status{
-					Status: types.TaskState_TASK_RUNNING,
+				eremetic.Status{
+					Status: eremetic.TaskState_TASK_RUNNING,
 					Time:   time.Now().Unix(),
 				},
 			},
@@ -210,19 +210,19 @@ func TestBoltDatabase(t *testing.T) {
 		defer db.Close()
 
 		db.Clean()
-		db.PutTask(&types.EremeticTask{
+		db.PutTask(&eremetic.Task{
 			ID: "1234",
-			Status: []types.Status{
-				types.Status{
-					Status: types.TaskState_TASK_STAGING,
+			Status: []eremetic.Status{
+				eremetic.Status{
+					Status: eremetic.TaskState_TASK_STAGING,
 					Time:   time.Now().Unix(),
 				},
-				types.Status{
-					Status: types.TaskState_TASK_RUNNING,
+				eremetic.Status{
+					Status: eremetic.TaskState_TASK_RUNNING,
 					Time:   time.Now().Unix(),
 				},
-				types.Status{
-					Status: types.TaskState_TASK_FINISHED,
+				eremetic.Status{
+					Status: eremetic.TaskState_TASK_FINISHED,
 					Time:   time.Now().Unix(),
 				},
 			},
