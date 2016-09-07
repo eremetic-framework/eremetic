@@ -1,4 +1,4 @@
-# <img src="static/images/eremiteLOGO_02.png" width="400px" alt="Eremetic">
+# <img src="server/static/images/eremiteLOGO_02.png" width="400px" alt="Eremetic">
 
 [![Build Status][travis-image]](https://travis-ci.org/klarna/eremetic)
 [![Coverage Status][coveralls-image]](https://coveralls.io/r/klarna/eremetic?branch=master)
@@ -187,6 +187,7 @@ These are the fine folks who helped build eremetic
 - William Strucke
 - Charles G.
 - Clément Laforet
+- Marcus Olsson
 
 ## Acknowledgements
 Thanks to Sebastian Norde for the awesome logo!
