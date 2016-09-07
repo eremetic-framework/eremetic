@@ -1,4 +1,4 @@
-package types
+package eremetic
 
 // Request represents the structure of a job request
 type Request struct {

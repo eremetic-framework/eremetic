@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/mocks"
-	"github.com/klarna/eremetic/types"
 	"github.com/samuel/go-zookeeper/zk"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
@@ -37,9 +37,9 @@ func TestZKDatabase(t *testing.T) {
 		connector = nil
 	}
 
-	status := []types.Status{
-		types.Status{
-			Status: types.TaskState_TASK_RUNNING,
+	status := []eremetic.Status{
+		eremetic.Status{
+			Status: eremetic.TaskState_TASK_RUNNING,
 			Time:   time.Now().Unix(),
 		},
 	}
@@ -47,7 +47,7 @@ func TestZKDatabase(t *testing.T) {
 	var maskedEnv = make(map[string]string)
 	maskedEnv["foo"] = "bar"
 
-	task := &types.EremeticTask{
+	task := &eremetic.Task{
 		ID:                "1234",
 		MaskedEnvironment: maskedEnv,
 		Status:            status,

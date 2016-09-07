@@ -9,26 +9,26 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 	"github.com/samuel/go-zookeeper/zk"
 )
 
 type zkDriver struct {
-	connection types.ZkConnection
+	connection eremetic.ZkConnection
 	path       string
 }
 
 type zkConnector struct{}
 
-func (z zkConnector) Connect(zksStr string) (types.ZkConnection, error) {
+func (z zkConnector) Connect(zksStr string) (eremetic.ZkConnection, error) {
 	zks := strings.Split(zksStr, ",")
 	conn, _, err := zk.Connect(zks, time.Second)
 
 	return conn, err
 }
 
-func createZKConnector() types.ZkConnectorInterface {
-	return types.ZkConnectorInterface(zkConnector{})
+func createZKConnector() eremetic.ZkConnectorInterface {
+	return eremetic.ZkConnectorInterface(zkConnector{})
 }
 
 func parsePath(zkpath string) (string, string, error) {
@@ -41,7 +41,7 @@ func parsePath(zkpath string) (string, string, error) {
 	return u.Host, path, nil
 }
 
-func createZKDriver(connector types.ZkConnectorInterface, zkPath string) (TaskDB, error) {
+func createZKDriver(connector eremetic.ZkConnectorInterface, zkPath string) (TaskDB, error) {
 	if zkPath == "" {
 		return nil, errors.New("Missing ZK path")
 	}
@@ -72,7 +72,7 @@ func createZKDriver(connector types.ZkConnectorInterface, zkPath string) (TaskDB
 		}
 	}
 
-	driver := zkDriver{connection: types.ZkConnection(conn), path: path}
+	driver := zkDriver{connection: eremetic.ZkConnection(conn), path: path}
 
 	return driver, nil
 }
@@ -86,7 +86,7 @@ func (z zkDriver) Clean() error {
 	return z.connection.Delete(path, -1)
 }
 
-func (z zkDriver) PutTask(task *types.EremeticTask) error {
+func (z zkDriver) PutTask(task *eremetic.Task) error {
 	path := fmt.Sprintf("%s/%s", z.path, task.ID)
 
 	encode, err := encode(task)
@@ -112,7 +112,7 @@ func (z zkDriver) PutTask(task *types.EremeticTask) error {
 	return err
 }
 
-func (z zkDriver) ReadTask(id string) (types.EremeticTask, error) {
+func (z zkDriver) ReadTask(id string) (eremetic.Task, error) {
 	task, err := z.ReadUnmaskedTask(id)
 
 	applyMask(&task)
@@ -120,8 +120,8 @@ func (z zkDriver) ReadTask(id string) (types.EremeticTask, error) {
 	return task, err
 }
 
-func (z zkDriver) ReadUnmaskedTask(id string) (types.EremeticTask, error) {
-	var task types.EremeticTask
+func (z zkDriver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
+	var task eremetic.Task
 	path := fmt.Sprintf("%s/%s", z.path, id)
 
 	bytes, _, err := z.connection.Get(path)
@@ -131,8 +131,8 @@ func (z zkDriver) ReadUnmaskedTask(id string) (types.EremeticTask, error) {
 
 }
 
-func (z zkDriver) ListNonTerminalTasks() ([]*types.EremeticTask, error) {
-	tasks := []*types.EremeticTask{}
+func (z zkDriver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
+	tasks := []*eremetic.Task{}
 	paths, _, _ := z.connection.Children(z.path)
 	for _, p := range paths {
 		t, err := z.ReadTask(p)

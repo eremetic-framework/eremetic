@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"encoding/json"
@@ -12,15 +12,14 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/klarna/eremetic/assets"
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/formatter"
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic/server/assets"
 	"github.com/klarna/eremetic/version"
 )
 
 // getFile handles the actual fetching of file from the agent.
-func getFile(file string, task types.EremeticTask) (int, io.ReadCloser) {
+func getFile(file string, task eremetic.Task) (int, io.ReadCloser) {
 	if task.SandboxPath == "" {
 		return http.StatusNoContent, nil
 	}
@@ -66,16 +65,16 @@ func writeJSON(status int, data interface{}, w http.ResponseWriter) error {
 	return json.NewEncoder(w).Encode(data)
 }
 
-func renderHTML(w http.ResponseWriter, r *http.Request, task types.EremeticTask, taskID string, conf *config.Config) {
+func renderHTML(w http.ResponseWriter, r *http.Request, task eremetic.Task, taskID string, conf *config.Config) {
 	var templateFile string
 
 	data := make(map[string]interface{})
 	funcMap := template.FuncMap{
 		"ToLower":    strings.ToLower,
-		"FormatTime": formatter.FormatTime,
+		"FormatTime": FormatTime,
 	}
 
-	if reflect.DeepEqual(task, (types.EremeticTask{})) {
+	if reflect.DeepEqual(task, (eremetic.Task{})) {
 		notFound(w, r)
 		return
 	} else {
@@ -118,7 +117,7 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(nil)
 }
 
-func makeMap(task types.EremeticTask) map[string]interface{} {
+func makeMap(task eremetic.Task) map[string]interface{} {
 	data := make(map[string]interface{})
 
 	data["TaskID"] = task.ID

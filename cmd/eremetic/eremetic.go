@@ -9,8 +9,8 @@ import (
 	"github.com/braintree/manners"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/routes"
 	"github.com/klarna/eremetic/scheduler"
+	"github.com/klarna/eremetic/server"
 	"github.com/klarna/eremetic/version"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -94,7 +94,7 @@ func main() {
 		sched.Stop()
 	}()
 
-	router := routes.Create(sched, config, db)
+	router := server.NewRouter(sched, config, db)
 
 	bind := fmt.Sprintf("%s:%d", config.Address, config.Port)
 	logrus.WithFields(logrus.Fields{

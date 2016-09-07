@@ -6,8 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
-
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 )
 
 type callbackData struct {
@@ -17,7 +16,7 @@ type callbackData struct {
 }
 
 // NotifyCallback handles posting a JSON back to the URI given with the task.
-func NotifyCallback(task *types.EremeticTask) {
+func NotifyCallback(task *eremetic.Task) {
 	if len(task.CallbackURI) == 0 {
 		return
 	}

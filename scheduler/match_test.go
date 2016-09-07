@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
@@ -89,8 +89,8 @@ func TestMatch(t *testing.T) {
 
 	Convey("AttributeMatch", t, func() {
 		Convey("Does match", func() {
-			m := AttributeMatch([]types.SlaveConstraint{
-				types.SlaveConstraint{
+			m := AttributeMatch([]eremetic.SlaveConstraint{
+				eremetic.SlaveConstraint{
 					AttributeName:  "node_name",
 					AttributeValue: "node1",
 				},
@@ -99,8 +99,8 @@ func TestMatch(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 		Convey("Does not match", func() {
-			m := AttributeMatch([]types.SlaveConstraint{
-				types.SlaveConstraint{
+			m := AttributeMatch([]eremetic.SlaveConstraint{
+				eremetic.SlaveConstraint{
 					AttributeName:  "node_name",
 					AttributeValue: "node2",
 				},
@@ -113,7 +113,7 @@ func TestMatch(t *testing.T) {
 	Convey("matchOffer", t, func() {
 		Convey("Tasks without SlaveConstraints", func() {
 			Convey("Match", func() {
-				task := types.EremeticTask{
+				task := eremetic.Task{
 					TaskCPUs: 0.8,
 					TaskMem:  128.0,
 				}
@@ -125,7 +125,7 @@ func TestMatch(t *testing.T) {
 			})
 
 			Convey("No match CPU", func() {
-				task := types.EremeticTask{
+				task := eremetic.Task{
 					TaskCPUs: 2.0,
 					TaskMem:  128.0,
 				}
@@ -136,7 +136,7 @@ func TestMatch(t *testing.T) {
 			})
 
 			Convey("No match MEM", func() {
-				task := types.EremeticTask{
+				task := eremetic.Task{
 					TaskCPUs: 0.2,
 					TaskMem:  712.0,
 				}
@@ -150,11 +150,11 @@ func TestMatch(t *testing.T) {
 		Convey("Tasks with SlaveConstraints", func() {
 			Convey("Match slave with attribute", func() {
 				// Use task/mem constraints which match both offers.
-				task := types.EremeticTask{
+				task := eremetic.Task{
 					TaskCPUs: 0.5,
 					TaskMem:  128.0,
-					SlaveConstraints: []types.SlaveConstraint{
-						types.SlaveConstraint{
+					SlaveConstraints: []eremetic.SlaveConstraint{
+						eremetic.SlaveConstraint{
 							AttributeName:  "node_name",
 							AttributeValue: "node2",
 						},
@@ -169,11 +169,11 @@ func TestMatch(t *testing.T) {
 
 			Convey("No matching slave with attribute", func() {
 				// Use task/mem constraints which match both offers.
-				task := types.EremeticTask{
+				task := eremetic.Task{
 					TaskCPUs: 0.5,
 					TaskMem:  128.0,
-					SlaveConstraints: []types.SlaveConstraint{
-						types.SlaveConstraint{
+					SlaveConstraints: []eremetic.SlaveConstraint{
+						eremetic.SlaveConstraint{
 							AttributeName:  "node_name",
 							AttributeValue: "sherah",
 						},
@@ -195,15 +195,15 @@ func TestMatch(t *testing.T) {
 					&mesos.Attribute{Name: proto.String("role"), Type: mesos.Value_TEXT.Enum(), Text: &mesos.Value_Text{Value: proto.String("badassmofo")}},
 				)
 
-				task := types.EremeticTask{
+				task := eremetic.Task{
 					TaskCPUs: 0.5,
 					TaskMem:  128.0,
-					SlaveConstraints: []types.SlaveConstraint{
-						types.SlaveConstraint{
+					SlaveConstraints: []eremetic.SlaveConstraint{
+						eremetic.SlaveConstraint{
 							AttributeName:  "role",
 							AttributeValue: "badassmofo",
 						},
-						types.SlaveConstraint{
+						eremetic.SlaveConstraint{
 							AttributeName:  "node_name",
 							AttributeValue: "node3",
 						},

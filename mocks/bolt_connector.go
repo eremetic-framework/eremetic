@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -11,15 +11,15 @@ type BoltConnectorInterface struct {
 }
 
 // Open provides a mock function with given fields: path
-func (_m *BoltConnectorInterface) Open(path string) (types.BoltConnection, error) {
+func (_m *BoltConnectorInterface) Open(path string) (eremetic.BoltConnection, error) {
 	ret := _m.Called(path)
 
-	var r0 types.BoltConnection
-	if rf, ok := ret.Get(0).(func(string) types.BoltConnection); ok {
+	var r0 eremetic.BoltConnection
+	if rf, ok := ret.Get(0).(func(string) eremetic.BoltConnection); ok {
 		r0 = rf(path)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(types.BoltConnection)
+			r0 = ret.Get(0).(eremetic.BoltConnection)
 		}
 	}
 

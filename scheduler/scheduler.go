@@ -13,8 +13,8 @@ import (
 	sched "github.com/mesos/mesos-go/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/types"
 )
 
 var (
@@ -139,8 +139,8 @@ loop:
 			}).Debug("Preparing to launch task")
 
 			t, task := createTaskInfo(t, offer)
-			t.UpdateStatus(types.Status{
-				Status: types.TaskState_TASK_STAGING,
+			t.UpdateStatus(eremetic.Status{
+				Status: eremetic.TaskState_TASK_STAGING,
 				Time:   time.Now().Unix(),
 			})
 			s.database.PutTask(&t)
@@ -163,7 +163,7 @@ loop:
 // StatusUpdate takes care of updating the status
 func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
 	id := status.TaskId.GetValue()
-	newState := types.TaskState(status.State.String())
+	newState := eremetic.TaskState(status.State.String())
 
 	logrus.WithFields(logrus.Fields{
 		"task_id": id,
@@ -176,7 +176,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 	}
 
 	if task.ID == "" {
-		task = types.EremeticTask{
+		task = eremetic.Task{
 			ID:      id,
 			SlaveId: status.SlaveId.GetValue(),
 		}
@@ -191,12 +191,12 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		task.SandboxPath = sandboxPath
 	}
 
-	if newState == types.TaskState_TASK_RUNNING && !task.IsRunning() {
+	if newState == eremetic.TaskState_TASK_RUNNING && !task.IsRunning() {
 		TasksRunning.Inc()
 	}
 
 	var shouldRetry bool
-	if newState == types.TaskState_TASK_FAILED && !task.WasRunning() {
+	if newState == eremetic.TaskState_TASK_FAILED && !task.WasRunning() {
 		if task.Retry >= maxRetries {
 			logrus.WithFields(logrus.Fields{
 				"task_id": id,
@@ -207,7 +207,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		}
 	}
 
-	if types.IsTerminal(newState) {
+	if eremetic.IsTerminal(newState) {
 		var seq string
 		if shouldRetry {
 			seq = "retry"
@@ -223,15 +223,15 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 		}
 	}
 
-	task.UpdateStatus(types.Status{
+	task.UpdateStatus(eremetic.Status{
 		Status: newState,
 		Time:   time.Now().Unix(),
 	})
 
 	if shouldRetry {
 		logrus.WithField("task_id", id).Info("Re-scheduling task that never ran.")
-		task.UpdateStatus(types.Status{
-			Status: types.TaskState_TASK_QUEUED,
+		task.UpdateStatus(eremetic.Status{
+			Status: eremetic.TaskState_TASK_QUEUED,
 			Time:   time.Now().Unix(),
 		})
 		task.Retry++
@@ -239,7 +239,7 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 			QueueSize.Inc()
 			s.tasks <- id
 		}()
-	} else if types.IsTerminal(newState) {
+	} else if eremetic.IsTerminal(newState) {
 		NotifyCallback(&task)
 	}
 
@@ -298,7 +298,7 @@ func nextID(s *eremeticScheduler) string {
 	return string(b)
 }
 
-func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) {
+func (s *eremeticScheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	logrus.WithFields(logrus.Fields{
 		"docker_image":      request.DockerImage,
 		"command":           request.Command,
@@ -306,7 +306,7 @@ func (s *eremeticScheduler) ScheduleTask(request types.Request) (string, error) 
 		"ports":             request.Ports,
 	}).Debug("Adding task to queue")
 
-	task, err := types.NewEremeticTask(request, fmt.Sprintf("Eremetic task %s", nextID(s)))
+	task, err := eremetic.NewTask(request, fmt.Sprintf("Eremetic task %s", nextID(s)))
 	if err != nil {
 		return "", err
 	}

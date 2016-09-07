@@ -3,14 +3,14 @@ package mocks
 import (
 	"errors"
 
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 )
 
 type Scheduler struct {
 	NextError *error
 }
 
-func (s *Scheduler) ScheduleTask(request types.Request) (string, error) {
+func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	if err := s.NextError; err != nil {
 		s.NextError = nil
 		return "", *err

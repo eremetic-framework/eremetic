@@ -6,7 +6,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	ogle "github.com/jacobsa/oglematchers"
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 )
 
@@ -16,7 +16,7 @@ type resourceMatcher struct {
 }
 
 type attributeMatcher struct {
-	constraint types.SlaveConstraint
+	constraint eremetic.SlaveConstraint
 }
 
 func (m *resourceMatcher) Matches(o interface{}) error {
@@ -74,7 +74,7 @@ func (m *attributeMatcher) Description() string {
 	)
 }
 
-func AttributeMatch(slaveConstraints []types.SlaveConstraint) ogle.Matcher {
+func AttributeMatch(slaveConstraints []eremetic.SlaveConstraint) ogle.Matcher {
 	var submatchers []ogle.Matcher
 	for _, constraint := range slaveConstraints {
 		submatchers = append(submatchers, &attributeMatcher{constraint})
@@ -82,7 +82,7 @@ func AttributeMatch(slaveConstraints []types.SlaveConstraint) ogle.Matcher {
 	return ogle.AllOf(submatchers...)
 }
 
-func createMatcher(task types.EremeticTask) ogle.Matcher {
+func createMatcher(task eremetic.Task) ogle.Matcher {
 	return ogle.AllOf(
 		CPUAvailable(task.TaskCPUs),
 		MemoryAvailable(task.TaskMem),
@@ -95,7 +95,7 @@ func matches(matcher ogle.Matcher, o interface{}) bool {
 	return err == nil
 }
 
-func matchOffer(task types.EremeticTask, offers []*mesos.Offer) (*mesos.Offer, []*mesos.Offer) {
+func matchOffer(task eremetic.Task, offers []*mesos.Offer) (*mesos.Offer, []*mesos.Offer) {
 	var matcher = createMatcher(task)
 	for i, off := range offers {
 		if matches(matcher, off) {

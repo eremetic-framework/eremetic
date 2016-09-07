@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"encoding/json"
@@ -13,11 +13,11 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
-	"github.com/klarna/eremetic/assets"
+	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/scheduler"
-	"github.com/klarna/eremetic/types"
+	"github.com/klarna/eremetic/server/assets"
 	"github.com/klarna/eremetic/version"
 )
 
@@ -27,11 +27,11 @@ type ErrorDocument struct {
 }
 
 type Handler struct {
-	scheduler types.Scheduler
+	scheduler eremetic.Scheduler
 	database  database.TaskDB
 }
 
-func Create(scheduler types.Scheduler, database database.TaskDB) Handler {
+func NewHandler(scheduler eremetic.Scheduler, database database.TaskDB) Handler {
 	return Handler{
 		scheduler: scheduler,
 		database:  database,
@@ -41,7 +41,7 @@ func Create(scheduler types.Scheduler, database database.TaskDB) Handler {
 // AddTask handles adding a task to the queue
 func (h Handler) AddTask() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var request types.Request
+		var request eremetic.Request
 
 		body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 		if err != nil {
@@ -107,7 +107,7 @@ func (h Handler) GetTaskInfo(conf *config.Config) http.HandlerFunc {
 		if strings.Contains(r.Header.Get("Accept"), "text/html") {
 			renderHTML(w, r, task, id, conf)
 		} else {
-			if reflect.DeepEqual(task, (types.EremeticTask{})) {
+			if reflect.DeepEqual(task, (eremetic.Task{})) {
 				writeJSON(http.StatusNotFound, nil, w)
 				return
 			}

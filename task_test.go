@@ -1,4 +1,4 @@
-package types
+package eremetic
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 func TestTask(t *testing.T) {
 	Convey("WasRunning", t, func() {
 		Convey("A task that was running", func() {
-			task := EremeticTask{
+			task := Task{
 				Status: []Status{
 					Status{0, "TASK_STAGING"},
 					Status{1, "TASK_RUNNING"},
@@ -21,7 +21,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("A task that is running", func() {
-			task := EremeticTask{
+			task := Task{
 				Status: []Status{
 					Status{0, "TASK_STAGING"},
 					Status{1, "TASK_RUNNING"},
@@ -32,7 +32,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("A task that never was running", func() {
-			task := EremeticTask{
+			task := Task{
 				Status: []Status{
 					Status{0, "TASK_STAGING"},
 					Status{1, "TASK_FAILED"},
@@ -45,7 +45,7 @@ func TestTask(t *testing.T) {
 
 	Convey("IsTerminated", t, func() {
 		Convey("A task that was running", func() {
-			task := EremeticTask{
+			task := Task{
 				Status: []Status{
 					Status{0, "TASK_STAGING"},
 					Status{1, "TASK_RUNNING"},
@@ -57,7 +57,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("A task that is running", func() {
-			task := EremeticTask{
+			task := Task{
 				Status: []Status{
 					Status{0, "TASK_STAGING"},
 					Status{1, "TASK_RUNNING"},
@@ -68,7 +68,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("A task that never was running", func() {
-			task := EremeticTask{
+			task := Task{
 				Status: []Status{
 					Status{0, "TASK_STAGING"},
 					Status{1, "TASK_FAILED"},
@@ -79,7 +79,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("A empty task", func() {
-			task := EremeticTask{}
+			task := Task{}
 
 			So(task.IsTerminated(), ShouldBeTrue)
 		})
@@ -87,7 +87,7 @@ func TestTask(t *testing.T) {
 
 	Convey("IsRunning", t, func() {
 		Convey("A task that was running", func() {
-			task := EremeticTask{
+			task := Task{
 				Status: []Status{
 					Status{0, "TASK_STAGING"},
 					Status{1, "TASK_RUNNING"},
@@ -99,7 +99,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("A task that is running", func() {
-			task := EremeticTask{
+			task := Task{
 				Status: []Status{
 					Status{0, "TASK_STAGING"},
 					Status{1, "TASK_RUNNING"},
@@ -110,7 +110,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("A empty task", func() {
-			task := EremeticTask{}
+			task := Task{}
 
 			So(task.IsRunning(), ShouldBeFalse)
 		})
@@ -118,7 +118,7 @@ func TestTask(t *testing.T) {
 
 	Convey("LastUpdated", t, func() {
 		Convey("A task that is running", func() {
-			task := EremeticTask{
+			task := Task{
 				Status: []Status{
 					Status{1449682262, "TASK_STAGING"},
 					Status{1449682265, "TASK_RUNNING"},
@@ -131,7 +131,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("A empty task", func() {
-			task := EremeticTask{}
+			task := Task{}
 
 			s := task.LastUpdated()
 
@@ -139,7 +139,7 @@ func TestTask(t *testing.T) {
 		})
 	})
 
-	Convey("NewEremeticTask", t, func() {
+	Convey("NewTask", t, func() {
 		request := Request{
 			TaskCPUs:    0.5,
 			TaskMem:     22.0,
@@ -148,7 +148,7 @@ func TestTask(t *testing.T) {
 		}
 
 		Convey("No volume or environment specified", func() {
-			task, err := NewEremeticTask(request, "")
+			task, err := NewTask(request, "")
 
 			So(err, ShouldBeNil)
 			So(task, ShouldNotBeNil)
@@ -172,7 +172,7 @@ func TestTask(t *testing.T) {
 			request.Volumes = volumes
 			request.Environment = environment
 
-			task, err := NewEremeticTask(request, "")
+			task, err := NewTask(request, "")
 
 			So(err, ShouldBeNil)
 			So(task.Environment, ShouldContainKey, "foo")
@@ -186,7 +186,7 @@ func TestTask(t *testing.T) {
 			maskedEnv["foo"] = "bar"
 
 			request.MaskedEnvironment = maskedEnv
-			task, err := NewEremeticTask(request, "")
+			task, err := NewTask(request, "")
 
 			So(err, ShouldBeNil)
 			So(task.MaskedEnvironment, ShouldContainKey, "foo")
@@ -196,7 +196,7 @@ func TestTask(t *testing.T) {
 		Convey("Given URI (via uris) to download", func() {
 			request.URIs = []string{"http://foobar.local/kitten.jpg"}
 
-			task, err := NewEremeticTask(request, "")
+			task, err := NewTask(request, "")
 
 			So(err, ShouldBeNil)
 			So(task.FetchURIs, ShouldHaveLength, 1)
@@ -209,7 +209,7 @@ func TestTask(t *testing.T) {
 		Convey("Given URI (via uris) to download and extract", func() {
 			request.URIs = []string{"http://foobar.local/kittens.tar.gz"}
 
-			task, err := NewEremeticTask(request, "")
+			task, err := NewTask(request, "")
 
 			So(err, ShouldBeNil)
 			So(task.FetchURIs, ShouldHaveLength, 1)
@@ -225,7 +225,7 @@ func TestTask(t *testing.T) {
 				Extract: true,
 			}}
 
-			task, err := NewEremeticTask(request, "")
+			task, err := NewTask(request, "")
 
 			So(err, ShouldBeNil)
 			So(task.FetchURIs, ShouldHaveLength, 1)
@@ -242,7 +242,7 @@ func TestTask(t *testing.T) {
 				Cache:      true,
 			}}
 
-			task, err := NewEremeticTask(request, "")
+			task, err := NewTask(request, "")
 
 			So(err, ShouldBeNil)
 			So(task.FetchURIs, ShouldHaveLength, 1)
@@ -255,7 +255,7 @@ func TestTask(t *testing.T) {
 		Convey("Given no Command", func() {
 			request.Command = ""
 
-			task, err := NewEremeticTask(request, "")
+			task, err := NewTask(request, "")
 
 			So(err, ShouldBeNil)
 			So(task.Command, ShouldBeEmpty)
@@ -264,7 +264,7 @@ func TestTask(t *testing.T) {
 		Convey("Given Force Pull image", func() {
 			request.ForcePullImage = true
 
-			task, err := NewEremeticTask(request, "")
+			task, err := NewTask(request, "")
 
 			So(err, ShouldBeNil)
 			So(task.ForcePullImage, ShouldBeTrue)
@@ -272,7 +272,7 @@ func TestTask(t *testing.T) {
 
 		Convey("New task from empty request", func() {
 			req := Request{}
-			task, err := NewEremeticTask(req, "")
+			task, err := NewTask(req, "")
 
 			So(err, ShouldBeNil)
 			So(task, ShouldNotBeNil)
