@@ -14,7 +14,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/database"
 )
 
 var (
@@ -42,7 +41,7 @@ type eremeticScheduler struct {
 	reconcile *Reconcile
 
 	// Handler for storing tasks
-	database database.TaskDB
+	database eremetic.TaskDB
 }
 
 // Settings holds configuration values for the scheduler
@@ -60,7 +59,7 @@ type Settings struct {
 }
 
 // Create a new eremeticScheduler
-func Create(settings *Settings, db database.TaskDB) *eremeticScheduler {
+func Create(settings *Settings, db eremetic.TaskDB) *eremeticScheduler {
 	return &eremeticScheduler{
 		shutdown: make(chan struct{}),
 		tasks:    make(chan string, settings.MaxQueueSize),

@@ -1,4 +1,4 @@
-package database
+package boltdb
 
 import (
 	"encoding/json"
@@ -12,13 +12,26 @@ import (
 	"github.com/klarna/eremetic"
 )
 
-type boltDriver struct {
-	database eremetic.BoltConnection
+// Connection defines the functions needed to interact with a bolt database
+type Connection interface {
+	Close() error
+	Update(func(*bolt.Tx) error) error
+	View(func(*bolt.Tx) error) error
+	Path() string
 }
 
-type boltConnector struct{}
+// ConnectorInterface assists in opening a boltdb connection
+type ConnectorInterface interface {
+	Open(path string) (Connection, error)
+}
 
-func (b boltConnector) Open(file string) (eremetic.BoltConnection, error) {
+type driver struct {
+	database Connection
+}
+
+type connector struct{}
+
+func (b connector) Open(file string) (Connection, error) {
 	if !filepath.IsAbs(file) {
 		dir, _ := os.Getwd()
 		file = fmt.Sprintf("%s/../%s", dir, file)
@@ -28,29 +41,33 @@ func (b boltConnector) Open(file string) (eremetic.BoltConnection, error) {
 	return bolt.Open(file, 0600, nil)
 }
 
-func createBoltConnector() eremetic.BoltConnectorInterface {
-	return eremetic.BoltConnectorInterface(boltConnector{})
+func newConnector() ConnectorInterface {
+	return ConnectorInterface(connector{})
 }
 
-func createBoltDriver(connector eremetic.BoltConnectorInterface, file string) (TaskDB, error) {
+func NewTaskDB(file string) (eremetic.TaskDB, error) {
+	return newDriver(newConnector(), file)
+}
+
+func newDriver(connector ConnectorInterface, file string) (eremetic.TaskDB, error) {
 	if file == "" {
 		return nil, errors.New("Missing BoltDB database loctation.")
 	}
 
 	db, err := connector.Open(file)
 
-	return boltDriver{database: db}, err
+	return driver{database: db}, err
 }
 
 // Close is used to Close the database
-func (db boltDriver) Close() {
+func (db driver) Close() {
 	if db.database != nil {
 		db.database.Close()
 	}
 }
 
 // Clean is used to delete the tasks bucket
-func (db boltDriver) Clean() error {
+func (db driver) Clean() error {
 	return db.database.Update(func(tx *bolt.Tx) error {
 		if err := tx.DeleteBucket([]byte("tasks")); err != nil {
 			return err
@@ -63,14 +80,14 @@ func (db boltDriver) Clean() error {
 }
 
 // PutTask stores a requested task in the database
-func (db boltDriver) PutTask(task *eremetic.Task) error {
+func (db driver) PutTask(task *eremetic.Task) error {
 	return db.database.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("tasks"))
 		if err != nil {
 			return err
 		}
 
-		encoded, err := encode(task)
+		encoded, err := eremetic.Encode(task)
 		if err != nil {
 			logrus.WithError(err).Error("Unable to encode task to byte-array.")
 			return err
@@ -82,10 +99,10 @@ func (db boltDriver) PutTask(task *eremetic.Task) error {
 
 // ReadTask fetches a task from the database and applies a mask to the
 // MaskedEnvironment field
-func (db boltDriver) ReadTask(id string) (eremetic.Task, error) {
+func (db driver) ReadTask(id string) (eremetic.Task, error) {
 	task, err := db.ReadUnmaskedTask(id)
 
-	applyMask(&task)
+	eremetic.ApplyMask(&task)
 
 	return task, err
 }
@@ -95,7 +112,7 @@ func (db boltDriver) ReadTask(id string) (eremetic.Task, error) {
 // This function should be considered internal to Eremetic, and is used where
 // we need to fetch a task and then re-save it to the database. It should not
 // be returned to the API.
-func (db boltDriver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
+func (db driver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	var task eremetic.Task
 
 	err := db.database.View(func(tx *bolt.Tx) error {
@@ -113,7 +130,7 @@ func (db boltDriver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 
 // ListNonTerminalTasks returns a list of tasks that are not yet finished in one
 // way or another.
-func (db boltDriver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
+func (db driver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 	tasks := []*eremetic.Task{}
 
 	err := db.database.View(func(tx *bolt.Tx) error {
@@ -125,7 +142,7 @@ func (db boltDriver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 			var task eremetic.Task
 			json.Unmarshal(v, &task)
 			if !task.IsTerminated() {
-				applyMask(&task)
+				eremetic.ApplyMask(&task)
 				tasks = append(tasks, &task)
 			}
 			return nil

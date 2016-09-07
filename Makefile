@@ -36,7 +36,7 @@ test-docker:
 	$(DOCKER_GOLANG_RUN_CMD) "make test"
 
 server/assets/assets.go: server/generate.go ${STATIC}
-	cd server; go generate
+	go generate github.com/klarna/eremetic/server
 
 eremetic: ${TOOLS} server/assets/assets.go
 eremetic: ${SRC}

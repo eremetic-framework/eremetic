@@ -6,7 +6,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/database"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 )
@@ -24,7 +23,7 @@ func (r *Reconcile) Cancel() {
 	close(r.cancel)
 }
 
-func ReconcileTasks(driver sched.SchedulerDriver, database database.TaskDB) *Reconcile {
+func ReconcileTasks(driver sched.SchedulerDriver, database eremetic.TaskDB) *Reconcile {
 	cancel := make(chan struct{})
 	done := make(chan struct{})
 

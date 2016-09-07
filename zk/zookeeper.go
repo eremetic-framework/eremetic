@@ -1,4 +1,4 @@
-package database
+package zk
 
 import (
 	"encoding/json"
@@ -13,22 +13,38 @@ import (
 	"github.com/samuel/go-zookeeper/zk"
 )
 
-type zkDriver struct {
-	connection eremetic.ZkConnection
+// Connection wraps a zk.Conn struct for testability
+type Connection interface {
+	Close()
+	Create(path string, data []byte, flags int32, acl []zk.ACL) (string, error)
+	Delete(path string, n int32) error
+	Exists(path string) (bool, *zk.Stat, error)
+	Get(path string) ([]byte, *zk.Stat, error)
+	Set(path string, data []byte, version int32) (*zk.Stat, error)
+	Children(path string) ([]string, *zk.Stat, error)
+}
+
+// ConnectorInterface helps create a zookeeper connection
+type ConnectorInterface interface {
+	Connect(path string) (Connection, error)
+}
+
+type driver struct {
+	connection Connection
 	path       string
 }
 
-type zkConnector struct{}
+type connector struct{}
 
-func (z zkConnector) Connect(zksStr string) (eremetic.ZkConnection, error) {
+func (z connector) Connect(zksStr string) (Connection, error) {
 	zks := strings.Split(zksStr, ",")
 	conn, _, err := zk.Connect(zks, time.Second)
 
 	return conn, err
 }
 
-func createZKConnector() eremetic.ZkConnectorInterface {
-	return eremetic.ZkConnectorInterface(zkConnector{})
+func newConnector() ConnectorInterface {
+	return ConnectorInterface(connector{})
 }
 
 func parsePath(zkpath string) (string, string, error) {
@@ -41,7 +57,11 @@ func parsePath(zkpath string) (string, string, error) {
 	return u.Host, path, nil
 }
 
-func createZKDriver(connector eremetic.ZkConnectorInterface, zkPath string) (TaskDB, error) {
+func NewTaskDB(zk string) (eremetic.TaskDB, error) {
+	return newDriver(newConnector(), zk)
+}
+
+func newDriver(connector ConnectorInterface, zkPath string) (eremetic.TaskDB, error) {
 	if zkPath == "" {
 		return nil, errors.New("Missing ZK path")
 	}
@@ -72,24 +92,24 @@ func createZKDriver(connector eremetic.ZkConnectorInterface, zkPath string) (Tas
 		}
 	}
 
-	driver := zkDriver{connection: eremetic.ZkConnection(conn), path: path}
+	drv := driver{connection: Connection(conn), path: path}
 
-	return driver, nil
+	return drv, nil
 }
 
-func (z zkDriver) Close() {
+func (z driver) Close() {
 	z.connection.Close()
 }
 
-func (z zkDriver) Clean() error {
+func (z driver) Clean() error {
 	path := fmt.Sprintf("%s/", z.path)
 	return z.connection.Delete(path, -1)
 }
 
-func (z zkDriver) PutTask(task *eremetic.Task) error {
+func (z driver) PutTask(task *eremetic.Task) error {
 	path := fmt.Sprintf("%s/%s", z.path, task.ID)
 
-	encode, err := encode(task)
+	encode, err := eremetic.Encode(task)
 	if err != nil {
 		logrus.WithError(err).Error("Unable to encode task to byte-array.")
 		return err
@@ -112,15 +132,15 @@ func (z zkDriver) PutTask(task *eremetic.Task) error {
 	return err
 }
 
-func (z zkDriver) ReadTask(id string) (eremetic.Task, error) {
+func (z driver) ReadTask(id string) (eremetic.Task, error) {
 	task, err := z.ReadUnmaskedTask(id)
 
-	applyMask(&task)
+	eremetic.ApplyMask(&task)
 
 	return task, err
 }
 
-func (z zkDriver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
+func (z driver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	var task eremetic.Task
 	path := fmt.Sprintf("%s/%s", z.path, id)
 
@@ -131,7 +151,7 @@ func (z zkDriver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 
 }
 
-func (z zkDriver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
+func (z driver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 	tasks := []*eremetic.Task{}
 	paths, _, _ := z.connection.Children(z.path)
 	for _, p := range paths {
@@ -141,7 +161,7 @@ func (z zkDriver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 			continue
 		}
 		if !t.IsTerminated() {
-			applyMask(&t)
+			eremetic.ApplyMask(&t)
 			tasks = append(tasks, &t)
 		}
 	}

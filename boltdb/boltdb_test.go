@@ -1,4 +1,4 @@
-package database
+package boltdb
 
 import (
 	"fmt"
@@ -9,26 +9,24 @@ import (
 	"time"
 
 	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/mocks"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestBoltDatabase(t *testing.T) {
 	var (
 		testDB string
-		db     boltDriver
+		db     driver
 	)
 
 	setup := func() error {
 		dir, _ := ioutil.TempDir("", "eremetic")
 		testDB = fmt.Sprintf("%s/test.db", dir)
-		adb, err := NewDB("boltdb", testDB)
-
+		adb, err := newDriver(newConnector(), testDB)
 		if err != nil {
 			return err
 		}
 
-		db = adb.(boltDriver)
+		db = adb.(driver)
 
 		return nil
 	}
@@ -61,8 +59,8 @@ func TestBoltDatabase(t *testing.T) {
 			defer teardown()
 			defer db.Close()
 
-			connector := new(mocks.BoltConnectorInterface)
-			_, err := createBoltDriver(connector, "")
+			connector := new(mockConnectorInterface)
+			_, err := newDriver(connector, "")
 
 			So(err, ShouldNotBeNil)
 			So(err.Error(), ShouldEqual, "Missing BoltDB database loctation.")
