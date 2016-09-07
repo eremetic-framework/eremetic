@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/klarna/eremetic"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/klarna/eremetic"
 )
 
 func TestBoltDatabase(t *testing.T) {

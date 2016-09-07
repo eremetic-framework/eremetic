@@ -6,8 +6,9 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	ogle "github.com/jacobsa/oglematchers"
-	"github.com/klarna/eremetic"
 	mesos "github.com/mesos/mesos-go/mesosproto"
+
+	"github.com/klarna/eremetic"
 )
 
 type resourceMatcher struct {

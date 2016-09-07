@@ -17,12 +17,13 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/boltdb"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/mock"
 	"github.com/klarna/eremetic/version"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestHandling(t *testing.T) {

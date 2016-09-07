@@ -10,12 +10,13 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/boltdb"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/klarna/eremetic"
+	"github.com/klarna/eremetic/boltdb"
 )
 
 func callbackReceiver() (chan callbackData, *httptest.Server) {

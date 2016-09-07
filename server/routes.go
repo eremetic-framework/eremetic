@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Route enforces the structure of a route

@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/klarna/eremetic/boltdb"
 	"github.com/klarna/eremetic/config"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestRoutes(t *testing.T) {

@@ -8,6 +8,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/braintree/manners"
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/boltdb"
 	"github.com/klarna/eremetic/config"
@@ -15,7 +17,6 @@ import (
 	"github.com/klarna/eremetic/server"
 	"github.com/klarna/eremetic/version"
 	"github.com/klarna/eremetic/zk"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 func setup() *config.Config {

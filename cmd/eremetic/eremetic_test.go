@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/klarna/eremetic/config"
-
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/klarna/eremetic/config"
 )
 
 func TestMain(t *testing.T) {

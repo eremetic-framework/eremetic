@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/klarna/eremetic"
 	"github.com/samuel/go-zookeeper/zk"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/klarna/eremetic"
 )
 
 func TestZKDatabase(t *testing.T) {

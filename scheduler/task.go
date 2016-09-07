@@ -2,9 +2,10 @@ package scheduler
 
 import (
 	"github.com/golang/protobuf/proto"
-	"github.com/klarna/eremetic"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
+
+	"github.com/klarna/eremetic"
 )
 
 func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mesos.TaskInfo) {

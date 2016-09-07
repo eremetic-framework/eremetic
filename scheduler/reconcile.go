@@ -5,9 +5,10 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
-	"github.com/klarna/eremetic"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
+
+	"github.com/klarna/eremetic"
 )
 
 var (

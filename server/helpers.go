@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/server/assets"

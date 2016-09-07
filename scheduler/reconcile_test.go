@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/boltdb"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/klarna/eremetic"
+	"github.com/klarna/eremetic/boltdb"
 )
 
 func TestReconcile(t *testing.T) {

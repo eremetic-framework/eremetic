@@ -13,6 +13,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
+
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/scheduler"

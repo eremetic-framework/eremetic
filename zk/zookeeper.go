@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/klarna/eremetic"
 	"github.com/samuel/go-zookeeper/zk"
+
+	"github.com/klarna/eremetic"
 )
 
 // Connection wraps a zk.Conn struct for testability
