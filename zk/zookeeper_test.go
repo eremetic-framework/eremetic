@@ -15,20 +15,20 @@ import (
 
 func TestZKDatabase(t *testing.T) {
 	var (
-		db        *driver
+		db        *TaskDB
 		object    *mockConnection
-		connector *mockConnectorInterface
+		connector *mockConnector
 	)
 
 	zkPath := "zk://localhost:1234/testdb"
 
 	setup := func() {
-		db = &driver{
-			connection: new(mockConnection),
-			path:       "/testdb",
+		db = &TaskDB{
+			conn: new(mockConnection),
+			path: "/testdb",
 		}
-		object = db.connection.(*mockConnection)
-		connector = new(mockConnectorInterface)
+		object = db.conn.(*mockConnection)
+		connector = new(mockConnector)
 	}
 
 	teardown := func() {
@@ -64,7 +64,7 @@ func TestZKDatabase(t *testing.T) {
 				setup()
 				defer teardown()
 
-				_, err := newDriver(connector, "")
+				_, err := newCustomTaskDB(connector, "")
 
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "Missing ZK path")
@@ -76,7 +76,7 @@ func TestZKDatabase(t *testing.T) {
 
 				connector.On("Connect", mock.AnythingOfType("string")).Return(nil, errors.New("Unable to connect"))
 
-				_, err := newDriver(connector, zkPath)
+				_, err := newCustomTaskDB(connector, zkPath)
 
 				So(err, ShouldNotBeNil)
 				So(connector.AssertCalled(t, "Connect", "localhost:1234"), ShouldBeTrue)
@@ -88,7 +88,7 @@ func TestZKDatabase(t *testing.T) {
 				connector.On("Connect", mock.AnythingOfType("string")).Return(object, nil)
 				object.On("Exists", mock.AnythingOfType("string")).Return(false, &zk.Stat{}, errors.New("Bad Connection"))
 
-				_, err := newDriver(connector, zkPath)
+				_, err := newCustomTaskDB(connector, zkPath)
 
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "Bad Connection")
@@ -103,7 +103,7 @@ func TestZKDatabase(t *testing.T) {
 				object.On("Exists", mock.AnythingOfType("string")).Return(false, &zk.Stat{}, nil)
 				object.On("Create", mock.AnythingOfType("string"), mock.Anything, mock.AnythingOfType("int32"), mock.Anything).Return("", errors.New("Unable to create node"))
 
-				_, err := newDriver(connector, zkPath)
+				_, err := newCustomTaskDB(connector, zkPath)
 
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "Unable to create node")
@@ -119,7 +119,7 @@ func TestZKDatabase(t *testing.T) {
 			connector.On("Connect", mock.AnythingOfType("string")).Return(object, nil)
 			object.On("Exists", mock.AnythingOfType("string")).Return(true, &zk.Stat{}, nil)
 
-			db, err := newDriver(connector, zkPath)
+			db, err := newCustomTaskDB(connector, zkPath)
 
 			So(err, ShouldBeNil)
 			So(connector.AssertCalled(t, "Connect", "localhost:1234"), ShouldBeTrue)

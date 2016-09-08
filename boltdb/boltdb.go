@@ -13,26 +13,22 @@ import (
 	"github.com/klarna/eremetic"
 )
 
-// Connection defines the functions needed to interact with a bolt database
-type Connection interface {
+// connection defines the functions needed to interact with a bolt database
+type connection interface {
 	Close() error
 	Update(func(*bolt.Tx) error) error
 	View(func(*bolt.Tx) error) error
 	Path() string
 }
 
-// ConnectorInterface assists in opening a boltdb connection
-type ConnectorInterface interface {
-	Open(path string) (Connection, error)
+// connector assists in opening a boltdb connection
+type connector interface {
+	Open(path string) (connection, error)
 }
 
-type driver struct {
-	database Connection
-}
+type defaultConnector struct{}
 
-type connector struct{}
-
-func (b connector) Open(file string) (Connection, error) {
+func (b defaultConnector) Open(file string) (connection, error) {
 	if !filepath.IsAbs(file) {
 		dir, _ := os.Getwd()
 		file = fmt.Sprintf("%s/../%s", dir, file)
@@ -42,47 +38,53 @@ func (b connector) Open(file string) (Connection, error) {
 	return bolt.Open(file, 0600, nil)
 }
 
-func newConnector() ConnectorInterface {
-	return ConnectorInterface(connector{})
+type TaskDB struct {
+	conn connection
 }
 
-func NewTaskDB(file string) (eremetic.TaskDB, error) {
-	return newDriver(newConnector(), file)
+// NewTaskDB returns a new instance of TaskDB.
+func NewTaskDB(file string) (*TaskDB, error) {
+	return newCustomTaskDB(defaultConnector{}, file)
 }
 
-func newDriver(connector ConnectorInterface, file string) (eremetic.TaskDB, error) {
+func newCustomTaskDB(c connector, file string) (*TaskDB, error) {
 	if file == "" {
-		return nil, errors.New("Missing BoltDB database loctation.")
+		return nil, errors.New("missing boltdb database location")
 	}
 
-	db, err := connector.Open(file)
+	conn, err := c.Open(file)
+	if err != nil {
+		return nil, err
+	}
 
-	return driver{database: db}, err
+	return &TaskDB{conn: conn}, nil
 }
 
 // Close is used to Close the database
-func (db driver) Close() {
-	if db.database != nil {
-		db.database.Close()
+func (db *TaskDB) Close() {
+	if db.conn != nil {
+		db.conn.Close()
 	}
 }
 
 // Clean is used to delete the tasks bucket
-func (db driver) Clean() error {
-	return db.database.Update(func(tx *bolt.Tx) error {
+func (db *TaskDB) Clean() error {
+	return db.conn.Update(func(tx *bolt.Tx) error {
 		if err := tx.DeleteBucket([]byte("tasks")); err != nil {
 			return err
 		}
+
 		if _, err := tx.CreateBucketIfNotExists([]byte("tasks")); err != nil {
 			return err
 		}
+
 		return nil
 	})
 }
 
 // PutTask stores a requested task in the database
-func (db driver) PutTask(task *eremetic.Task) error {
-	return db.database.Update(func(tx *bolt.Tx) error {
+func (db *TaskDB) PutTask(task *eremetic.Task) error {
+	return db.conn.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("tasks"))
 		if err != nil {
 			return err
@@ -100,7 +102,7 @@ func (db driver) PutTask(task *eremetic.Task) error {
 
 // ReadTask fetches a task from the database and applies a mask to the
 // MaskedEnvironment field
-func (db driver) ReadTask(id string) (eremetic.Task, error) {
+func (db *TaskDB) ReadTask(id string) (eremetic.Task, error) {
 	task, err := db.ReadUnmaskedTask(id)
 
 	eremetic.ApplyMask(&task)
@@ -113,10 +115,10 @@ func (db driver) ReadTask(id string) (eremetic.Task, error) {
 // This function should be considered internal to Eremetic, and is used where
 // we need to fetch a task and then re-save it to the database. It should not
 // be returned to the API.
-func (db driver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
+func (db *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	var task eremetic.Task
 
-	err := db.database.View(func(tx *bolt.Tx) error {
+	err := db.conn.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("tasks"))
 		if b == nil {
 			return bolt.ErrBucketNotFound
@@ -131,10 +133,10 @@ func (db driver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 
 // ListNonTerminalTasks returns a list of tasks that are not yet finished in one
 // way or another.
-func (db driver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
+func (db *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 	tasks := []*eremetic.Task{}
 
-	err := db.database.View(func(tx *bolt.Tx) error {
+	err := db.conn.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("tasks"))
 		if b == nil {
 			return bolt.ErrBucketNotFound

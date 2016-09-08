@@ -14,8 +14,8 @@ import (
 	"github.com/klarna/eremetic"
 )
 
-// Connection wraps a zk.Conn struct for testability
-type Connection interface {
+// connection wraps a zk.Conn struct for testability
+type connection interface {
 	Close()
 	Create(path string, data []byte, flags int32, acl []zk.ACL) (string, error)
 	Delete(path string, n int32) error
@@ -25,27 +25,23 @@ type Connection interface {
 	Children(path string) ([]string, *zk.Stat, error)
 }
 
-// ConnectorInterface helps create a zookeeper connection
-type ConnectorInterface interface {
-	Connect(path string) (Connection, error)
+// connector helps create a zookeeper connection
+type connector interface {
+	Connect(path string) (connection, error)
 }
 
-type driver struct {
-	connection Connection
-	path       string
+type TaskDB struct {
+	conn connection
+	path string
 }
 
-type connector struct{}
+type defaultConnector struct{}
 
-func (z connector) Connect(zksStr string) (Connection, error) {
+func (z defaultConnector) Connect(zksStr string) (connection, error) {
 	zks := strings.Split(zksStr, ",")
 	conn, _, err := zk.Connect(zks, time.Second)
 
 	return conn, err
-}
-
-func newConnector() ConnectorInterface {
-	return ConnectorInterface(connector{})
 }
 
 func parsePath(zkpath string) (string, string, error) {
@@ -58,21 +54,21 @@ func parsePath(zkpath string) (string, string, error) {
 	return u.Host, path, nil
 }
 
-func NewTaskDB(zk string) (eremetic.TaskDB, error) {
-	return newDriver(newConnector(), zk)
+func NewTaskDB(zk string) (*TaskDB, error) {
+	return newCustomTaskDB(defaultConnector{}, zk)
 }
 
-func newDriver(connector ConnectorInterface, zkPath string) (eremetic.TaskDB, error) {
-	if zkPath == "" {
+func newCustomTaskDB(c connector, path string) (*TaskDB, error) {
+	if path == "" {
 		return nil, errors.New("Missing ZK path")
 	}
 
-	servers, path, err := parsePath(zkPath)
+	servers, path, err := parsePath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := connector.Connect(servers)
+	conn, err := c.Connect(servers)
 	if err != nil {
 		return nil, err
 	}
@@ -93,21 +89,22 @@ func newDriver(connector ConnectorInterface, zkPath string) (eremetic.TaskDB, er
 		}
 	}
 
-	drv := driver{connection: Connection(conn), path: path}
-
-	return drv, nil
+	return &TaskDB{
+		conn: conn,
+		path: path,
+	}, nil
 }
 
-func (z driver) Close() {
-	z.connection.Close()
+func (z *TaskDB) Close() {
+	z.conn.Close()
 }
 
-func (z driver) Clean() error {
+func (z *TaskDB) Clean() error {
 	path := fmt.Sprintf("%s/", z.path)
-	return z.connection.Delete(path, -1)
+	return z.conn.Delete(path, -1)
 }
 
-func (z driver) PutTask(task *eremetic.Task) error {
+func (z *TaskDB) PutTask(task *eremetic.Task) error {
 	path := fmt.Sprintf("%s/%s", z.path, task.ID)
 
 	encode, err := eremetic.Encode(task)
@@ -116,24 +113,24 @@ func (z driver) PutTask(task *eremetic.Task) error {
 		return err
 	}
 
-	exists, stat, err := z.connection.Exists(path)
+	exists, stat, err := z.conn.Exists(path)
 	if err != nil {
 		logrus.WithError(err).Error("Unable to check existance of database.")
 		return err
 	}
 
 	if exists {
-		_, err = z.connection.Set(path, encode, stat.Version)
+		_, err = z.conn.Set(path, encode, stat.Version)
 		return err
 	}
 
 	flags := int32(0)
 	acl := zk.WorldACL(zk.PermAll)
-	_, err = z.connection.Create(path, encode, flags, acl)
+	_, err = z.conn.Create(path, encode, flags, acl)
 	return err
 }
 
-func (z driver) ReadTask(id string) (eremetic.Task, error) {
+func (z *TaskDB) ReadTask(id string) (eremetic.Task, error) {
 	task, err := z.ReadUnmaskedTask(id)
 
 	eremetic.ApplyMask(&task)
@@ -141,20 +138,20 @@ func (z driver) ReadTask(id string) (eremetic.Task, error) {
 	return task, err
 }
 
-func (z driver) ReadUnmaskedTask(id string) (eremetic.Task, error) {
+func (z *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	var task eremetic.Task
 	path := fmt.Sprintf("%s/%s", z.path, id)
 
-	bytes, _, err := z.connection.Get(path)
+	bytes, _, err := z.conn.Get(path)
 	json.Unmarshal(bytes, &task)
 
 	return task, err
 
 }
 
-func (z driver) ListNonTerminalTasks() ([]*eremetic.Task, error) {
+func (z *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 	tasks := []*eremetic.Task{}
-	paths, _, _ := z.connection.Children(z.path)
+	paths, _, _ := z.conn.Children(z.path)
 	for _, p := range paths {
 		t, err := z.ReadTask(p)
 		if err != nil {

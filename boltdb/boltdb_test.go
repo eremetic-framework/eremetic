@@ -16,18 +16,18 @@ import (
 func TestBoltDatabase(t *testing.T) {
 	var (
 		testDB string
-		db     driver
+		db     *TaskDB
 	)
 
 	setup := func() error {
 		dir, _ := ioutil.TempDir("", "eremetic")
 		testDB = fmt.Sprintf("%s/test.db", dir)
-		adb, err := newDriver(newConnector(), testDB)
+		adb, err := newCustomTaskDB(defaultConnector{}, testDB)
 		if err != nil {
 			return err
 		}
 
-		db = adb.(driver)
+		db = adb
 
 		return nil
 	}
@@ -47,10 +47,9 @@ func TestBoltDatabase(t *testing.T) {
 		Convey("With an absolute path", func() {
 			setup()
 			defer teardown()
-			defer db.Close()
 
-			So(db.database.Path(), ShouldNotBeEmpty)
-			So(filepath.IsAbs(db.database.Path()), ShouldBeTrue)
+			So(db.conn.Path(), ShouldNotBeEmpty)
+			So(filepath.IsAbs(db.conn.Path()), ShouldBeTrue)
 		})
 	})
 
@@ -60,11 +59,11 @@ func TestBoltDatabase(t *testing.T) {
 			defer teardown()
 			defer db.Close()
 
-			connector := new(mockConnectorInterface)
-			_, err := newDriver(connector, "")
+			connector := new(mockConnector)
+			_, err := newCustomTaskDB(connector, "")
 
 			So(err, ShouldNotBeNil)
-			So(err.Error(), ShouldEqual, "Missing BoltDB database loctation.")
+			So(err.Error(), ShouldEqual, "missing boltdb database location")
 		})
 	})
 
@@ -73,7 +72,7 @@ func TestBoltDatabase(t *testing.T) {
 		defer teardown()
 		db.Close()
 
-		So(db.database.Path(), ShouldBeEmpty)
+		So(db.conn.Path(), ShouldBeEmpty)
 	})
 
 	Convey("Clean", t, func() {
