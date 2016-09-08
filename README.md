@@ -193,6 +193,7 @@ These are the fine folks who helped build eremetic
 - Charles G.
 - Clément Laforet
 - Marcus Olsson
+- Rares Mirica
 
 ## Acknowledgements
 Thanks to Sebastian Norde for the awesome logo!
