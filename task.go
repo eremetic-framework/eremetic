@@ -44,6 +44,7 @@ type Task struct {
 	Command           string            `json:"command"`
 	User              string            `json:"user"`
 	Environment       map[string]string `json:"env"`
+	Parameters        map[string]string `json:"parameters"`
 	MaskedEnvironment map[string]string `json:"masked_env"`
 	Image             string            `json:"image"`
 	Volumes           []Volume          `json:"volumes"`
@@ -114,6 +115,7 @@ func NewTask(request Request, name string) (Task, error) {
 		Command:           request.Command,
 		User:              "root",
 		Environment:       request.Environment,
+		Parameters:        request.Parameters,
 		MaskedEnvironment: request.MaskedEnvironment,
 		SlaveConstraints:  request.SlaveConstraints,
 		Image:             request.DockerImage,
