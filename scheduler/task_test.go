@@ -73,7 +73,7 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.GetShell(), ShouldBeFalse)
 		})
 
-		Convey("Given a volume and environment", func() {
+		Convey("Given a volume, environment and parameters", func() {
 			volumes := []eremetic.Volume{eremetic.Volume{
 				ContainerPath: "/var/www",
 				HostPath:      "/var/www",
@@ -82,8 +82,12 @@ func TestTask(t *testing.T) {
 			environment := make(map[string]string)
 			environment["foo"] = "bar"
 
+			parameters := make(map[string]string)
+			parameters["foo"] = "bar"
+
 			eremeticTask.Environment = environment
 			eremeticTask.Volumes = volumes
+			eremeticTask.Parameters = parameters
 
 			_, taskInfo := createTaskInfo(eremeticTask, &offer)
 
@@ -94,6 +98,8 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.Environment.Variables[0].GetValue(), ShouldEqual, "bar")
 			So(taskInfo.Command.Environment.Variables[1].GetName(), ShouldEqual, "MESOS_TASK_ID")
 			So(taskInfo.Command.Environment.Variables[1].GetValue(), ShouldEqual, eremeticTask.ID)
+			So(taskInfo.Container.Docker.Parameters[0].GetKey(), ShouldEqual, "foo")
+			So(taskInfo.Container.Docker.Parameters[0].GetValue(), ShouldEqual, "bar")
 		})
 
 		Convey("Given a portMapping", func() {
