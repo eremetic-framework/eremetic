@@ -21,34 +21,42 @@ func NotifyCallback(task *eremetic.Task) {
 		return
 	}
 
-	cbData := callbackData{
-		Time:   task.Status[len(task.Status)-1].Time,
-		Status: string(task.Status[len(task.Status)-1].Status),
+	if len(task.Status) == 0 {
+		return
+	}
+
+	status := task.Status[len(task.Status)-1]
+
+	data := callbackData{
+		Time:   status.Time,
+		Status: status.Status.String(),
 		TaskID: task.ID,
 	}
 
-	body, err := json.Marshal(cbData)
+	body, err := json.Marshal(data)
 	if err != nil {
 		logrus.WithError(err).WithFields(logrus.Fields{
 			"task_id":      task.ID,
 			"callback_uri": task.CallbackURI,
 		}).Error("Unable to create callback message")
+
 		return
 	}
 
 	go func() {
 		_, err = http.Post(task.CallbackURI, "application/json", bytes.NewBuffer(body))
-
 		if err != nil {
 			logrus.WithError(err).WithFields(logrus.Fields{
 				"task_id":      task.ID,
 				"callback_uri": task.CallbackURI,
 			}).Error("Unable to POST to Callback URI")
-		} else {
-			logrus.WithFields(logrus.Fields{
-				"task_id":      task.ID,
-				"callback_uri": task.CallbackURI,
-			}).Debug("Sent callback")
+
+			return
 		}
+
+		logrus.WithFields(logrus.Fields{
+			"task_id":      task.ID,
+			"callback_uri": task.CallbackURI,
+		}).Debug("Sent callback")
 	}()
 }
