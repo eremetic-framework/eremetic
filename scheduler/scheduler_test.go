@@ -39,7 +39,7 @@ func callbackReceiver() (chan callbackData, *httptest.Server) {
 	return cb, ts
 }
 
-func TestScheduler_Scheduling(t *testing.T) {
+func TestScheduler(t *testing.T) {
 	logrus.SetOutput(ioutil.Discard)
 
 	dir, _ := os.Getwd()
@@ -116,20 +116,6 @@ func TestScheduler_Scheduling(t *testing.T) {
 			s.Error(nil, "Error")
 		})
 	})
-}
-
-func TestScheduler_ResourceOffers(t *testing.T) {
-	logrus.SetOutput(ioutil.Discard)
-
-	dir, _ := os.Getwd()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
-	if err != nil || db == nil {
-		t.Error("Foo")
-		t.Fail()
-	}
-	db.Clean()
-	defer db.Close()
-
 	Convey("Given a scheduler with one scheduled task", t, func() {
 		s := &eremeticScheduler{
 			tasks:    make(chan string, 1),
@@ -224,20 +210,6 @@ func TestScheduler_ResourceOffers(t *testing.T) {
 			})
 		})
 	})
-}
-
-func TestScheduler_StatusUpdate(t *testing.T) {
-	logrus.SetOutput(ioutil.Discard)
-
-	dir, _ := os.Getwd()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
-	if err != nil || db == nil {
-		t.Error("Foo")
-		t.Fail()
-	}
-	db.Clean()
-	defer db.Close()
-
 	Convey("Given a scheduler with one scheduled task", t, func() {
 		s := &eremeticScheduler{
 			tasks:    make(chan string, 1),
@@ -423,20 +395,6 @@ func TestScheduler_StatusUpdate(t *testing.T) {
 			})
 		})
 	})
-}
-
-func TestScheduler_FrameworkMessage(t *testing.T) {
-	logrus.SetOutput(ioutil.Discard)
-
-	dir, _ := os.Getwd()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
-	if err != nil || db == nil {
-		t.Error("Foo")
-		t.Fail()
-	}
-	db.Clean()
-	defer db.Close()
-
 	Convey("Given a scheduler with one scheduled task", t, func() {
 		s := &eremeticScheduler{
 			tasks:    make(chan string, 1),
@@ -473,20 +431,6 @@ func TestScheduler_FrameworkMessage(t *testing.T) {
 			s.FrameworkMessage(driver, &executor, &mesos.SlaveID{}, "not a json")
 		})
 	})
-}
-
-func TestScheduler_ScheduleTask(t *testing.T) {
-	logrus.SetOutput(ioutil.Discard)
-
-	dir, _ := os.Getwd()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
-	if err != nil || db == nil {
-		t.Error("Foo")
-		t.Fail()
-	}
-	db.Clean()
-	defer db.Close()
-
 	Convey("Given a scheduler with no scheduled tasks", t, func() {
 		scheduler := &eremeticScheduler{
 			tasks:    make(chan string, 1),
@@ -540,20 +484,6 @@ func TestScheduler_ScheduleTask(t *testing.T) {
 			})
 		})
 	})
-}
-
-func TestScheduler_GenerateID(t *testing.T) {
-	logrus.SetOutput(ioutil.Discard)
-
-	dir, _ := os.Getwd()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
-	if err != nil || db == nil {
-		t.Error("Foo")
-		t.Fail()
-	}
-	db.Clean()
-	defer db.Close()
-
 	Convey("Given a scheduler with no scheduled tasks", t, func() {
 		scheduler := &eremeticScheduler{
 			tasks:    make(chan string, 100),
