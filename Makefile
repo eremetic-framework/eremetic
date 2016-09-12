@@ -44,7 +44,7 @@ eremetic: ${SRC}
 
 docker/eremetic: ${TOOLS} server/assets/assets.go
 docker/eremetic: ${SRC}
-	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@
+	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@ github.com/klarna/eremetic/cmd/eremetic
 
 docker: docker/eremetic docker/Dockerfile docker/marathon.sh
 	docker build -t ${DOCKERTAG} docker
