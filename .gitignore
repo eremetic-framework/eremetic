@@ -3,7 +3,7 @@ eremetic.yml
 db/*.db
 docker/static
 docker/templates
-assets/assets.go
+server/assets/assets.go
 .DS_Store
 ._*
 *\.sw[op]

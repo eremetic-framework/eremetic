@@ -174,7 +174,7 @@ The tests rely on [GoConvey](http://goconvey.co/), and can be run either by runn
 Using [minimesos](https://www.minimesos.org/) is a very simple way to test and play with eremetic.
 
 ```bash
-docker run -e MASTER=$MINIMESOS_ZOOKEEPER -e HOST=0.0.0.0 -e DATABASE_DRIVER=zk -e PORT=8000 -p 8000:8000 alde/eremetic:latest
+docker run -e MASTER=$MINIMESOS_ZOOKEEPER -e HOST=0.0.0.0 -e DATABASE_DRIVER=zk -e DATABASE=$MINIMESOS_ZOOKEEPER/eremetic -e PORT=8000 -p 8000:8000 alde/eremetic:latest
 ```
 
 ## Contributors
