@@ -52,7 +52,7 @@ func TestScheduler(t *testing.T) {
 	defer db.Close()
 
 	Convey("Scheduling", t, func() {
-		Convey("Given a scheduler with one scheduled task", func() {
+		Convey("Given a scheduler with one task", func() {
 			s := &eremeticScheduler{
 				tasks:    make(chan string, 1),
 				database: db,
@@ -119,7 +119,7 @@ func TestScheduler(t *testing.T) {
 		})
 	})
 	Convey("ResourceOffers", t, func() {
-		Convey("Given a scheduler with one scheduled task", func() {
+		Convey("Given a scheduler with one task", func() {
 			s := &eremeticScheduler{
 				tasks:    make(chan string, 1),
 				database: db,
@@ -215,7 +215,7 @@ func TestScheduler(t *testing.T) {
 		})
 	})
 	Convey("StatusUpdate", t, func() {
-		Convey("Given a scheduler with one scheduled task", func() {
+		Convey("Given a scheduler with one task", func() {
 			s := &eremeticScheduler{
 				tasks:    make(chan string, 1),
 				database: db,
@@ -402,7 +402,7 @@ func TestScheduler(t *testing.T) {
 		})
 	})
 	Convey("FrameworkMessage", t, func() {
-		Convey("Given a scheduler with one scheduled task", func() {
+		Convey("Given a scheduler with one task", func() {
 			s := &eremeticScheduler{
 				tasks:    make(chan string, 1),
 				database: db,
