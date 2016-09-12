@@ -1,5 +1,25 @@
 ## Changelog
 
+### v0.24.0 / 2016-09-12
+- [#129](https://github.com/klarna/eremetic/pull/129) Extract dependency packages (@marcusolsson)
+- [#131](https://github.com/klarna/eremetic/pull/131) Add callback tests and check for missing status (@marcusolsson)
+- [#132](https://github.com/klarna/eremetic/pull/132) Extract scheduler tests into smaller ones (@marcusolsson)
+- [#127](https://github.com/klarna/eremetic/pull/127) Fix readme (@alde)
+- [#126](https://github.com/klarna/eremetic/pull/126) Refactor package layout (@marcusolsson)
+- [#125](https://github.com/klarna/eremetic/pull/125) Version is not configurable (@keis)
+- [#124](https://github.com/klarna/eremetic/pull/124) Remove dependency on spf13/viper and m4rw3r/uuid (@alde)
+- [#123](https://github.com/klarna/eremetic/pull/123) Status view (@keis)
+- [#121](https://github.com/klarna/eremetic/pull/121) Unify the building of routes (@alde)
+- [#119](https://github.com/klarna/eremetic/pull/119) add port mapping (@mrares)
+- [#120](https://github.com/klarna/eremetic/pull/120) Refactor createTaskInfo (@alde)
+- [#107](https://github.com/klarna/eremetic/pull/107) Build with 1.7rc on travis (@keis)
+- [#114](https://github.com/klarna/eremetic/pull/114) Add task queued state (@keis)
+- [#115](https://github.com/klarna/eremetic/pull/115) Return empty array instead of `null` when tasks list is empty (@sheepkiller)
+- [#112](https://github.com/klarna/eremetic/pull/112) Vendor all dependencies (@alde)
+- [#113](https://github.com/klarna/eremetic/pull/113) fix ForcePullImage and add unit test (@sheepkiller)
+- [#109](https://github.com/klarna/eremetic/pull/109) Refactor uris/fetch (@sheepkiller)
+- [#108](https://github.com/klarna/eremetic/pull/108) Expose eremetic version (@alde)
+
 ### v0.23.0 / 2016-08-13
 - [#106](https://github.com/klarna/eremetic/pull/106) Add ability to force docker to pull image before launching each task (@sheepkiller)
 - [#105](https://github.com/klarna/eremetic/pull/105) Set sandbox path from reconcile status update (@keis)
