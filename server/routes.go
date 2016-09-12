@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/database"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Route enforces the structure of a route
@@ -22,7 +22,7 @@ type Route struct {
 type Routes []Route
 
 // NewRouter is used to create a new router.
-func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db database.TaskDB) *mux.Router {
+func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db eremetic.TaskDB) *mux.Router {
 	h := NewHandler(scheduler, db)
 	router := mux.NewRouter().StrictSlash(true)
 

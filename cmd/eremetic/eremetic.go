@@ -1,18 +1,22 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/braintree/manners"
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/klarna/eremetic"
+	"github.com/klarna/eremetic/boltdb"
 	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/scheduler"
 	"github.com/klarna/eremetic/server"
 	"github.com/klarna/eremetic/version"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/klarna/eremetic/zk"
 )
 
 func setup() *config.Config {
@@ -67,7 +71,7 @@ func main() {
 
 	setupLogging(config.LogFormat, config.LogLevel)
 	setupMetrics()
-	db, err := database.NewDB(config.DatabaseDriver, config.DatabasePath)
+	db, err := NewDB(config.DatabaseDriver, config.DatabasePath)
 
 	if err != nil {
 		logrus.WithError(err).Fatal("Unable to set up database.")
@@ -107,4 +111,15 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Fatal("Unrecoverable error")
 	}
+}
+
+// NewDB Is used to create a new database driver based on settings.
+func NewDB(driver string, location string) (eremetic.TaskDB, error) {
+	switch driver {
+	case "boltdb":
+		return boltdb.NewTaskDB(location)
+	case "zk":
+		return zk.NewTaskDB(location)
+	}
+	return nil, errors.New("Invalid driver.")
 }

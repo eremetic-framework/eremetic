@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/klarna/eremetic"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/klarna/eremetic"
 )
 
 // Optional attributes can be added.

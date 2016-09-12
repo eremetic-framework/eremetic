@@ -6,19 +6,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/database"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/klarna/eremetic"
+	"github.com/klarna/eremetic/boltdb"
 )
 
 func TestReconcile(t *testing.T) {
 	dir, _ := os.Getwd()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
+	db, err := boltdb.NewTaskDB(fmt.Sprintf("%s/../db/test.db", dir))
 	if err != nil {
-		t.Fail()
+		t.Fatal(err)
 	}
-
 	db.Clean()
 	defer db.Close()
 

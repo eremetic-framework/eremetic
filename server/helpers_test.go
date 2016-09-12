@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
-
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestHandlingHelpers(t *testing.T) {

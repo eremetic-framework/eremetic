@@ -1,4 +1,4 @@
-package database
+package zk
 
 import (
 	"errors"
@@ -6,29 +6,29 @@ import (
 	"testing"
 	"time"
 
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/mocks"
 	"github.com/samuel/go-zookeeper/zk"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/klarna/eremetic"
 )
 
 func TestZKDatabase(t *testing.T) {
 	var (
-		db        *zkDriver
-		object    *mocks.ZkConnection
-		connector *mocks.ZkConnectorInterface
+		db        *TaskDB
+		object    *mockConnection
+		connector *mockConnector
 	)
 
 	zkPath := "zk://localhost:1234/testdb"
 
 	setup := func() {
-		db = &zkDriver{
-			connection: new(mocks.ZkConnection),
-			path:       "/testdb",
+		db = &TaskDB{
+			conn: new(mockConnection),
+			path: "/testdb",
 		}
-		object = db.connection.(*mocks.ZkConnection)
-		connector = new(mocks.ZkConnectorInterface)
+		object = db.conn.(*mockConnection)
+		connector = new(mockConnector)
 	}
 
 	teardown := func() {
@@ -53,7 +53,7 @@ func TestZKDatabase(t *testing.T) {
 		Status:            status,
 	}
 
-	taskBytes, err := encode(task)
+	taskBytes, err := eremetic.Encode(task)
 	if err != nil {
 		t.Fail()
 	}
@@ -64,7 +64,7 @@ func TestZKDatabase(t *testing.T) {
 				setup()
 				defer teardown()
 
-				_, err := createZKDriver(connector, "")
+				_, err := newCustomTaskDB(connector, "")
 
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "Missing ZK path")
@@ -76,7 +76,7 @@ func TestZKDatabase(t *testing.T) {
 
 				connector.On("Connect", mock.AnythingOfType("string")).Return(nil, errors.New("Unable to connect"))
 
-				_, err := createZKDriver(connector, zkPath)
+				_, err := newCustomTaskDB(connector, zkPath)
 
 				So(err, ShouldNotBeNil)
 				So(connector.AssertCalled(t, "Connect", "localhost:1234"), ShouldBeTrue)
@@ -88,7 +88,7 @@ func TestZKDatabase(t *testing.T) {
 				connector.On("Connect", mock.AnythingOfType("string")).Return(object, nil)
 				object.On("Exists", mock.AnythingOfType("string")).Return(false, &zk.Stat{}, errors.New("Bad Connection"))
 
-				_, err := createZKDriver(connector, zkPath)
+				_, err := newCustomTaskDB(connector, zkPath)
 
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "Bad Connection")
@@ -103,7 +103,7 @@ func TestZKDatabase(t *testing.T) {
 				object.On("Exists", mock.AnythingOfType("string")).Return(false, &zk.Stat{}, nil)
 				object.On("Create", mock.AnythingOfType("string"), mock.Anything, mock.AnythingOfType("int32"), mock.Anything).Return("", errors.New("Unable to create node"))
 
-				_, err := createZKDriver(connector, zkPath)
+				_, err := newCustomTaskDB(connector, zkPath)
 
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "Unable to create node")
@@ -119,12 +119,12 @@ func TestZKDatabase(t *testing.T) {
 			connector.On("Connect", mock.AnythingOfType("string")).Return(object, nil)
 			object.On("Exists", mock.AnythingOfType("string")).Return(true, &zk.Stat{}, nil)
 
-			db, err := createZKDriver(connector, zkPath)
+			db, err := newCustomTaskDB(connector, zkPath)
 
 			So(err, ShouldBeNil)
 			So(connector.AssertCalled(t, "Connect", "localhost:1234"), ShouldBeTrue)
 			So(object.AssertCalled(t, "Exists", "/testdb"), ShouldBeTrue)
-			So(db, ShouldImplement, (*TaskDB)(nil)) // Most weirdest syntax ever?
+			So(db, ShouldImplement, (*eremetic.TaskDB)(nil)) // Most weirdest syntax ever?
 		})
 	})
 
@@ -234,7 +234,7 @@ func TestZKDatabase(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(&read, ShouldHaveSameTypeAs, task)
 			So(read.ID, ShouldEqual, task.ID)
-			So(read.MaskedEnvironment["foo"], ShouldEqual, masking)
+			So(read.MaskedEnvironment["foo"], ShouldEqual, eremetic.Masking)
 			So(object.AssertCalled(t, "Get", "/testdb/1234"), ShouldBeTrue)
 		})
 
@@ -264,7 +264,7 @@ func TestZKDatabase(t *testing.T) {
 			So(list, ShouldHaveLength, 1)
 			So(list[0], ShouldHaveSameTypeAs, task)
 			So(list[0].ID, ShouldEqual, task.ID)
-			So(list[0].MaskedEnvironment["foo"], ShouldEqual, masking)
+			So(list[0].MaskedEnvironment["foo"], ShouldEqual, eremetic.Masking)
 			So(object.AssertCalled(t, "Get", "/testdb/1234"), ShouldBeTrue)
 			So(object.AssertCalled(t, "Children", "/testdb"), ShouldBeTrue)
 		})

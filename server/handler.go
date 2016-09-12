@@ -13,9 +13,9 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
+
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/database"
 	"github.com/klarna/eremetic/scheduler"
 	"github.com/klarna/eremetic/server/assets"
 	"github.com/klarna/eremetic/version"
@@ -28,10 +28,10 @@ type ErrorDocument struct {
 
 type Handler struct {
 	scheduler eremetic.Scheduler
-	database  database.TaskDB
+	database  eremetic.TaskDB
 }
 
-func NewHandler(scheduler eremetic.Scheduler, database database.TaskDB) Handler {
+func NewHandler(scheduler eremetic.Scheduler, database eremetic.TaskDB) Handler {
 	return Handler{
 		scheduler: scheduler,
 		database:  database,

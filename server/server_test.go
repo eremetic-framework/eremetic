@@ -10,11 +10,12 @@ import (
 	"strings"
 	"testing"
 
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/mock"
 	"github.com/klarna/eremetic/scheduler"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestServer(t *testing.T) {

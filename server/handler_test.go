@@ -17,16 +17,17 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/database"
-	"github.com/klarna/eremetic/mocks"
-	"github.com/klarna/eremetic/version"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/klarna/eremetic"
+	"github.com/klarna/eremetic/boltdb"
+	"github.com/klarna/eremetic/config"
+	"github.com/klarna/eremetic/mock"
+	"github.com/klarna/eremetic/version"
 )
 
 func TestHandling(t *testing.T) {
-	scheduler := &mocks.Scheduler{}
+	scheduler := &mock.ErrScheduler{}
 	status := []eremetic.Status{
 		eremetic.Status{
 			Status: eremetic.TaskState_TASK_RUNNING,
@@ -35,10 +36,7 @@ func TestHandling(t *testing.T) {
 	}
 
 	dir := os.TempDir()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/eremetic_test.db", dir))
-	if err != nil {
-		t.Fail()
-	}
+	db, _ := boltdb.NewTaskDB(fmt.Sprintf("%s/eremetic_test.db", dir))
 	h := NewHandler(scheduler, db)
 
 	defer db.Close()
@@ -157,7 +155,7 @@ func TestHandling(t *testing.T) {
 			})
 
 			Convey("Error on bad input stream", func() {
-				r.Body = ioutil.NopCloser(&mocks.ErrorReader{})
+				r.Body = ioutil.NopCloser(&mock.ErrorReader{})
 
 				handler := h.AddTask()
 				handler(wr, r)

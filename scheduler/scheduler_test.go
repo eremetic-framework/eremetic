@@ -11,12 +11,13 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/database"
 	mesos "github.com/mesos/mesos-go/mesosproto"
 	sched "github.com/mesos/mesos-go/scheduler"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/klarna/eremetic"
+	"github.com/klarna/eremetic/boltdb"
 )
 
 func callbackReceiver() (chan callbackData, *httptest.Server) {
@@ -43,7 +44,8 @@ func TestScheduler(t *testing.T) {
 	logrus.SetOutput(ioutil.Discard)
 
 	dir, _ := os.Getwd()
-	db, err := database.NewDB("boltdb", fmt.Sprintf("%s/../db/test.db", dir))
+
+	db, err := boltdb.NewTaskDB(fmt.Sprintf("%s/../db/test.db", dir))
 	if err != nil || db == nil {
 		t.Error("Foo")
 		t.Fail()

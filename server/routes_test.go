@@ -5,15 +5,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/database"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/klarna/eremetic/boltdb"
+	"github.com/klarna/eremetic/config"
 )
 
 func TestRoutes(t *testing.T) {
 	routes := routes(Handler{}, &config.Config{})
 	dir := os.TempDir()
-	db, _ := database.NewDB("boltdb", fmt.Sprintf("%s/eremetic_test.db", dir))
+
+	db, err := boltdb.NewTaskDB(fmt.Sprintf("%s/eremetic_test.db", dir))
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	Convey("Create", t, func() {
 		Convey("Should build the expected routes", func() {
