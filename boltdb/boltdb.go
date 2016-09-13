@@ -57,6 +57,14 @@ func newCustomTaskDB(c connector, file string) (*TaskDB, error) {
 		return nil, err
 	}
 
+	err = conn.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("tasks"))
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &TaskDB{conn: conn}, nil
 }
 
@@ -71,10 +79,6 @@ func (db *TaskDB) Close() {
 func (db *TaskDB) Clean() error {
 	return db.conn.Update(func(tx *bolt.Tx) error {
 		if err := tx.DeleteBucket([]byte("tasks")); err != nil {
-			return err
-		}
-
-		if _, err := tx.CreateBucketIfNotExists([]byte("tasks")); err != nil {
 			return err
 		}
 
