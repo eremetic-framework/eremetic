@@ -19,8 +19,6 @@ paths:
           description: Task details
           schema:
             $ref: '#/definitions/Task'
-        404:
-          description: No tasks found
         default:
           description: Unexpected error
     post:
