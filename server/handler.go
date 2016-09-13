@@ -123,6 +123,7 @@ func (h Handler) ListRunningTasks() http.HandlerFunc {
 		tasks, err := h.database.ListNonTerminalTasks()
 		if err != nil {
 			handleError(err, w, "Unable to fetch running tasks from the database")
+			return
 		}
 		writeJSON(200, tasks, w)
 	}
