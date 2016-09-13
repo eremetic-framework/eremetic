@@ -3,7 +3,6 @@ package boltdb
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -29,10 +28,6 @@ type connector interface {
 type defaultConnector struct{}
 
 func (b defaultConnector) Open(file string) (connection, error) {
-	if !filepath.IsAbs(file) {
-		dir, _ := os.Getwd()
-		file = fmt.Sprintf("%s/../%s", dir, file)
-	}
 	os.MkdirAll(filepath.Dir(file), 0755)
 
 	return bolt.Open(file, 0600, nil)
@@ -57,6 +52,14 @@ func newCustomTaskDB(c connector, file string) (*TaskDB, error) {
 		return nil, err
 	}
 
+	err = conn.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("tasks"))
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &TaskDB{conn: conn}, nil
 }
 
@@ -71,10 +74,6 @@ func (db *TaskDB) Close() {
 func (db *TaskDB) Clean() error {
 	return db.conn.Update(func(tx *bolt.Tx) error {
 		if err := tx.DeleteBucket([]byte("tasks")); err != nil {
-			return err
-		}
-
-		if _, err := tx.CreateBucketIfNotExists([]byte("tasks")); err != nil {
 			return err
 		}
 
