@@ -1,5 +1,8 @@
 ## Changelog
 
+### v0.24.1 / 2016-09-12
+- [#134](https://github.com/klarna/eremetic/pull/134) Actually build the binary with make docker (@alde)
+
 ### v0.24.0 / 2016-09-12
 - [#129](https://github.com/klarna/eremetic/pull/129) Extract dependency packages (@marcusolsson)
 - [#131](https://github.com/klarna/eremetic/pull/131) Add callback tests and check for missing status (@marcusolsson)
