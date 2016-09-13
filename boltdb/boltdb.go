@@ -3,7 +3,6 @@ package boltdb
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -29,10 +28,6 @@ type connector interface {
 type defaultConnector struct{}
 
 func (b defaultConnector) Open(file string) (connection, error) {
-	if !filepath.IsAbs(file) {
-		dir, _ := os.Getwd()
-		file = fmt.Sprintf("%s/../%s", dir, file)
-	}
 	os.MkdirAll(filepath.Dir(file), 0755)
 
 	return bolt.Open(file, 0600, nil)
