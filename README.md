@@ -177,6 +177,10 @@ Using [minimesos](https://www.minimesos.org/) is a very simple way to test and p
 docker run -e MASTER=$MINIMESOS_ZOOKEEPER -e HOST=0.0.0.0 -e DATABASE_DRIVER=zk -e DATABASE=$MINIMESOS_ZOOKEEPER/eremetic -e PORT=8000 -p 8000:8000 alde/eremetic:latest
 ```
 
+## hermit CLI
+
+[hermit](cmd/hermit) is a command-line application to perform operations on a Eremetic server from the terminal.
+
 ## Contributors
 
 These are the fine folks who helped build eremetic
