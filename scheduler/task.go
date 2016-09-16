@@ -29,6 +29,7 @@ func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mes
 				ForcePullImage: proto.Bool(task.ForcePullImage),
 				PortMappings:   portMapping,
 				Network:        mesos.ContainerInfo_DockerInfo_BRIDGE.Enum(),
+				Parameters:     buildParameters(task),
 			},
 			Volumes: buildVolumes(task),
 		},
@@ -62,6 +63,18 @@ func buildEnvironment(task eremetic.Task) []*mesos.Environment_Variable {
 	})
 
 	return environment
+}
+
+func buildParameters(task eremetic.Task) []*mesos.Parameter {
+	var params []*mesos.Parameter
+	for k, v := range task.Parameters {
+		params = append(params, &mesos.Parameter{
+			Key:   proto.String(k),
+			Value: proto.String(v),
+		})
+	}
+
+	return params
 }
 
 func buildVolumes(task eremetic.Task) []*mesos.Volume {

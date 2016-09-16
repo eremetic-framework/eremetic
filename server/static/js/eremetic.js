@@ -27,6 +27,13 @@ $(document).ready(function() {
       }, {});
     }
 
+    if (typeof json.parameters !== "undefined") {
+      json.parameters = json.parameters.reduce(function(collector, element) {
+        collector[element.key] = element.value;
+        return collector;
+      }, {});
+    }
+
     if (typeof json.slave_constraints !== "undefined") {
       json.slave_constraints = json.slave_constraints.reduce(function(collector, element) {
         collector.push({ 'attribute_name': element.attribute_name, 'attribute_value': element.attribute_value });
@@ -91,6 +98,17 @@ $(document).ready(function() {
         },
         two: {
           name: 'env['+number+'][value]',
+          placeholder: 'value'
+        }
+      }
+    } else if (type === 'params') {
+      input = {
+        one: {
+          name: 'parameters['+number+'][key]',
+          placeholder: 'key'
+        },
+        two: {
+          name: 'parameters['+number+'][value]',
           placeholder: 'value'
         }
       }
@@ -192,6 +210,18 @@ $(document).ready(function() {
     $cont.data('count', index);
   }
 
+  function addParameters(e) {
+    var   $cont = $('#params')
+        , index = $cont.data('count') + 1
+        , $input = createInput('params', index)
+        ;
+
+    e.preventDefault();
+
+    $cont.append($input);
+    $cont.data('count', index);
+  }
+
   function addURIs(e) {
     var   $cont = $('#uris')
         , index = $cont.data('count') + 1
@@ -239,6 +269,7 @@ $(document).ready(function() {
   $('#new_task #volumes .plus').on('click', addVolumes);
   $('#new_task #ports .plus').on('click', addPorts);
   $('#new_task #env .plus').on('click', addEnvironments);
+  $('#new_task #params .plus').on('click', addParameters);
   $('#new_task #uris .plus').on('click', addURIs);
   $('#new_task #slave_constraints .plus').on('click', addSlaveConstraints);
   $('#new_task #cancel').on('click', function(e) {

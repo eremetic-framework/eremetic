@@ -303,6 +303,7 @@ func (s *eremeticScheduler) ScheduleTask(request eremetic.Request) (string, erro
 		"command":           request.Command,
 		"slave_constraints": request.SlaveConstraints,
 		"ports":             request.Ports,
+		"parameters":        request.Parameters,
 	}).Debug("Adding task to queue")
 
 	task, err := eremetic.NewTask(request, fmt.Sprintf("Eremetic task %s", nextID(s)))

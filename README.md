@@ -20,7 +20,7 @@ curl -H "Content-Type: application/json" \
 ```
 
 These basic fields are required but you can also specify volumes, ports, environment
-variables, and URIs for the mesos fetcher to download. See
+variables, docker parameters, and URIs for the mesos fetcher to download. See
 [examples.md](examples.md) for more examples on how to use eremetic.
 
 JSON format:
@@ -58,6 +58,11 @@ JSON format:
   // Object, Will be merged to `env` when passed to Mesos, but masked when doing a GET.
   // See Clarification of the Masked Env field below for more information
   "masked_env": {
+    "KEY": "value"
+  },
+  // Object, Parameters to pass to docker when starting.
+  // This allows passing things like --volume-driver to the container executor
+  "parameters": {
     "KEY": "value"
   },
   // URIs of resource to download
