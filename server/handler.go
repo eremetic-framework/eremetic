@@ -71,7 +71,7 @@ func (h Handler) AddTask() http.HandlerFunc {
 		}
 
 		w.Header().Set("Location", absURL(r, fmt.Sprintf("/task/%s", taskID)))
-		writeJSON(http.StatusAccepted, taskID, w)
+		w.WriteHeader(http.StatusAccepted)
 	}
 }
 
