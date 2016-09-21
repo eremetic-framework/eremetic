@@ -13,6 +13,7 @@ type TaskState string
 
 // Valid task states
 const (
+	// Standard mesos states
 	TaskStaging  TaskState = "TASK_STAGING"
 	TaskStarting TaskState = "TASK_STARTING"
 	TaskRunning  TaskState = "TASK_RUNNING"
@@ -22,7 +23,9 @@ const (
 	TaskLost     TaskState = "TASK_LOST"
 	TaskError    TaskState = "TASK_ERROR"
 
-	TaskQueued TaskState = "TASK_QUEUED"
+	// Custom eremetic states
+	TaskQueued      TaskState = "TASK_QUEUED"
+	TaskTerminating TaskState = "TASK_TERMINATING"
 )
 
 // IsTerminal takes a string representation of a state and returns whether it
@@ -197,20 +200,32 @@ func (task *Task) WasRunning() bool {
 
 // IsTerminated returns whether the task has been terminated.
 func (task *Task) IsTerminated() bool {
-	if len(task.Status) == 0 {
+	st := task.CurrentStatus()
+	if st == "" {
 		return true
 	}
-	st := task.Status[len(task.Status)-1]
-	return IsTerminal(st.Status)
+	return IsTerminal(st)
+}
+
+func (task *Task) IsWaiting() bool {
+	return task.CurrentStatus() == TaskQueued
+}
+
+func (task *Task) IsTerminating() bool {
+	return task.CurrentStatus() == TaskTerminating
 }
 
 // IsRunning returns whether the task is currently running.
 func (task *Task) IsRunning() bool {
+	return task.CurrentStatus() == TaskRunning
+}
+
+// CurrentStatus returns the current TaskState
+func (task *Task) CurrentStatus() TaskState {
 	if len(task.Status) == 0 {
-		return false
+		return ""
 	}
-	st := task.Status[len(task.Status)-1]
-	return st.Status == TaskRunning
+	return task.Status[len(task.Status)-1].Status
 }
 
 // LastUpdated returns the time of the latest status update.

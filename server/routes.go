@@ -70,6 +70,12 @@ func routes(h Handler, conf *config.Config) Routes {
 			Handler: h.GetFromSandbox("stderr"),
 		},
 		Route{
+			Name:    "Kill",
+			Method:  "POST",
+			Pattern: "/task/{taskId}/kill",
+			Handler: h.KillTask(conf),
+		},
+		Route{
 			Name:    "ListRunningTasks",
 			Method:  "GET",
 			Pattern: "/task",

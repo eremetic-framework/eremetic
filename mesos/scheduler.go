@@ -39,6 +39,7 @@ type Settings struct {
 type Scheduler struct {
 	tasksCreated int
 	initialised  bool
+	driver       mesossched.SchedulerDriver
 
 	// task to start
 	tasks chan string
@@ -66,6 +67,8 @@ func NewScheduler(queueSize int, db eremetic.TaskDB) *Scheduler {
 // Run the eremetic scheduler
 func (s *Scheduler) Run(settings *Settings) {
 	driver, err := createDriver(s, settings)
+	s.driver = driver
+
 	if err != nil {
 		logrus.WithError(err).Error("Unable to create scheduler driver")
 	}
@@ -139,6 +142,17 @@ loop:
 		case tid := <-s.tasks:
 			logrus.WithField("task_id", tid).Debug("Trying to find offer to launch task with")
 			t, _ := s.database.ReadUnmaskedTask(tid)
+
+			if t.IsTerminating() {
+				logrus.Debug("Dropping terminating task.")
+				t.UpdateStatus(eremetic.Status{
+					Status: eremetic.TaskKilled,
+					Time:   time.Now().Unix(),
+				})
+				s.database.PutTask(&t)
+
+				continue
+			}
 			offer, offers = matchOffer(t, offers)
 
 			if offer == nil {
@@ -331,6 +345,33 @@ func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	case <-time.After(time.Duration(1) * time.Second):
 		return "", eremetic.ErrQueueFull
 	}
+}
+
+func (s *Scheduler) Kill(taskId string) error {
+	task, err := s.database.ReadTask(taskId)
+	if err != nil {
+		return err
+	}
+
+	if task.IsTerminated() {
+		return fmt.Errorf("You can not kill that which is already dead.")
+	}
+
+	waiting := task.IsWaiting()
+
+	logrus.Debugf("Marking task for killing.")
+	task.UpdateStatus(eremetic.Status{
+		Status: eremetic.TaskTerminating,
+		Time:   time.Now().Unix(),
+	})
+	s.database.PutTask(&task)
+
+	if waiting {
+		return nil
+	}
+
+	_, err = s.driver.KillTask(&mesosproto.TaskID{Value: proto.String(taskId)})
+	return err
 }
 
 // Stop triggers a shutdown of the scheduler.

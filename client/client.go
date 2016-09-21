@@ -131,3 +131,21 @@ func (c *Client) Version() (string, error) {
 
 	return string(b), nil
 }
+
+func (c *Client) Kill(taskID string) error {
+	u := fmt.Sprintf("%s/task/%s/kill", c.endpoint, taskID)
+	req, err := http.NewRequest("POST", u, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusAccepted {
+		return fmt.Errorf("Unexpected status code `%s`", resp.Status)
+	}
+
+	return nil
+}

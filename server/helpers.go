@@ -135,6 +135,7 @@ func makeMap(task eremetic.Task) map[string]interface{} {
 	data["Status"] = task.Status
 	data["CPU"] = fmt.Sprintf("%.2f", task.TaskCPUs)
 	data["Memory"] = fmt.Sprintf("%.2f", task.TaskMem)
+	data["Terminated"] = task.IsTerminated()
 
 	return data
 }

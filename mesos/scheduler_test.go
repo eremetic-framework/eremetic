@@ -2,20 +2,22 @@ package mesos
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/mesosproto"
-	mesossched "github.com/mesos/mesos-go/scheduler"
+
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/klarna/eremetic"
+	"github.com/klarna/eremetic/mock"
 )
 
 func callbackReceiver() (chan eremetic.CallbackData, *httptest.Server) {
@@ -65,8 +67,10 @@ func TestScheduler(t *testing.T) {
 			})
 
 			Convey("When the scheduler is registered", func() {
-				driver := NewMockScheduler()
-				driver.On("ReconcileTasks").Return("ok").Once()
+				driver := mock.NewMesosScheduler()
+				driver.ReconcileTasksFn = func(ts []*mesosproto.TaskStatus) (mesosproto.Status, error) {
+					return mesosproto.Status_DRIVER_RUNNING, nil
+				}
 
 				fid := mesosproto.FrameworkID{Value: proto.String("1234")}
 				info := mesosproto.MasterInfo{}
@@ -74,19 +78,21 @@ func TestScheduler(t *testing.T) {
 				s.Registered(driver, &fid, &info)
 
 				Convey("The tasks should be reconciled", func() {
-					So(driver.AssertCalled(t, "ReconcileTasks"), ShouldBeTrue)
+					So(driver.ReconcileTasksFnInvoked, ShouldBeTrue)
 				})
 			})
 
 			Convey("When the scheduler is reregistered", func() {
-				driver := NewMockScheduler()
-				driver.On("ReconcileTasks").Return("ok").Once()
+				driver := mock.NewMesosScheduler()
+				driver.ReconcileTasksFn = func(ts []*mesosproto.TaskStatus) (mesosproto.Status, error) {
+					return mesosproto.Status_DRIVER_RUNNING, nil
+				}
 				db.Clean()
 
 				s.Reregistered(driver, &mesosproto.MasterInfo{})
 
 				Convey("The tasks should be reconciled", func() {
-					So(driver.AssertCalled(t, "ReconcileTasks"), ShouldBeTrue)
+					So(driver.ReconcileTasksFnInvoked, ShouldBeTrue)
 				})
 			})
 
@@ -122,39 +128,43 @@ func TestScheduler(t *testing.T) {
 
 			db.PutTask(&eremetic.Task{ID: id})
 
-			driver := NewMockScheduler()
+			driver := mock.NewMesosScheduler()
 
 			Convey("When there are no offers", func() {
 				offers := []*mesosproto.Offer{}
 				s.ResourceOffers(driver, offers)
 
 				Convey("No offers should be declined", func() {
-					So(driver.AssertNotCalled(t, "DeclineOffer"), ShouldBeTrue)
+					So(driver.DeclineOfferFnInvoked, ShouldBeFalse)
 				})
 				Convey("No tasks should be launched", func() {
-					So(driver.AssertNotCalled(t, "LaunchTasks"), ShouldBeTrue)
+					So(driver.LaunchTasksFnInvoked, ShouldBeFalse)
 				})
 			})
 			Convey("When there are no tasks", func() {
 				offers := []*mesosproto.Offer{
 					offer("1234", 1.0, 128),
 				}
-				driver.On("DeclineOffer").Return("declined").Once()
+				driver.DeclineOfferFn = func(_ *mesosproto.OfferID, _ *mesosproto.Filters) (mesosproto.Status, error) {
+					return mesosproto.Status_DRIVER_RUNNING, nil
+				}
 
 				s.ResourceOffers(driver, offers)
 
 				Convey("The offer should be declined", func() {
-					So(driver.AssertCalled(t, "DeclineOffer"), ShouldBeTrue)
+					So(driver.DeclineOfferFnInvoked, ShouldBeTrue)
 				})
 				Convey("No tasks should be launched", func() {
-					So(driver.AssertNotCalled(t, "LaunchTasks"), ShouldBeTrue)
+					So(driver.LaunchTasksFnInvoked, ShouldBeFalse)
 				})
 			})
 			Convey("When a task is able to launch", func() {
 				offers := []*mesosproto.Offer{
 					offer("1234", 1.0, 128),
 				}
-				driver.On("LaunchTasks").Return("launched").Once()
+				driver.LaunchTasksFn = func(_ []*mesosproto.OfferID, _ []*mesosproto.TaskInfo, _ *mesosproto.Filters) (mesosproto.Status, error) {
+					return mesosproto.Status_DRIVER_RUNNING, nil
+				}
 
 				taskID, err := s.ScheduleTask(eremetic.Request{
 					TaskCPUs:    0.5,
@@ -175,10 +185,10 @@ func TestScheduler(t *testing.T) {
 					So(task.Status[1].Status, ShouldEqual, eremetic.TaskStaging)
 				})
 				Convey("The offer should not be declined", func() {
-					So(driver.AssertNotCalled(t, "DeclineOffer"), ShouldBeTrue)
+					So(driver.DeclineOfferFnInvoked, ShouldBeFalse)
 				})
 				Convey("The tasks should be launched", func() {
-					So(driver.AssertCalled(t, "LaunchTasks"), ShouldBeTrue)
+					So(driver.LaunchTasksFnInvoked, ShouldBeTrue)
 				})
 			})
 
@@ -186,7 +196,9 @@ func TestScheduler(t *testing.T) {
 				offers := []*mesosproto.Offer{
 					offer("1234", 1.0, 128),
 				}
-				driver.On("DeclineOffer").Return("declined").Once()
+				driver.DeclineOfferFn = func(_ *mesosproto.OfferID, _ *mesosproto.Filters) (mesosproto.Status, error) {
+					return mesosproto.Status_DRIVER_RUNNING, nil
+				}
 
 				_, err := s.ScheduleTask(eremetic.Request{
 					TaskCPUs:    1.5,
@@ -199,11 +211,38 @@ func TestScheduler(t *testing.T) {
 				s.ResourceOffers(driver, offers)
 
 				Convey("The offer should be declined", func() {
-					So(driver.AssertCalled(t, "DeclineOffer"), ShouldBeTrue)
+					So(driver.DeclineOfferFnInvoked, ShouldBeTrue)
 				})
 				Convey("The tasks should not be launched", func() {
-					So(driver.AssertNotCalled(t, "LaunchTasks"), ShouldBeTrue)
+					So(driver.LaunchTasksFnInvoked, ShouldBeFalse)
 				})
+			})
+
+			Convey("When a task is marked for termination", func() {
+				offers := []*mesosproto.Offer{offer("1234", 1.0, 128)}
+				driver.DeclineOfferFn = func(_ *mesosproto.OfferID, _ *mesosproto.Filters) (mesosproto.Status, error) {
+					return mesosproto.Status_DRIVER_RUNNING, nil
+				}
+
+				id, _ := s.ScheduleTask(eremetic.Request{
+					TaskCPUs:    1.5,
+					TaskMem:     22.0,
+					DockerImage: "busybox",
+					Command:     "echo hello",
+				})
+				task, _ := db.ReadTask(id)
+				task.UpdateStatus(eremetic.Status{
+					Time:   time.Now().Unix(),
+					Status: eremetic.TaskTerminating,
+				})
+				db.PutTask(&task)
+
+				s.ResourceOffers(driver, offers)
+
+				task, _ = db.ReadTask(id)
+				So(task.CurrentStatus(), ShouldEqual, eremetic.TaskKilled)
+				So(driver.LaunchTasksFnInvoked, ShouldBeFalse)
+				So(driver.DeclineOfferFnInvoked, ShouldBeTrue)
 			})
 		})
 	})
@@ -404,7 +443,7 @@ func TestScheduler(t *testing.T) {
 			id := "eremetic-task.9999"
 			db.PutTask(&eremetic.Task{ID: id})
 
-			driver := NewMockScheduler()
+			driver := mock.NewMesosScheduler()
 			message := `{"message": "this is a message"}`
 
 			Convey("When receiving a framework message from Eremetic", func() {
@@ -503,119 +542,86 @@ func TestScheduler(t *testing.T) {
 			})
 		})
 	})
-}
 
-//------------------ Mock Scheduler ------------------------------------------//
+	Convey("KillTask", t, func() {
+		driver := mock.NewMesosScheduler()
+		id := "eremetic-task.9999"
 
-type MockScheduler struct {
-	mock.Mock
-}
+		scheduler := &Scheduler{
+			tasks:    make(chan string, 1),
+			database: db,
+			driver:   driver,
+		}
 
-func NewMockScheduler() *MockScheduler {
-	return &MockScheduler{}
-}
+		Convey("Given a running task", func() {
+			db.PutTask(&eremetic.Task{
+				ID: id,
+				Status: []eremetic.Status{
+					eremetic.Status{
+						Time:   123456,
+						Status: eremetic.TaskRunning,
+					},
+				},
+			})
+			driver.KillTaskFn = func(_ *mesosproto.TaskID) (mesosproto.Status, error) {
+				return mesosproto.Status_DRIVER_RUNNING, nil
+			}
 
-func (sched *MockScheduler) Abort() (stat mesosproto.Status, err error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_ABORTED, nil
-}
+			err := scheduler.Kill(id)
+			So(err, ShouldBeNil)
+			So(driver.KillTaskFnInvoked, ShouldBeTrue)
 
-func (sched *MockScheduler) AcceptOffers(offerIds []*mesosproto.OfferID, operations []*mesosproto.Offer_Operation, filters *mesosproto.Filters) (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
+			task, _ := db.ReadTask(id)
+			So(task.CurrentStatus(), ShouldEqual, eremetic.TaskTerminating)
+		})
 
-func (sched *MockScheduler) DeclineOffer(*mesosproto.OfferID, *mesosproto.Filters) (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_STOPPED, nil
-}
+		Convey("Given a queued task", func() {
+			driver.KillTaskFn = func(_ *mesosproto.TaskID) (mesosproto.Status, error) {
+				return mesosproto.Status_DRIVER_RUNNING, nil
+			}
+			db.PutTask(&eremetic.Task{
+				ID: id,
+				Status: []eremetic.Status{
+					eremetic.Status{
+						Time:   123456,
+						Status: eremetic.TaskQueued,
+					},
+				},
+			})
+			err := scheduler.Kill(id)
+			So(err, ShouldBeNil)
+			So(driver.KillTaskFnInvoked, ShouldBeFalse)
+		})
 
-func (sched *MockScheduler) Join() (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
+		Convey("Given that something goes wrong", func() {
+			driver.KillTaskFn = func(_ *mesosproto.TaskID) (mesosproto.Status, error) {
+				return mesosproto.Status_DRIVER_RUNNING, errors.New("Nope")
+			}
 
-func (sched *MockScheduler) KillTask(*mesosproto.TaskID) (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
+			err := scheduler.Kill(id)
 
-func (sched *MockScheduler) ReconcileTasks([]*mesosproto.TaskStatus) (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
+			So(driver.KillTaskFnInvoked, ShouldBeTrue)
+			So(err, ShouldNotBeNil)
+		})
 
-func (sched *MockScheduler) RequestResources([]*mesosproto.Request) (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
+		Convey("Given already terminated task", func() {
+			db.PutTask(&eremetic.Task{
+				ID: id,
+				Status: []eremetic.Status{
+					eremetic.Status{
+						Time:   123456,
+						Status: eremetic.TaskLost,
+					},
+				},
+			})
+			driver.KillTaskFn = func(_ *mesosproto.TaskID) (mesosproto.Status, error) {
+				return mesosproto.Status_DRIVER_RUNNING, nil
+			}
 
-func (sched *MockScheduler) ReviveOffers() (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
+			err := scheduler.Kill(id)
 
-func (sched *MockScheduler) Run() (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
-
-func (sched *MockScheduler) Start() (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
-
-func (sched *MockScheduler) Stop(bool) (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
-
-func (sched *MockScheduler) SendFrameworkMessage(*mesosproto.ExecutorID, *mesosproto.SlaveID, string) (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
-
-func (sched *MockScheduler) LaunchTasks([]*mesosproto.OfferID, []*mesosproto.TaskInfo, *mesosproto.Filters) (mesosproto.Status, error) {
-	sched.Called()
-	return mesosproto.Status_DRIVER_RUNNING, nil
-}
-
-func (sched *MockScheduler) Registered(mesossched.SchedulerDriver, *mesosproto.FrameworkID, *mesosproto.MasterInfo) {
-	sched.Called()
-}
-
-func (sched *MockScheduler) Reregistered(mesossched.SchedulerDriver, *mesosproto.MasterInfo) {
-	sched.Called()
-}
-
-func (sched *MockScheduler) Disconnected(mesossched.SchedulerDriver) {
-	sched.Called()
-}
-
-func (sched *MockScheduler) ResourceOffers(mesossched.SchedulerDriver, []*mesosproto.Offer) {
-	sched.Called()
-}
-
-func (sched *MockScheduler) OfferRescinded(mesossched.SchedulerDriver, *mesosproto.OfferID) {
-	sched.Called()
-}
-
-func (sched *MockScheduler) StatusUpdate(mesossched.SchedulerDriver, *mesosproto.TaskStatus) {
-	sched.Called()
-}
-
-func (sched *MockScheduler) FrameworkMessage(mesossched.SchedulerDriver, *mesosproto.ExecutorID, *mesosproto.SlaveID, string) {
-	sched.Called()
-}
-
-func (sched *MockScheduler) SlaveLost(mesossched.SchedulerDriver, *mesosproto.SlaveID) {
-	sched.Called()
-}
-
-func (sched *MockScheduler) ExecutorLost(mesossched.SchedulerDriver, *mesosproto.ExecutorID, *mesosproto.SlaveID, int) {
-	sched.Called()
-}
-
-func (sched *MockScheduler) Error(d mesossched.SchedulerDriver, _msg string) {
-	sched.Called()
+			So(err, ShouldNotBeNil)
+			So(driver.KillTaskFnInvoked, ShouldBeFalse)
+		})
+	})
 }
