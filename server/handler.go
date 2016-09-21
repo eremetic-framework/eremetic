@@ -16,7 +16,6 @@ import (
 
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/scheduler"
 	"github.com/klarna/eremetic/server/assets"
 	"github.com/klarna/eremetic/version"
 )
@@ -59,7 +58,7 @@ func (h Handler) AddTask() http.HandlerFunc {
 		if err != nil {
 			logrus.WithError(err).Error("Unable to create task.")
 			httpStatus := 500
-			if err == scheduler.ErrQueueFull {
+			if err == eremetic.ErrQueueFull {
 				httpStatus = 503
 			}
 			errorMessage := ErrorDocument{

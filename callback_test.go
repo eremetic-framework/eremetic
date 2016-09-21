@@ -1,4 +1,4 @@
-package scheduler
+package eremetic
 
 import (
 	"encoding/json"
@@ -8,8 +8,6 @@ import (
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
-
-	"github.com/klarna/eremetic"
 )
 
 type callbackHandler struct {
@@ -31,7 +29,7 @@ func TestCallback(t *testing.T) {
 		var h callbackHandler
 		ts := httptest.NewServer(&h)
 
-		var task eremetic.Task
+		var task Task
 
 		Convey("When notifying without a callback URI", func() {
 			NotifyCallback(&task)
@@ -53,8 +51,8 @@ func TestCallback(t *testing.T) {
 		})
 		Convey("When notifying with one status", func() {
 			task.CallbackURI = ts.URL
-			task.Status = []eremetic.Status{
-				{Time: 0, Status: eremetic.TaskState_TASK_STAGING},
+			task.Status = []Status{
+				{Time: 0, Status: TaskState_TASK_STAGING},
 			}
 
 			NotifyCallback(&task)
@@ -70,10 +68,10 @@ func TestCallback(t *testing.T) {
 		})
 		Convey("When notifying with many statuses", func() {
 			task.CallbackURI = ts.URL
-			task.Status = []eremetic.Status{
-				{Time: 0, Status: eremetic.TaskState_TASK_STAGING},
-				{Time: 1, Status: eremetic.TaskState_TASK_RUNNING},
-				{Time: 2, Status: eremetic.TaskState_TASK_FINISHED},
+			task.Status = []Status{
+				{Time: 0, Status: TaskState_TASK_STAGING},
+				{Time: 1, Status: TaskState_TASK_RUNNING},
+				{Time: 2, Status: TaskState_TASK_FINISHED},
 			}
 
 			NotifyCallback(&task)

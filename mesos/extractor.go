@@ -1,10 +1,10 @@
-package scheduler
+package mesos
 
 import (
 	"encoding/json"
 
 	"github.com/Sirupsen/logrus"
-	mesos "github.com/mesos/mesos-go/mesosproto"
+	"github.com/mesos/mesos-go/mesosproto"
 )
 
 type mounts struct {
@@ -18,7 +18,7 @@ type dockerMounts struct {
 	RW          bool   `json:"RW"`
 }
 
-func extractSandboxPath(status *mesos.TaskStatus) (string, error) {
+func extractSandboxPath(status *mesosproto.TaskStatus) (string, error) {
 	var mounts []mounts
 
 	if len(status.Data) == 0 {

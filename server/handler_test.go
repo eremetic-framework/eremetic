@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -20,7 +19,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/boltdb"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/mock"
 	"github.com/klarna/eremetic/version"
@@ -35,14 +33,13 @@ func TestHandling(t *testing.T) {
 		},
 	}
 
-	dir := os.TempDir()
-	db, _ := boltdb.NewTaskDB(fmt.Sprintf("%s/eremetic_test.db", dir))
+	db := eremetic.NewDefaultTaskDB()
+
 	h := NewHandler(scheduler, db)
 
 	defer db.Close()
 
 	Convey("Routes", t, func() {
-		db.Clean()
 
 		id := "eremetic-task.1234"
 
