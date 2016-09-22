@@ -2,6 +2,7 @@
 
 [![Build Status][travis-image]](https://travis-ci.org/klarna/eremetic)
 [![Coverage Status][coveralls-image]](https://coveralls.io/r/klarna/eremetic?branch=master)
+[![Go Report][goreport-image]](https://goreportcard.com/report/github.com/klarna/eremetic)
 
 ## Purpose
 Eremetic is a Mesos Framework to run one-shot tasks. The vision is to provide a
@@ -141,7 +142,7 @@ The file should contain the Principal to authenticate and the secret separated b
 ## Building
 
 ### Environment
-Clone the repository into `$GOCODE/src/github.com/klarna/eremetic`.
+Clone the repository into `$GOPATH/src/github.com/klarna/eremetic`.
 This is needed because of internal package dependencies
 
 ### Install dependencies
@@ -149,13 +150,16 @@ First you need to install dependencies. Parts of the eremetic code is auto-gener
 
     go get github.com/jteeuwen/go-bindata/...
     go get github.com/elazarl/go-bindata-assetfs/...
-    go generate
-    go get -t ./...
+
+All other dependencies are vendored, so it is recommended to run eremetic with Go >= 1.6 or with GO15VENDOREXPERIMENT=1
 
 ### Creating the docker image
 To build a docker image with eremetic, simply run
 
     make docker
+
+### Compiling
+Run `make eremetic`
 
 ## Running on mesos
 
@@ -168,7 +172,8 @@ curl -X POST -H 'Content-Type: application/json' $MARATHON/v2/apps -d@misc/ereme
 ```
 
 ## Running tests
-The tests rely on [GoConvey](http://goconvey.co/), and can be run either by running `goconvey` or `go test ./...` from the project root.
+The default target of make builds and runs tests.
+Tests can also be run by running `goconvey` in the project root.
 
 ## Running with minimesos
 Using [minimesos](https://www.minimesos.org/) is a very simple way to test and play with eremetic.
@@ -202,3 +207,4 @@ Apache-2
 
 [travis-image]: https://img.shields.io/travis/klarna/eremetic.svg?style=flat
 [coveralls-image]: https://img.shields.io/coveralls/klarna/eremetic.svg?style=flat
+[goreport-image]: https://goreportcard.com/badge/github.com/klarna/eremetic
