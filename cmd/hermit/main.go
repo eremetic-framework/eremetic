@@ -46,8 +46,14 @@ func main() {
 		"version": newVersionCommand(ec),
 	}
 
+	if len(os.Args) < 2 || os.Args[1] == "-help" || os.Args[1] == "-h" {
+		usage(cmds)
+		os.Exit(0)
+	}
+
 	cmd, ok := cmds[os.Args[1]]
 	if !ok {
+		usage(cmds)
 		os.Exit(1)
 	}
 
@@ -331,4 +337,15 @@ func lastUpdated(t time.Time) string {
 func exitWithError(err error) {
 	fmt.Println("Error:", err)
 	os.Exit(1)
+}
+
+func usage(cmds map[string]subCommand) {
+	fmt.Print("A CLI tool for communicating with Eremetic.\n\n")
+	var commands []string
+	for cmd := range cmds {
+		commands = append(commands, cmd)
+	}
+	strings.Join(commands, ", ")
+	fmt.Printf("Available sub-commands: %s\n\n", commands)
+	fmt.Println("Use hermit <sub-command> -help for more information.")
 }
