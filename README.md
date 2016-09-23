@@ -45,7 +45,8 @@ JSON format:
       "host_path": "/var/run/docker.sock"
     }
   ],
-  // Array of Objects, ports to forward to the container
+  // Array of Objects, ports to forward to the container.
+  // Assigned host ports are available as environment variables (e.g. PORT0, PORT1 and so on with PORT being an alias for PORT0).
   "ports": [
     {
       "container_port": 80,
