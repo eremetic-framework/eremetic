@@ -379,6 +379,7 @@ func (cmd *versionCommand) Run() {
 	fmt.Printf(" Version: %s", b)
 }
 
+// ByLastUpdated sorts tasks based by when they were last updated.
 type ByLastUpdated []eremetic.Task
 
 func (t ByLastUpdated) Len() int           { return len(t) }
@@ -391,23 +392,23 @@ func currentStatus(statuses []eremetic.Status) string {
 	}
 
 	switch statuses[len(statuses)-1].Status {
-	case eremetic.TaskState_TASK_STAGING:
+	case eremetic.TaskStaging:
 		return "staging"
-	case eremetic.TaskState_TASK_STARTING:
+	case eremetic.TaskStarting:
 		return "starting"
-	case eremetic.TaskState_TASK_RUNNING:
+	case eremetic.TaskRunning:
 		return "running"
-	case eremetic.TaskState_TASK_FINISHED:
+	case eremetic.TaskFinished:
 		return "finished"
-	case eremetic.TaskState_TASK_FAILED:
+	case eremetic.TaskFailed:
 		return "failed"
-	case eremetic.TaskState_TASK_KILLED:
+	case eremetic.TaskKilled:
 		return "killed"
-	case eremetic.TaskState_TASK_LOST:
+	case eremetic.TaskLost:
 		return "lost"
-	case eremetic.TaskState_TASK_ERROR:
+	case eremetic.TaskError:
 		return "error"
-	case eremetic.TaskState_TASK_QUEUED:
+	case eremetic.TaskQueued:
 		return "queued"
 	}
 

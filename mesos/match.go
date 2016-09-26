@@ -44,11 +44,11 @@ func (m *resourceMatcher) Description() string {
 	return fmt.Sprintf("%f of scalar resource %s", m.value, m.name)
 }
 
-func CPUAvailable(v float64) ogle.Matcher {
+func cpuAvailable(v float64) ogle.Matcher {
 	return &resourceMatcher{"cpus", v}
 }
 
-func MemoryAvailable(v float64) ogle.Matcher {
+func memoryAvailable(v float64) ogle.Matcher {
 	return &resourceMatcher{"mem", v}
 }
 
@@ -75,7 +75,7 @@ func (m *attributeMatcher) Description() string {
 	)
 }
 
-func AttributeMatch(slaveConstraints []eremetic.SlaveConstraint) ogle.Matcher {
+func attributeMatch(slaveConstraints []eremetic.SlaveConstraint) ogle.Matcher {
 	var submatchers []ogle.Matcher
 	for _, constraint := range slaveConstraints {
 		submatchers = append(submatchers, &attributeMatcher{constraint})
@@ -85,9 +85,9 @@ func AttributeMatch(slaveConstraints []eremetic.SlaveConstraint) ogle.Matcher {
 
 func createMatcher(task eremetic.Task) ogle.Matcher {
 	return ogle.AllOf(
-		CPUAvailable(task.TaskCPUs),
-		MemoryAvailable(task.TaskMem),
-		AttributeMatch(task.SlaveConstraints),
+		cpuAvailable(task.TaskCPUs),
+		memoryAvailable(task.TaskMem),
+		attributeMatch(task.SlaveConstraints),
 	)
 }
 

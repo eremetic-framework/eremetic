@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/mesos/mesos-go/mesosproto"
 )
 
 type mounts struct {
@@ -18,17 +17,15 @@ type dockerMounts struct {
 	RW          bool   `json:"RW"`
 }
 
-func extractSandboxPath(status *mesosproto.TaskStatus) (string, error) {
+func extractSandboxPath(statusData []byte) (string, error) {
 	var mounts []mounts
 
-	if len(status.Data) == 0 {
+	if len(statusData) == 0 {
 		logrus.Debug("No Data in task status.")
 		return "", nil
 	}
 
-	err := json.Unmarshal(status.Data, &mounts)
-
-	if err != nil {
+	if err := json.Unmarshal(statusData, &mounts); err != nil {
 		logrus.WithError(err).Error("Task status data contained invalid JSON.")
 		return "", err
 	}

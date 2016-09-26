@@ -8,20 +8,21 @@ import (
 	"github.com/pborman/uuid"
 )
 
+// TaskState defines the valid task states.
 type TaskState string
 
+// Valid task states
 const (
-	// Standard mesos states
-	TaskState_TASK_STAGING  TaskState = "TASK_STAGING"
-	TaskState_TASK_STARTING TaskState = "TASK_STARTING"
-	TaskState_TASK_RUNNING  TaskState = "TASK_RUNNING"
-	TaskState_TASK_FINISHED TaskState = "TASK_FINISHED"
-	TaskState_TASK_FAILED   TaskState = "TASK_FAILED"
-	TaskState_TASK_KILLED   TaskState = "TASK_KILLED"
-	TaskState_TASK_LOST     TaskState = "TASK_LOST"
-	TaskState_TASK_ERROR    TaskState = "TASK_ERROR"
-	// Custom eremetic states
-	TaskState_TASK_QUEUED TaskState = "TASK_QUEUED"
+	TaskStaging  TaskState = "TASK_STAGING"
+	TaskStarting TaskState = "TASK_STARTING"
+	TaskRunning  TaskState = "TASK_RUNNING"
+	TaskFinished TaskState = "TASK_FINISHED"
+	TaskFailed   TaskState = "TASK_FAILED"
+	TaskKilled   TaskState = "TASK_KILLED"
+	TaskLost     TaskState = "TASK_LOST"
+	TaskError    TaskState = "TASK_ERROR"
+
+	TaskQueued TaskState = "TASK_QUEUED"
 )
 
 // IsTerminal takes a string representation of a state and returns whether it
@@ -39,6 +40,7 @@ func (s TaskState) String() string {
 	return string(s)
 }
 
+// Status represents the task status at a given time.
 type Status struct {
 	Time   int64     `json:"time"`
 	Status TaskState `json:"status"`
@@ -51,17 +53,21 @@ type Volume struct {
 	HostPath      string `json:"host_path"`
 }
 
+// Port defines a port mapping.
 type Port struct {
 	ContainerPort uint32 `json:"container_port"`
 	HostPort      uint32 `json:"host_port"`
 	Protocol      string `json:"protocol"`
 }
 
+// SlaveConstraint is a constraint that is validated for each slave when
+// determining where to schedule a task.
 type SlaveConstraint struct {
 	AttributeName  string `json:"attribute_name"`
 	AttributeValue string `json:"attribute_value"`
 }
 
+// URI holds meta-data for a sandbox resource.
 type URI struct {
 	URI        string `json:"uri"`
 	Executable bool   `json:"executable"`
@@ -69,6 +75,7 @@ type URI struct {
 	Cache      bool   `json:"cache"`
 }
 
+// Task defines the properties of a scheduled task.
 type Task struct {
 	TaskCPUs          float64           `json:"task_cpus"`
 	TaskMem           float64           `json:"task_mem"`
@@ -82,8 +89,8 @@ type Task struct {
 	Status            []Status          `json:"status"`
 	ID                string            `json:"id"`
 	Name              string            `json:"name"`
-	FrameworkId       string            `json:"framework_id"`
-	SlaveId           string            `json:"slave_id"`
+	FrameworkID       string            `json:"framework_id"`
+	SlaveID           string            `json:"slave_id"`
 	SlaveConstraints  []SlaveConstraint `json:"slave_constraints"`
 	Hostname          string            `json:"hostname"`
 	Retry             int               `json:"retry"`
@@ -143,12 +150,13 @@ type Request struct {
 	ForcePullImage    bool              `json:"force_pull_image"`
 }
 
+// NewTask returns a new instance of a Task.
 func NewTask(request Request, name string) (Task, error) {
 	taskID := fmt.Sprintf("eremetic-task.%s", uuid.New())
 
 	status := []Status{
 		Status{
-			Status: TaskState_TASK_QUEUED,
+			Status: TaskQueued,
 			Time:   time.Now().Unix(),
 		},
 	}
@@ -174,15 +182,17 @@ func NewTask(request Request, name string) (Task, error) {
 	return task, nil
 }
 
+// WasRunning returns whether the task was running at some point.
 func (task *Task) WasRunning() bool {
 	for _, s := range task.Status {
-		if s.Status == TaskState_TASK_RUNNING {
+		if s.Status == TaskRunning {
 			return true
 		}
 	}
 	return false
 }
 
+// IsTerminated returns whether the task has been terminated.
 func (task *Task) IsTerminated() bool {
 	if len(task.Status) == 0 {
 		return true
@@ -191,14 +201,16 @@ func (task *Task) IsTerminated() bool {
 	return IsTerminal(st.Status)
 }
 
+// IsRunning returns whether the task is currently running.
 func (task *Task) IsRunning() bool {
 	if len(task.Status) == 0 {
 		return false
 	}
 	st := task.Status[len(task.Status)-1]
-	return st.Status == TaskState_TASK_RUNNING
+	return st.Status == TaskRunning
 }
 
+// LastUpdated returns the time of the latest status update.
 func (task *Task) LastUpdated() time.Time {
 	if len(task.Status) == 0 {
 		return time.Unix(0, 0)
@@ -207,6 +219,7 @@ func (task *Task) LastUpdated() time.Time {
 	return time.Unix(st.Time, 0)
 }
 
+// UpdateStatus updates the current task status.
 func (task *Task) UpdateStatus(status Status) {
 	task.Status = append(task.Status, status)
 }

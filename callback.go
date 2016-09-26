@@ -8,6 +8,7 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+// CallbackData holds information about the status update.
 type CallbackData struct {
 	Time   int64  `json:"time"`
 	Status string `json:"status"`

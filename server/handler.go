@@ -20,16 +20,18 @@ import (
 	"github.com/klarna/eremetic/version"
 )
 
-type ErrorDocument struct {
+type errorDocument struct {
 	Error   string `json:"error"`
 	Message string `json:"message"`
 }
 
+// Handler holds the server context.
 type Handler struct {
 	scheduler eremetic.Scheduler
 	database  eremetic.TaskDB
 }
 
+// NewHandler returns a new instance of Handler.
 func NewHandler(scheduler eremetic.Scheduler, database eremetic.TaskDB) Handler {
 	return Handler{
 		scheduler: scheduler,
@@ -61,7 +63,7 @@ func (h Handler) AddTask() http.HandlerFunc {
 			if err == eremetic.ErrQueueFull {
 				httpStatus = 503
 			}
-			errorMessage := ErrorDocument{
+			errorMessage := errorDocument{
 				err.Error(),
 				"Unable to schedule task",
 			}

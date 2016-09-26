@@ -38,7 +38,7 @@ func getFile(file string, task eremetic.Task) (int, io.ReadCloser) {
 	response, err := http.Get(url)
 
 	if err != nil {
-		logrus.WithError(err).Errorf("Unable to fetch %s from agent %s.", file, task.SlaveId)
+		logrus.WithError(err).Errorf("Unable to fetch %s from agent %s.", file, task.SlaveID)
 		return http.StatusInternalServerError, ioutil.NopCloser(strings.NewReader("Unable to fetch upstream file."))
 	}
 
@@ -50,7 +50,7 @@ func handleError(err error, w http.ResponseWriter, message string) {
 		return
 	}
 
-	errorMessage := ErrorDocument{
+	errorMessage := errorDocument{
 		err.Error(),
 		message,
 	}
@@ -78,11 +78,11 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task eremetic.Task, task
 	if reflect.DeepEqual(task, (eremetic.Task{})) {
 		notFound(w, r)
 		return
-	} else {
-		templateFile = "task.html"
-		data = makeMap(task)
-		data["Version"] = version.Version
 	}
+
+	templateFile = "task.html"
+	data = makeMap(task)
+	data["Version"] = version.Version
 
 	source, _ := assets.Asset(fmt.Sprintf("templates/%s", templateFile))
 	tpl, err := template.New(templateFile).Funcs(funcMap).Parse(string(source))
@@ -127,10 +127,10 @@ func makeMap(task eremetic.Task) map[string]interface{} {
 	data["Command"] = task.Command
 	// TODO: Support more than docker?
 	data["ContainerImage"] = task.Image
-	data["FrameworkID"] = task.FrameworkId
+	data["FrameworkID"] = task.FrameworkID
 	data["Hostname"] = task.Hostname
 	data["Name"] = task.Name
-	data["SlaveID"] = task.SlaveId
+	data["SlaveID"] = task.SlaveID
 	data["SlaveConstraints"] = task.SlaveConstraints
 	data["Status"] = task.Status
 	data["CPU"] = fmt.Sprintf("%.2f", task.TaskCPUs)

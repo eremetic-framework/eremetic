@@ -12,8 +12,8 @@ import (
 )
 
 func createTaskInfo(task eremetic.Task, offer *mesosproto.Offer) (eremetic.Task, *mesosproto.TaskInfo) {
-	task.FrameworkId = *offer.FrameworkId.Value
-	task.SlaveId = *offer.SlaveId.Value
+	task.FrameworkID = *offer.FrameworkId.Value
+	task.SlaveID = *offer.SlaveId.Value
 	task.Hostname = *offer.Hostname
 	task.AgentIP = offer.GetUrl().GetAddress().GetIp()
 	task.AgentPort = offer.GetUrl().GetAddress().GetPort()

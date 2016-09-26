@@ -38,7 +38,7 @@ func TestBoltDatabase(t *testing.T) {
 
 	status := []eremetic.Status{
 		eremetic.Status{
-			Status: eremetic.TaskState_TASK_RUNNING,
+			Status: eremetic.TaskRunning,
 			Time:   time.Now().Unix(),
 		},
 	}
@@ -106,7 +106,7 @@ func TestBoltDatabase(t *testing.T) {
 			TaskMem:           15.3,
 			Name:              "request Name",
 			Status:            status,
-			FrameworkId:       "1234",
+			FrameworkID:       "1234",
 			Command:           "echo date",
 			User:              "root",
 			Image:             "busybox",
@@ -138,7 +138,7 @@ func TestBoltDatabase(t *testing.T) {
 			TaskMem:           15.3,
 			Name:              "request Name",
 			Status:            status,
-			FrameworkId:       "1234",
+			FrameworkID:       "1234",
 			Command:           "echo date",
 			User:              "root",
 			Image:             "busybox",
@@ -166,15 +166,15 @@ func TestBoltDatabase(t *testing.T) {
 			ID: "1234",
 			Status: []eremetic.Status{
 				eremetic.Status{
-					Status: eremetic.TaskState_TASK_STAGING,
+					Status: eremetic.TaskStaging,
 					Time:   time.Now().Unix(),
 				},
 				eremetic.Status{
-					Status: eremetic.TaskState_TASK_RUNNING,
+					Status: eremetic.TaskRunning,
 					Time:   time.Now().Unix(),
 				},
 				eremetic.Status{
-					Status: eremetic.TaskState_TASK_FINISHED,
+					Status: eremetic.TaskFinished,
 					Time:   time.Now().Unix(),
 				},
 			},
@@ -185,11 +185,11 @@ func TestBoltDatabase(t *testing.T) {
 			ID: "2345",
 			Status: []eremetic.Status{
 				eremetic.Status{
-					Status: eremetic.TaskState_TASK_STAGING,
+					Status: eremetic.TaskStaging,
 					Time:   time.Now().Unix(),
 				},
 				eremetic.Status{
-					Status: eremetic.TaskState_TASK_RUNNING,
+					Status: eremetic.TaskRunning,
 					Time:   time.Now().Unix(),
 				},
 			},
@@ -212,15 +212,15 @@ func TestBoltDatabase(t *testing.T) {
 			ID: "1234",
 			Status: []eremetic.Status{
 				eremetic.Status{
-					Status: eremetic.TaskState_TASK_STAGING,
+					Status: eremetic.TaskStaging,
 					Time:   time.Now().Unix(),
 				},
 				eremetic.Status{
-					Status: eremetic.TaskState_TASK_RUNNING,
+					Status: eremetic.TaskRunning,
 					Time:   time.Now().Unix(),
 				},
 				eremetic.Status{
-					Status: eremetic.TaskState_TASK_FINISHED,
+					Status: eremetic.TaskFinished,
 					Time:   time.Now().Unix(),
 				},
 			},

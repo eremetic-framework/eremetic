@@ -33,6 +33,7 @@ func (b defaultConnector) Open(file string) (connection, error) {
 	return bolt.Open(file, 0600, nil)
 }
 
+// TaskDB is a boltdb implementation of the task database.
 type TaskDB struct {
 	conn connection
 }

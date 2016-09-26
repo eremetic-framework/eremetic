@@ -171,8 +171,8 @@ func TestScheduler(t *testing.T) {
 
 				Convey("The task should contain the status history", func() {
 					So(task.Status, ShouldHaveLength, 2)
-					So(task.Status[0].Status, ShouldEqual, eremetic.TaskState_TASK_QUEUED)
-					So(task.Status[1].Status, ShouldEqual, eremetic.TaskState_TASK_STAGING)
+					So(task.Status[0].Status, ShouldEqual, eremetic.TaskQueued)
+					So(task.Status[1].Status, ShouldEqual, eremetic.TaskStaging)
 				})
 				Convey("The offer should not be declined", func() {
 					So(driver.AssertNotCalled(t, "DeclineOffer"), ShouldBeTrue)
@@ -230,7 +230,7 @@ func TestScheduler(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				So(len(task.Status), ShouldEqual, 1)
-				So(task.Status[0].Status, ShouldEqual, eremetic.TaskState_TASK_RUNNING)
+				So(task.Status[0].Status, ShouldEqual, eremetic.TaskRunning)
 
 				s.StatusUpdate(nil, &mesosproto.TaskStatus{
 					TaskId: &mesosproto.TaskID{
@@ -244,8 +244,8 @@ func TestScheduler(t *testing.T) {
 
 				Convey("The task status history should contain the failed status", func() {
 					So(len(task.Status), ShouldEqual, 2)
-					So(task.Status[0].Status, ShouldEqual, eremetic.TaskState_TASK_RUNNING)
-					So(task.Status[1].Status, ShouldEqual, eremetic.TaskState_TASK_FAILED)
+					So(task.Status[0].Status, ShouldEqual, eremetic.TaskRunning)
+					So(task.Status[1].Status, ShouldEqual, eremetic.TaskFailed)
 				})
 			})
 
@@ -264,8 +264,8 @@ func TestScheduler(t *testing.T) {
 
 				Convey("The task should have a queued status", func() {
 					So(len(task.Status), ShouldEqual, 2)
-					So(task.Status[0].Status, ShouldEqual, eremetic.TaskState_TASK_FAILED)
-					So(task.Status[1].Status, ShouldEqual, eremetic.TaskState_TASK_QUEUED)
+					So(task.Status[0].Status, ShouldEqual, eremetic.TaskFailed)
+					So(task.Status[1].Status, ShouldEqual, eremetic.TaskQueued)
 				})
 
 				Convey("The task should be published on channel", func() {

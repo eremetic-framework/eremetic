@@ -38,15 +38,6 @@ func setupLogging(logFormat, logLevel string) {
 	logrus.SetLevel(level)
 }
 
-func setupMetrics() {
-	prometheus.MustRegister(mesos.TasksCreated)
-	prometheus.MustRegister(mesos.TasksLaunched)
-	prometheus.MustRegister(mesos.TasksTerminated)
-	prometheus.MustRegister(mesos.TasksDelayed)
-	prometheus.MustRegister(mesos.TasksRunning)
-	prometheus.MustRegister(mesos.QueueSize)
-}
-
 func getSchedulerSettings(config *config.Config) *mesos.Settings {
 	return &mesos.Settings{
 		MaxQueueSize:     config.QueueSize,
@@ -70,7 +61,8 @@ func main() {
 	config := setup()
 
 	setupLogging(config.LogFormat, config.LogLevel)
-	setupMetrics()
+
+	mesos.RegisterMetrics(prometheus.DefaultRegisterer)
 
 	db, err := NewDB(config.DatabaseDriver, config.DatabasePath)
 	if err != nil {

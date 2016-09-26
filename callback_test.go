@@ -52,7 +52,7 @@ func TestCallback(t *testing.T) {
 		Convey("When notifying with one status", func() {
 			task.CallbackURI = ts.URL
 			task.Status = []Status{
-				{Time: 0, Status: TaskState_TASK_STAGING},
+				{Time: 0, Status: TaskStaging},
 			}
 
 			NotifyCallback(&task)
@@ -69,9 +69,9 @@ func TestCallback(t *testing.T) {
 		Convey("When notifying with many statuses", func() {
 			task.CallbackURI = ts.URL
 			task.Status = []Status{
-				{Time: 0, Status: TaskState_TASK_STAGING},
-				{Time: 1, Status: TaskState_TASK_RUNNING},
-				{Time: 2, Status: TaskState_TASK_FINISHED},
+				{Time: 0, Status: TaskStaging},
+				{Time: 1, Status: TaskRunning},
+				{Time: 2, Status: TaskFinished},
 			}
 
 			NotifyCallback(&task)
