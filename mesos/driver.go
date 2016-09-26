@@ -1,4 +1,4 @@
-package scheduler
+package mesos
 
 import (
 	"errors"
@@ -9,28 +9,28 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/auth"
-	mesos "github.com/mesos/mesos-go/mesosproto"
-	sched "github.com/mesos/mesos-go/scheduler"
+	"github.com/mesos/mesos-go/mesosproto"
+	mesossched "github.com/mesos/mesos-go/scheduler"
 	"golang.org/x/net/context"
 )
 
-func getFrameworkID(settings *Settings) *mesos.FrameworkID {
+func getFrameworkID(settings *Settings) *mesosproto.FrameworkID {
 	if settings.FrameworkID != "" {
-		return &mesos.FrameworkID{
+		return &mesosproto.FrameworkID{
 			Value: proto.String(settings.FrameworkID),
 		}
 	}
 	return nil
 }
 
-func getPrincipalID(credential *mesos.Credential) *string {
+func getPrincipalID(credential *mesosproto.Credential) *string {
 	if credential != nil {
 		return credential.Principal
 	}
 	return nil
 }
 
-func getCredential(settings *Settings) (*mesos.Credential, error) {
+func getCredential(settings *Settings) (*mesosproto.Credential, error) {
 	if settings.CredentialFile != "" {
 		content, err := ioutil.ReadFile(settings.CredentialFile)
 		if err != nil {
@@ -50,7 +50,7 @@ func getCredential(settings *Settings) (*mesos.Credential, error) {
 		}
 
 		logrus.WithField("principal", fields[0]).Info("Successfully loaded principal")
-		return &mesos.Credential{
+		return &mesosproto.Credential{
 			Principal: proto.String(fields[0]),
 			Secret:    proto.String(fields[1]),
 		}, nil
@@ -63,7 +63,7 @@ func getAuthContext(ctx context.Context) context.Context {
 	return auth.WithLoginProvider(ctx, "SASL")
 }
 
-func createDriver(scheduler *eremeticScheduler, settings *Settings) (*sched.MesosSchedulerDriver, error) {
+func createDriver(scheduler *Scheduler, settings *Settings) (*mesossched.MesosSchedulerDriver, error) {
 	publishedAddr := net.ParseIP(settings.MessengerAddress)
 	bindingPort := settings.MessengerPort
 	credential, err := getCredential(settings)
@@ -72,9 +72,9 @@ func createDriver(scheduler *eremeticScheduler, settings *Settings) (*sched.Meso
 		return nil, err
 	}
 
-	return sched.NewMesosSchedulerDriver(sched.DriverConfig{
+	return mesossched.NewMesosSchedulerDriver(mesossched.DriverConfig{
 		Master: settings.Master,
-		Framework: &mesos.FrameworkInfo{
+		Framework: &mesosproto.FrameworkInfo{
 			Id:              getFrameworkID(settings),
 			Name:            proto.String(settings.Name),
 			User:            proto.String(settings.User),

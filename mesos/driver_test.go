@@ -1,4 +1,4 @@
-package scheduler
+package mesos
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 func TestDriver(t *testing.T) {
 	Convey("createDriver", t, func() {
 		Convey("Error when master URL can't be found", func() {
-			scheduler := eremeticScheduler{}
+			scheduler := Scheduler{}
 
 			driver, err := createDriver(&scheduler, &Settings{})
 

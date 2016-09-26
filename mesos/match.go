@@ -1,4 +1,4 @@
-package scheduler
+package mesos
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	ogle "github.com/jacobsa/oglematchers"
-	mesos "github.com/mesos/mesos-go/mesosproto"
+	"github.com/mesos/mesos-go/mesosproto"
 
 	"github.com/klarna/eremetic"
 )
@@ -21,12 +21,12 @@ type attributeMatcher struct {
 }
 
 func (m *resourceMatcher) Matches(o interface{}) error {
-	offer := o.(*mesos.Offer)
+	offer := o.(*mesosproto.Offer)
 	err := errors.New("")
 
 	for _, res := range offer.Resources {
 		if res.GetName() == m.name {
-			if res.GetType() != mesos.Value_SCALAR {
+			if res.GetType() != mesosproto.Value_SCALAR {
 				return err
 			}
 
@@ -53,11 +53,11 @@ func MemoryAvailable(v float64) ogle.Matcher {
 }
 
 func (m *attributeMatcher) Matches(o interface{}) error {
-	offer := o.(*mesos.Offer)
+	offer := o.(*mesosproto.Offer)
 
 	for _, attr := range offer.Attributes {
 		if attr.GetName() == m.constraint.AttributeName {
-			if attr.GetType() != mesos.Value_TEXT ||
+			if attr.GetType() != mesosproto.Value_TEXT ||
 				attr.Text.GetValue() != m.constraint.AttributeValue {
 				return errors.New("")
 			}
@@ -96,7 +96,7 @@ func matches(matcher ogle.Matcher, o interface{}) bool {
 	return err == nil
 }
 
-func matchOffer(task eremetic.Task, offers []*mesos.Offer) (*mesos.Offer, []*mesos.Offer) {
+func matchOffer(task eremetic.Task, offers []*mesosproto.Offer) (*mesosproto.Offer, []*mesosproto.Offer) {
 	var matcher = createMatcher(task)
 	for i, off := range offers {
 		if matches(matcher, off) {

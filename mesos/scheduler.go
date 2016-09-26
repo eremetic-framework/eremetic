@@ -1,4 +1,4 @@
-package scheduler
+package mesos
 
 import (
 	"encoding/json"
@@ -9,24 +9,34 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
-	mesos "github.com/mesos/mesos-go/mesosproto"
-	sched "github.com/mesos/mesos-go/scheduler"
+	"github.com/mesos/mesos-go/mesosproto"
+	mesossched "github.com/mesos/mesos-go/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/klarna/eremetic"
 )
 
 var (
-	defaultFilter = &mesos.Filters{RefuseSeconds: proto.Float64(10)}
+	defaultFilter = &mesosproto.Filters{RefuseSeconds: proto.Float64(10)}
 	maxRetries    = 5
-
-	// ErrQueueFull is returned in the event of a full queue. This allows the caller
-	// to handle this as they see fit.
-	ErrQueueFull = errors.New("task queue is full")
 )
 
-// eremeticScheduler holds the structure of the Eremetic Scheduler
-type eremeticScheduler struct {
+// Settings holds configuration values for the scheduler
+type Settings struct {
+	MaxQueueSize     int
+	Master           string
+	FrameworkID      string
+	CredentialFile   string
+	Name             string
+	User             string
+	MessengerAddress string
+	MessengerPort    uint16
+	Checkpoint       bool
+	FailoverTimeout  float64
+}
+
+// Scheduler holds the structure of the Eremetic Scheduler
+type Scheduler struct {
 	tasksCreated int
 	initialised  bool
 
@@ -44,30 +54,35 @@ type eremeticScheduler struct {
 	database eremetic.TaskDB
 }
 
-// Settings holds configuration values for the scheduler
-type Settings struct {
-	MaxQueueSize     int
-	Master           string
-	FrameworkID      string
-	CredentialFile   string
-	Name             string
-	User             string
-	MessengerAddress string
-	MessengerPort    uint16
-	Checkpoint       bool
-	FailoverTimeout  float64
-}
-
-// Create a new eremeticScheduler
-func Create(settings *Settings, db eremetic.TaskDB) *eremeticScheduler {
-	return &eremeticScheduler{
+// NewScheduler returns a new instance of the default scheduler.
+func NewScheduler(queueSize int, db eremetic.TaskDB) *Scheduler {
+	return &Scheduler{
 		shutdown: make(chan struct{}),
-		tasks:    make(chan string, settings.MaxQueueSize),
+		tasks:    make(chan string, queueSize),
 		database: db,
 	}
 }
 
-func (s *eremeticScheduler) Reconcile(driver sched.SchedulerDriver) {
+// Run the eremetic scheduler
+func (s *Scheduler) Run(settings *Settings) {
+	driver, err := createDriver(s, settings)
+	if err != nil {
+		logrus.WithError(err).Error("Unable to create scheduler driver")
+	}
+
+	go func() {
+		<-s.shutdown
+		driver.Stop(false)
+	}()
+
+	if status, err := driver.Run(); err != nil {
+		logrus.WithError(err).WithField("status", status.String()).Error("Framework stopped")
+	}
+
+	logrus.Info("Exiting...")
+}
+
+func (s *Scheduler) Reconcile(driver mesossched.SchedulerDriver) {
 	if s.reconcile != nil {
 		s.reconcile.Cancel()
 	}
@@ -75,7 +90,7 @@ func (s *eremeticScheduler) Reconcile(driver sched.SchedulerDriver) {
 }
 
 // Registered is called when the Scheduler is Registered
-func (s *eremeticScheduler) Registered(driver sched.SchedulerDriver, frameworkID *mesos.FrameworkID, masterInfo *mesos.MasterInfo) {
+func (s *Scheduler) Registered(driver mesossched.SchedulerDriver, frameworkID *mesosproto.FrameworkID, masterInfo *mesosproto.MasterInfo) {
 	logrus.WithFields(logrus.Fields{
 		"framework_id": frameworkID.GetValue(),
 		"master_id":    masterInfo.GetId(),
@@ -83,7 +98,7 @@ func (s *eremeticScheduler) Registered(driver sched.SchedulerDriver, frameworkID
 	}).Debug("Framework registered with master.")
 
 	if !s.initialised {
-		driver.ReconcileTasks([]*mesos.TaskStatus{})
+		driver.ReconcileTasks([]*mesosproto.TaskStatus{})
 		s.initialised = true
 	} else {
 		s.Reconcile(driver)
@@ -91,13 +106,13 @@ func (s *eremeticScheduler) Registered(driver sched.SchedulerDriver, frameworkID
 }
 
 // Reregistered is called when the Scheduler is Reregistered
-func (s *eremeticScheduler) Reregistered(driver sched.SchedulerDriver, masterInfo *mesos.MasterInfo) {
+func (s *Scheduler) Reregistered(driver mesossched.SchedulerDriver, masterInfo *mesosproto.MasterInfo) {
 	logrus.WithFields(logrus.Fields{
 		"master_id": masterInfo.GetId(),
 		"master":    masterInfo.GetHostname(),
 	}).Debug("Framework re-registered with master.")
 	if !s.initialised {
-		driver.ReconcileTasks([]*mesos.TaskStatus{})
+		driver.ReconcileTasks([]*mesosproto.TaskStatus{})
 		s.initialised = true
 	} else {
 		s.Reconcile(driver)
@@ -105,14 +120,14 @@ func (s *eremeticScheduler) Reregistered(driver sched.SchedulerDriver, masterInf
 }
 
 // Disconnected is called when the Scheduler is Disconnected
-func (s *eremeticScheduler) Disconnected(sched.SchedulerDriver) {
+func (s *Scheduler) Disconnected(mesossched.SchedulerDriver) {
 	logrus.Debugf("Framework disconnected with master")
 }
 
 // ResourceOffers handles the Resource Offers
-func (s *eremeticScheduler) ResourceOffers(driver sched.SchedulerDriver, offers []*mesos.Offer) {
+func (s *Scheduler) ResourceOffers(driver mesossched.SchedulerDriver, offers []*mesosproto.Offer) {
 	logrus.WithField("offers", len(offers)).Debug("Received offers")
-	var offer *mesos.Offer
+	var offer *mesosproto.Offer
 
 loop:
 	for len(offers) > 0 {
@@ -143,7 +158,7 @@ loop:
 				Time:   time.Now().Unix(),
 			})
 			s.database.PutTask(&t)
-			driver.LaunchTasks([]*mesos.OfferID{offer.Id}, []*mesos.TaskInfo{task}, defaultFilter)
+			driver.LaunchTasks([]*mesosproto.OfferID{offer.Id}, []*mesosproto.TaskInfo{task}, defaultFilter)
 			TasksLaunched.Inc()
 			QueueSize.Dec()
 
@@ -160,7 +175,7 @@ loop:
 }
 
 // StatusUpdate takes care of updating the status
-func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *mesos.TaskStatus) {
+func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *mesosproto.TaskStatus) {
 	id := status.TaskId.GetValue()
 	newState := eremetic.TaskState(status.State.String())
 
@@ -239,16 +254,16 @@ func (s *eremeticScheduler) StatusUpdate(driver sched.SchedulerDriver, status *m
 			s.tasks <- id
 		}()
 	} else if eremetic.IsTerminal(newState) {
-		NotifyCallback(&task)
+		eremetic.NotifyCallback(&task)
 	}
 
 	s.database.PutTask(&task)
 }
 
-func (s *eremeticScheduler) FrameworkMessage(
-	driver sched.SchedulerDriver,
-	executorID *mesos.ExecutorID,
-	slaveID *mesos.SlaveID,
+func (s *Scheduler) FrameworkMessage(
+	driver mesossched.SchedulerDriver,
+	executorID *mesosproto.ExecutorID,
+	slaveID *mesosproto.SlaveID,
 	message string) {
 
 	logrus.Debug("Getting a framework message")
@@ -267,37 +282,24 @@ func (s *eremeticScheduler) FrameworkMessage(
 	}
 }
 
-func (s *eremeticScheduler) OfferRescinded(_ sched.SchedulerDriver, offerID *mesos.OfferID) {
+func (s *Scheduler) OfferRescinded(_ mesossched.SchedulerDriver, offerID *mesosproto.OfferID) {
 	logrus.WithField("offer_id", offerID).Debug("Offer Rescinded")
 }
-func (s *eremeticScheduler) SlaveLost(_ sched.SchedulerDriver, slaveID *mesos.SlaveID) {
+func (s *Scheduler) SlaveLost(_ mesossched.SchedulerDriver, slaveID *mesosproto.SlaveID) {
 	logrus.WithField("slave_id", slaveID).Debug("Slave lost")
 }
-func (s *eremeticScheduler) ExecutorLost(_ sched.SchedulerDriver, executorID *mesos.ExecutorID, slaveID *mesos.SlaveID, status int) {
+func (s *Scheduler) ExecutorLost(_ mesossched.SchedulerDriver, executorID *mesosproto.ExecutorID, slaveID *mesosproto.SlaveID, status int) {
 	logrus.WithFields(logrus.Fields{
 		"slave_id":    slaveID,
 		"executor_id": executorID,
 	}).Debug("Executor on slave was lost")
 }
 
-func (s *eremeticScheduler) Error(_ sched.SchedulerDriver, err string) {
+func (s *Scheduler) Error(_ mesossched.SchedulerDriver, err string) {
 	logrus.WithError(errors.New(err)).Debug("Received an error")
 }
 
-func nextID(s *eremeticScheduler) string {
-	letters := []rune("bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ123456789")
-	rand.Seed(time.Now().UnixNano())
-	b := make([]rune, 8)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-
-	s.tasksCreated++
-
-	return string(b)
-}
-
-func (s *eremeticScheduler) ScheduleTask(request eremetic.Request) (string, error) {
+func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	logrus.WithFields(logrus.Fields{
 		"docker_image":      request.DockerImage,
 		"command":           request.Command,
@@ -317,10 +319,56 @@ func (s *eremeticScheduler) ScheduleTask(request eremetic.Request) (string, erro
 		QueueSize.Inc()
 		return task.ID, nil
 	case <-time.After(time.Duration(1) * time.Second):
-		return "", ErrQueueFull
+		return "", eremetic.ErrQueueFull
 	}
 }
 
-func (s *eremeticScheduler) Stop() {
+func (s *Scheduler) Stop() {
 	close(s.shutdown)
 }
+
+func nextID(s *Scheduler) string {
+	letters := []rune("bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ123456789")
+	rand.Seed(time.Now().UnixNano())
+	b := make([]rune, 8)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+
+	s.tasksCreated++
+
+	return string(b)
+}
+
+var (
+	TasksCreated = prometheus.NewCounter(prometheus.CounterOpts{
+		Subsystem: "scheduler",
+		Name:      "tasks_created",
+		Help:      "Number of tasks submitted to eremetic",
+	})
+	TasksLaunched = prometheus.NewCounter(prometheus.CounterOpts{
+		Subsystem: "scheduler",
+		Name:      "tasks_launched",
+		Help:      "Number of tasks launched by eremetic",
+	})
+	TasksTerminated = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Subsystem: "scheduler",
+		Name:      "tasks_terminated",
+		Help:      "Number of terminated tasks by terminal status",
+	}, []string{"status", "sequence"})
+	TasksDelayed = prometheus.NewCounter(prometheus.CounterOpts{
+		Subsystem: "scheduler",
+		Name:      "tasks_delayed",
+		Help:      "Number of times the launch of a task has been delayed",
+	})
+	TasksRunning = prometheus.NewGauge(prometheus.GaugeOpts{
+		Subsystem: "scheduler",
+		Name:      "tasks_running",
+		Help:      "Number of tasks currently running",
+	})
+	QueueSize = prometheus.NewGauge(prometheus.GaugeOpts{
+		Subsystem: "scheduler",
+		Name:      "queue_size",
+		Help:      "Number of tasks in the queue",
+	})
+)

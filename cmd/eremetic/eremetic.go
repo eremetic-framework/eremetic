@@ -13,7 +13,7 @@ import (
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/boltdb"
 	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/scheduler"
+	"github.com/klarna/eremetic/mesos"
 	"github.com/klarna/eremetic/server"
 	"github.com/klarna/eremetic/version"
 	"github.com/klarna/eremetic/zk"
@@ -39,16 +39,16 @@ func setupLogging(logFormat, logLevel string) {
 }
 
 func setupMetrics() {
-	prometheus.MustRegister(scheduler.TasksCreated)
-	prometheus.MustRegister(scheduler.TasksLaunched)
-	prometheus.MustRegister(scheduler.TasksTerminated)
-	prometheus.MustRegister(scheduler.TasksDelayed)
-	prometheus.MustRegister(scheduler.TasksRunning)
-	prometheus.MustRegister(scheduler.QueueSize)
+	prometheus.MustRegister(mesos.TasksCreated)
+	prometheus.MustRegister(mesos.TasksLaunched)
+	prometheus.MustRegister(mesos.TasksTerminated)
+	prometheus.MustRegister(mesos.TasksDelayed)
+	prometheus.MustRegister(mesos.TasksRunning)
+	prometheus.MustRegister(mesos.QueueSize)
 }
 
-func getSchedulerSettings(config *config.Config) *scheduler.Settings {
-	return &scheduler.Settings{
+func getSchedulerSettings(config *config.Config) *mesos.Settings {
+	return &mesos.Settings{
 		MaxQueueSize:     config.QueueSize,
 		Master:           config.Master,
 		FrameworkID:      config.FrameworkID,
@@ -71,17 +71,17 @@ func main() {
 
 	setupLogging(config.LogFormat, config.LogLevel)
 	setupMetrics()
-	db, err := NewDB(config.DatabaseDriver, config.DatabasePath)
 
+	db, err := NewDB(config.DatabaseDriver, config.DatabasePath)
 	if err != nil {
 		logrus.WithError(err).Fatal("Unable to set up database.")
 	}
 	defer db.Close()
 
-	schedulerSettings := getSchedulerSettings(config)
-	sched := scheduler.Create(schedulerSettings, db)
+	sched := mesos.NewScheduler(config.QueueSize, db)
+
 	go func() {
-		scheduler.Run(sched, schedulerSettings)
+		sched.Run(getSchedulerSettings(config))
 		manners.Close()
 	}()
 
@@ -101,13 +101,14 @@ func main() {
 	router := server.NewRouter(sched, config, db)
 
 	bind := fmt.Sprintf("%s:%d", config.Address, config.Port)
+
 	logrus.WithFields(logrus.Fields{
 		"version": version.Version,
 		"address": config.Address,
 		"port":    config.Port,
 	}).Infof("Launching Eremetic version %s!\nListening to %s", version.Version, bind)
-	err = manners.ListenAndServe(bind, router)
 
+	err = manners.ListenAndServe(bind, router)
 	if err != nil {
 		logrus.WithError(err).Fatal("Unrecoverable error")
 	}

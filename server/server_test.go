@@ -15,7 +15,6 @@ import (
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/config"
 	"github.com/klarna/eremetic/mock"
-	"github.com/klarna/eremetic/scheduler"
 )
 
 func TestServer(t *testing.T) {
@@ -46,7 +45,7 @@ func TestServer(t *testing.T) {
 			Convey("QueueFull", func() {
 				sched := mock.Scheduler{
 					ScheduleTaskFn: func(req eremetic.Request) (string, error) {
-						return "", scheduler.ErrQueueFull
+						return "", eremetic.ErrQueueFull
 					},
 				}
 

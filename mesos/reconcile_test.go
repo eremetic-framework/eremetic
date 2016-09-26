@@ -1,8 +1,6 @@
-package scheduler
+package mesos
 
 import (
-	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -10,17 +8,10 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/boltdb"
 )
 
 func TestReconcile(t *testing.T) {
-	dir, _ := os.Getwd()
-	db, err := boltdb.NewTaskDB(fmt.Sprintf("%s/../db/test.db", dir))
-	if err != nil {
-		t.Fatal(err)
-	}
-	db.Clean()
-	defer db.Close()
+	db := eremetic.NewDefaultTaskDB()
 
 	maxReconciliationDelay = 1
 

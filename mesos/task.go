@@ -1,14 +1,13 @@
-package scheduler
+package mesos
 
 import (
-	"github.com/golang/protobuf/proto"
-	mesos "github.com/mesos/mesos-go/mesosproto"
-	"github.com/mesos/mesos-go/mesosutil"
-
+	"github.com/gogo/protobuf/proto"
 	"github.com/klarna/eremetic"
+	"github.com/mesos/mesos-go/mesosproto"
+	"github.com/mesos/mesos-go/mesosutil"
 )
 
-func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mesos.TaskInfo) {
+func createTaskInfo(task eremetic.Task, offer *mesosproto.Offer) (eremetic.Task, *mesosproto.TaskInfo) {
 	task.FrameworkId = *offer.FrameworkId.Value
 	task.SlaveId = *offer.SlaveId.Value
 	task.Hostname = *offer.Hostname
@@ -17,22 +16,22 @@ func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mes
 
 	portMapping, portResources := buildPorts(task, offer)
 
-	taskInfo := &mesos.TaskInfo{
-		TaskId:  &mesos.TaskID{Value: proto.String(task.ID)},
+	taskInfo := &mesosproto.TaskInfo{
+		TaskId:  &mesosproto.TaskID{Value: proto.String(task.ID)},
 		SlaveId: offer.SlaveId,
 		Name:    proto.String(task.Name),
 		Command: buildCommandInfo(task),
-		Container: &mesos.ContainerInfo{
-			Type: mesos.ContainerInfo_DOCKER.Enum(),
-			Docker: &mesos.ContainerInfo_DockerInfo{
+		Container: &mesosproto.ContainerInfo{
+			Type: mesosproto.ContainerInfo_DOCKER.Enum(),
+			Docker: &mesosproto.ContainerInfo_DockerInfo{
 				Image:          proto.String(task.Image),
 				ForcePullImage: proto.Bool(task.ForcePullImage),
 				PortMappings:   portMapping,
-				Network:        mesos.ContainerInfo_DockerInfo_BRIDGE.Enum(),
+				Network:        mesosproto.ContainerInfo_DockerInfo_BRIDGE.Enum(),
 			},
 			Volumes: buildVolumes(task),
 		},
-		Resources: []*mesos.Resource{
+		Resources: []*mesosproto.Resource{
 			mesosutil.NewScalarResource("cpus", task.TaskCPUs),
 			mesosutil.NewScalarResource("mem", task.TaskMem),
 			mesosutil.NewRangesResource("ports", portResources),
@@ -41,22 +40,22 @@ func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mes
 	return task, taskInfo
 }
 
-func buildEnvironment(task eremetic.Task) []*mesos.Environment_Variable {
-	var environment []*mesos.Environment_Variable
+func buildEnvironment(task eremetic.Task) []*mesosproto.Environment_Variable {
+	var environment []*mesosproto.Environment_Variable
 	for k, v := range task.Environment {
-		environment = append(environment, &mesos.Environment_Variable{
+		environment = append(environment, &mesosproto.Environment_Variable{
 			Name:  proto.String(k),
 			Value: proto.String(v),
 		})
 	}
 	for k, v := range task.MaskedEnvironment {
-		environment = append(environment, &mesos.Environment_Variable{
+		environment = append(environment, &mesosproto.Environment_Variable{
 			Name:  proto.String(k),
 			Value: proto.String(v),
 		})
 	}
 
-	environment = append(environment, &mesos.Environment_Variable{
+	environment = append(environment, &mesosproto.Environment_Variable{
 		Name:  proto.String("MESOS_TASK_ID"),
 		Value: proto.String(task.ID),
 	})
@@ -64,11 +63,11 @@ func buildEnvironment(task eremetic.Task) []*mesos.Environment_Variable {
 	return environment
 }
 
-func buildVolumes(task eremetic.Task) []*mesos.Volume {
-	var volumes []*mesos.Volume
+func buildVolumes(task eremetic.Task) []*mesosproto.Volume {
+	var volumes []*mesosproto.Volume
 	for _, v := range task.Volumes {
-		volumes = append(volumes, &mesos.Volume{
-			Mode:          mesos.Volume_RW.Enum(),
+		volumes = append(volumes, &mesosproto.Volume{
+			Mode:          mesosproto.Volume_RW.Enum(),
 			ContainerPath: proto.String(v.ContainerPath),
 			HostPath:      proto.String(v.HostPath),
 		})
@@ -77,9 +76,9 @@ func buildVolumes(task eremetic.Task) []*mesos.Volume {
 	return volumes
 }
 
-func buildPorts(task eremetic.Task, offer *mesos.Offer) ([]*mesos.ContainerInfo_DockerInfo_PortMapping, []*mesos.Value_Range) {
-	var portResources []*mesos.Value_Range
-	var portMapping []*mesos.ContainerInfo_DockerInfo_PortMapping
+func buildPorts(task eremetic.Task, offer *mesosproto.Offer) ([]*mesosproto.ContainerInfo_DockerInfo_PortMapping, []*mesosproto.Value_Range) {
+	var portResources []*mesosproto.Value_Range
+	var portMapping []*mesosproto.ContainerInfo_DockerInfo_PortMapping
 
 	if len(task.Ports) > 0 {
 		lastIndex := len(task.Ports)
@@ -115,7 +114,7 @@ func buildPorts(task eremetic.Task, offer *mesos.Offer) ([]*mesos.ContainerInfo_
 
 					ask_port.HostPort = uint32(portnumber)
 
-					portMapping = append(portMapping, &mesos.ContainerInfo_DockerInfo_PortMapping{
+					portMapping = append(portMapping, &mesosproto.ContainerInfo_DockerInfo_PortMapping{
 						ContainerPort: proto.Uint32(ask_port.ContainerPort),
 						HostPort:      proto.Uint32(ask_port.HostPort),
 						Protocol:      proto.String(ask_port.Protocol),
@@ -132,10 +131,10 @@ func buildPorts(task eremetic.Task, offer *mesos.Offer) ([]*mesos.ContainerInfo_
 	return portMapping, portResources
 }
 
-func buildURIs(task eremetic.Task) []*mesos.CommandInfo_URI {
-	var uris []*mesos.CommandInfo_URI
+func buildURIs(task eremetic.Task) []*mesosproto.CommandInfo_URI {
+	var uris []*mesosproto.CommandInfo_URI
 	for _, v := range task.FetchURIs {
-		uris = append(uris, &mesos.CommandInfo_URI{
+		uris = append(uris, &mesosproto.CommandInfo_URI{
 			Value:      proto.String(v.URI),
 			Extract:    proto.Bool(v.Extract),
 			Executable: proto.Bool(v.Executable),
@@ -146,10 +145,10 @@ func buildURIs(task eremetic.Task) []*mesos.CommandInfo_URI {
 	return uris
 }
 
-func buildCommandInfo(task eremetic.Task) *mesos.CommandInfo {
-	commandInfo := &mesos.CommandInfo{
+func buildCommandInfo(task eremetic.Task) *mesosproto.CommandInfo {
+	commandInfo := &mesosproto.CommandInfo{
 		User: proto.String(task.User),
-		Environment: &mesos.Environment{
+		Environment: &mesosproto.Environment{
 			Variables: buildEnvironment(task),
 		},
 		Uris: buildURIs(task),

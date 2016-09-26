@@ -1,10 +1,10 @@
-package scheduler
+package mesos
 
 import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	mesos "github.com/mesos/mesos-go/mesosproto"
+	"github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -12,19 +12,19 @@ import (
 )
 
 // Optional attributes can be added.
-func offer(id string, cpu float64, mem float64, attributes ...*mesos.Attribute) *mesos.Offer {
-	return &mesos.Offer{
-		Id: &mesos.OfferID{
+func offer(id string, cpu float64, mem float64, attributes ...*mesosproto.Attribute) *mesosproto.Offer {
+	return &mesosproto.Offer{
+		Id: &mesosproto.OfferID{
 			Value: proto.String(id),
 		},
-		FrameworkId: &mesos.FrameworkID{
+		FrameworkId: &mesosproto.FrameworkID{
 			Value: proto.String("framework-1234"),
 		},
-		SlaveId: &mesos.SlaveID{
+		SlaveId: &mesosproto.SlaveID{
 			Value: proto.String("slave-1234"),
 		},
 		Hostname: proto.String("localhost"),
-		Resources: []*mesos.Resource{
+		Resources: []*mesosproto.Resource{
 			mesosutil.NewScalarResource("cpus", cpu),
 			mesosutil.NewScalarResource("mem", mem),
 		},
@@ -34,26 +34,26 @@ func offer(id string, cpu float64, mem float64, attributes ...*mesos.Attribute) 
 
 func TestMatch(t *testing.T) {
 	offerA := offer("offer-a", 0.6, 200.0,
-		&mesos.Attribute{
+		&mesosproto.Attribute{
 			Name: proto.String("role"),
-			Type: mesos.Value_TEXT.Enum(),
-			Text: &mesos.Value_Text{
+			Type: mesosproto.Value_TEXT.Enum(),
+			Text: &mesosproto.Value_Text{
 				Value: proto.String("badassmofo"),
 			},
 		},
-		&mesos.Attribute{
+		&mesosproto.Attribute{
 			Name: proto.String("node_name"),
-			Type: mesos.Value_TEXT.Enum(),
-			Text: &mesos.Value_Text{
+			Type: mesosproto.Value_TEXT.Enum(),
+			Text: &mesosproto.Value_Text{
 				Value: proto.String("node1"),
 			},
 		},
 	)
 	offerB := offer("offer-b", 1.8, 512.0,
-		&mesos.Attribute{
+		&mesosproto.Attribute{
 			Name: proto.String("node_name"),
-			Type: mesos.Value_TEXT.Enum(),
-			Text: &mesos.Value_Text{
+			Type: mesosproto.Value_TEXT.Enum(),
+			Text: &mesosproto.Value_Text{
 				Value: proto.String("node2"),
 			},
 		},
@@ -118,7 +118,7 @@ func TestMatch(t *testing.T) {
 					TaskCPUs: 0.8,
 					TaskMem:  128.0,
 				}
-				offer, others := matchOffer(task, []*mesos.Offer{offerA, offerB})
+				offer, others := matchOffer(task, []*mesosproto.Offer{offerA, offerB})
 
 				So(offer, ShouldEqual, offerB)
 				So(others, ShouldHaveLength, 1)
@@ -130,7 +130,7 @@ func TestMatch(t *testing.T) {
 					TaskCPUs: 2.0,
 					TaskMem:  128.0,
 				}
-				offer, others := matchOffer(task, []*mesos.Offer{offerA, offerB})
+				offer, others := matchOffer(task, []*mesosproto.Offer{offerA, offerB})
 
 				So(offer, ShouldBeNil)
 				So(others, ShouldHaveLength, 2)
@@ -141,7 +141,7 @@ func TestMatch(t *testing.T) {
 					TaskCPUs: 0.2,
 					TaskMem:  712.0,
 				}
-				offer, others := matchOffer(task, []*mesos.Offer{offerA, offerB})
+				offer, others := matchOffer(task, []*mesosproto.Offer{offerA, offerB})
 
 				So(offer, ShouldBeNil)
 				So(others, ShouldHaveLength, 2)
@@ -161,7 +161,7 @@ func TestMatch(t *testing.T) {
 						},
 					},
 				}
-				offer, others := matchOffer(task, []*mesos.Offer{offerA, offerB})
+				offer, others := matchOffer(task, []*mesosproto.Offer{offerA, offerB})
 
 				So(offer, ShouldEqual, offerB)
 				So(others, ShouldHaveLength, 1)
@@ -180,7 +180,7 @@ func TestMatch(t *testing.T) {
 						},
 					},
 				}
-				offer, others := matchOffer(task, []*mesos.Offer{offerA, offerB})
+				offer, others := matchOffer(task, []*mesosproto.Offer{offerA, offerB})
 
 				So(offer, ShouldBeNil)
 				So(others, ShouldHaveLength, 2)
@@ -189,11 +189,11 @@ func TestMatch(t *testing.T) {
 			Convey("Match slave with mulitple attributes", func() {
 				// Build two new offers, both with the same role as offerA.
 				offerC := offer("offer-c", 0.6, 200.0,
-					&mesos.Attribute{Name: proto.String("role"), Type: mesos.Value_TEXT.Enum(), Text: &mesos.Value_Text{Value: proto.String("badassmofo")}},
-					&mesos.Attribute{Name: proto.String("node_name"), Type: mesos.Value_TEXT.Enum(), Text: &mesos.Value_Text{Value: proto.String("node3")}},
+					&mesosproto.Attribute{Name: proto.String("role"), Type: mesosproto.Value_TEXT.Enum(), Text: &mesosproto.Value_Text{Value: proto.String("badassmofo")}},
+					&mesosproto.Attribute{Name: proto.String("node_name"), Type: mesosproto.Value_TEXT.Enum(), Text: &mesosproto.Value_Text{Value: proto.String("node3")}},
 				)
 				offerD := offer("offer-d", 0.6, 200.0,
-					&mesos.Attribute{Name: proto.String("role"), Type: mesos.Value_TEXT.Enum(), Text: &mesos.Value_Text{Value: proto.String("badassmofo")}},
+					&mesosproto.Attribute{Name: proto.String("role"), Type: mesosproto.Value_TEXT.Enum(), Text: &mesosproto.Value_Text{Value: proto.String("badassmofo")}},
 				)
 
 				task := eremetic.Task{
@@ -212,7 +212,7 @@ func TestMatch(t *testing.T) {
 				}
 				// Specifically add C last, our expected, so that we ensure
 				// the other mocks do not match first.
-				offer, others := matchOffer(task, []*mesos.Offer{offerA, offerD, offerC})
+				offer, others := matchOffer(task, []*mesosproto.Offer{offerA, offerD, offerC})
 
 				So(offer, ShouldEqual, offerC)
 				So(others, ShouldHaveLength, 2)

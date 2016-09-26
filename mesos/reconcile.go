@@ -1,12 +1,12 @@
-package scheduler
+package mesos
 
 import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
-	mesos "github.com/mesos/mesos-go/mesosproto"
-	sched "github.com/mesos/mesos-go/scheduler"
+	"github.com/mesos/mesos-go/mesosproto"
+	mesossched "github.com/mesos/mesos-go/scheduler"
 
 	"github.com/klarna/eremetic"
 )
@@ -24,7 +24,7 @@ func (r *Reconcile) Cancel() {
 	close(r.cancel)
 }
 
-func ReconcileTasks(driver sched.SchedulerDriver, database eremetic.TaskDB) *Reconcile {
+func ReconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB) *Reconcile {
 	cancel := make(chan struct{})
 	done := make(chan struct{})
 
@@ -67,12 +67,12 @@ func ReconcileTasks(driver sched.SchedulerDriver, database eremetic.TaskDB) *Rec
 
 				// Send reconciliation request
 				if len(tasks) > 0 {
-					var statuses []*mesos.TaskStatus
+					var statuses []*mesosproto.TaskStatus
 					for _, t := range tasks {
-						statuses = append(statuses, &mesos.TaskStatus{
-							State:   mesos.TaskState_TASK_STAGING.Enum(),
-							TaskId:  &mesos.TaskID{Value: proto.String(t.ID)},
-							SlaveId: &mesos.SlaveID{Value: proto.String(t.SlaveId)},
+						statuses = append(statuses, &mesosproto.TaskStatus{
+							State:   mesosproto.TaskState_TASK_STAGING.Enum(),
+							TaskId:  &mesosproto.TaskID{Value: proto.String(t.ID)},
+							SlaveId: &mesosproto.SlaveID{Value: proto.String(t.SlaveId)},
 						})
 					}
 					logrus.WithField("reconciliation_request_count", c).Debug("Sending reconciliation request")

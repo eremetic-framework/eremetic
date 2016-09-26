@@ -1,15 +1,14 @@
-package scheduler
+package mesos
 
 import (
 	"testing"
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	mesos "github.com/mesos/mesos-go/mesosproto"
+	"github.com/klarna/eremetic"
+	"github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
-
-	"github.com/klarna/eremetic"
 )
 
 func TestTask(t *testing.T) {
@@ -33,19 +32,19 @@ func TestTask(t *testing.T) {
 		}
 
 		portres := "ports"
-		offer := mesos.Offer{
-			FrameworkId: &mesos.FrameworkID{
+		offer := mesosproto.Offer{
+			FrameworkId: &mesosproto.FrameworkID{
 				Value: proto.String("framework-id"),
 			},
-			SlaveId: &mesos.SlaveID{
+			SlaveId: &mesosproto.SlaveID{
 				Value: proto.String("slave-id"),
 			},
 			Hostname: proto.String("hostname"),
-			Resources: []*mesos.Resource{&mesos.Resource{
+			Resources: []*mesosproto.Resource{&mesosproto.Resource{
 				Name: &portres,
-				Type: mesos.Value_RANGES.Enum(),
-				Ranges: &mesos.Value_Ranges{
-					Range: []*mesos.Value_Range{
+				Type: mesosproto.Value_RANGES.Enum(),
+				Ranges: &mesosproto.Value_Ranges{
+					Range: []*mesosproto.Value_Range{
 						mesosutil.NewValueRange(31000, 31010),
 					},
 				},
@@ -75,7 +74,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("Given a volume and environment", func() {
-			volumes := []eremetic.Volume{eremetic.Volume{
+			volumes := []eremetic.Volume{{
 				ContainerPath: "/var/www",
 				HostPath:      "/var/www",
 			}}
@@ -121,7 +120,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("Given archive to fetch", func() {
-			URI := []eremetic.URI{eremetic.URI{
+			URI := []eremetic.URI{{
 				URI:     "http://foobar.local/cats.zip",
 				Extract: true,
 			}}
@@ -137,7 +136,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("Given archive to fetch and cache", func() {
-			URI := []eremetic.URI{eremetic.URI{
+			URI := []eremetic.URI{{
 				URI:     "http://foobar.local/cats.zip",
 				Extract: true,
 				Cache:   true,
@@ -154,7 +153,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("Given image to fetch", func() {
-			URI := []eremetic.URI{eremetic.URI{
+			URI := []eremetic.URI{{
 				URI: "http://foobar.local/cats.jpeg",
 			}}
 			eremeticTask.FetchURIs = URI
@@ -169,7 +168,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("Given script to fetch", func() {
-			URI := []eremetic.URI{eremetic.URI{
+			URI := []eremetic.URI{{
 				URI:        "http://foobar.local/cats.sh",
 				Executable: true,
 			}}

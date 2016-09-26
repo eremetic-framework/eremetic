@@ -1,14 +1,14 @@
-package scheduler
+package mesos
 
 import (
 	"testing"
 
-	mesos "github.com/mesos/mesos-go/mesosproto"
+	"github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func mockStatusWithSandbox() *mesos.TaskStatus {
-	return &mesos.TaskStatus{
+func mockStatusWithSandbox() *mesosproto.TaskStatus {
+	return &mesosproto.TaskStatus{
 		Data: []byte(`[
                     {
                       "Mounts": [
@@ -24,8 +24,8 @@ func mockStatusWithSandbox() *mesos.TaskStatus {
 	}
 }
 
-func mockStatusWithoutSandbox() *mesos.TaskStatus {
-	return &mesos.TaskStatus{
+func mockStatusWithoutSandbox() *mesosproto.TaskStatus {
+	return &mesosproto.TaskStatus{
 		Data: []byte(`[
                     {
                       "Mounts": [
@@ -41,8 +41,8 @@ func mockStatusWithoutSandbox() *mesos.TaskStatus {
 	}
 }
 
-func mockStatusNoMounts() *mesos.TaskStatus {
-	return &mesos.TaskStatus{
+func mockStatusNoMounts() *mesosproto.TaskStatus {
+	return &mesosproto.TaskStatus{
 		Data: []byte(`[
                     {
                       "Mounts": []
@@ -75,7 +75,7 @@ func TestExtractor(t *testing.T) {
 		})
 
 		Convey("Empty data", func() {
-			sandbox, err := extractSandboxPath(&mesos.TaskStatus{Data: []byte("")})
+			sandbox, err := extractSandboxPath(&mesosproto.TaskStatus{Data: []byte("")})
 			So(sandbox, ShouldBeEmpty)
 			So(err, ShouldBeNil)
 		})
