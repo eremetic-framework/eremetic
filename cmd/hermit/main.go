@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"errors"
 	"flag"
 	"fmt"
 	"math"
@@ -160,7 +161,9 @@ func (cmd *taskCommand) Run() {
 }
 
 type listCommand struct {
-	User string
+	Filter   string
+	NumTasks int
+	Quiet    bool
 
 	flags  *flag.FlagSet
 	client *client.Client
@@ -174,14 +177,109 @@ func newListCommand(c *client.Client) *listCommand {
 }
 
 func (cmd *listCommand) Parse(args []string) {
-	cmd.flags.StringVar(&cmd.User, "user", "", "List tasks for a given user")
+	filters := []string{
+		"min_age=<duration>",
+		"max_age=<duration>",
+		"status=<string>",
+		"user=<string>",
+	}
+	filterDesc := "\n\t\t" + strings.Join(filters, "\n\t\t")
+
+	cmd.flags.StringVar(&cmd.Filter, "filter", "", `Filter output based on conditions (example: "min_age=5m,status=running"):`+filterDesc)
+	cmd.flags.IntVar(&cmd.NumTasks, "n", -1, "Show n last scheduled tasks")
+	cmd.flags.BoolVar(&cmd.Quiet, "q", false, "Only display task IDs")
 	cmd.flags.Parse(args)
+}
+
+func minAgeFilter(d time.Duration) func(t eremetic.Task) bool {
+	return func(t eremetic.Task) bool {
+		since := time.Now().Add(-d)
+		return t.LastUpdated().Before(since)
+	}
+}
+
+func maxAgeFilter(d time.Duration) func(t eremetic.Task) bool {
+	return func(t eremetic.Task) bool {
+		since := time.Now().Add(-d)
+		return t.LastUpdated().After(since)
+	}
+}
+
+func statusFilter(s string) func(t eremetic.Task) bool {
+	return func(t eremetic.Task) bool {
+		return currentStatus(t.Status) == s
+	}
+}
+
+func userFilter(user string) func(t eremetic.Task) bool {
+	return func(t eremetic.Task) bool {
+		return t.User == user
+	}
+}
+
+func filterTasks(tasks []eremetic.Task, f func(t eremetic.Task) bool) []eremetic.Task {
+	var res []eremetic.Task
+	for _, t := range tasks {
+		if f(t) {
+			res = append(res, t)
+		}
+	}
+	return res
 }
 
 func (cmd *listCommand) Run() {
 	tasks, err := cmd.client.Tasks()
 	if err != nil {
 		exitWithError(err)
+	}
+
+	if cmd.Filter != "" {
+		kvs := strings.Split(cmd.Filter, ",")
+		for _, kv := range kvs {
+			kvp := strings.Split(kv, "=")
+
+			if len(kv) < 2 {
+				exitWithError(errors.New("invalid filter"))
+			}
+
+			switch kvp[0] {
+			case "min_age":
+				d, err := time.ParseDuration(kvp[1])
+				if err != nil {
+					exitWithError(err)
+				}
+
+				tasks = filterTasks(tasks, minAgeFilter(d))
+			case "max_age":
+				d, err := time.ParseDuration(kvp[1])
+				if err != nil {
+					exitWithError(err)
+				}
+
+				tasks = filterTasks(tasks, maxAgeFilter(d))
+			case "status":
+				tasks = filterTasks(tasks, statusFilter(kvp[1]))
+			case "user":
+				tasks = filterTasks(tasks, userFilter(kvp[1]))
+			}
+		}
+	}
+
+	if cmd.NumTasks > 0 && cmd.NumTasks < len(tasks) {
+		tasks = tasks[:cmd.NumTasks]
+	}
+
+	sort.Sort(sort.Reverse(ByLastUpdated(tasks)))
+
+	printTasks(tasks, cmd.Quiet)
+}
+
+func printTasks(tasks []eremetic.Task, quiet bool) {
+	if quiet {
+		for _, t := range tasks {
+			fmt.Println(t.ID)
+		}
+		return
 	}
 
 	w := new(tabwriter.Writer)
@@ -193,13 +291,7 @@ func (cmd *listCommand) Run() {
 
 	fmt.Fprintln(w, strings.Join(headers, "\t"))
 
-	sort.Sort(sort.Reverse(ByLastUpdated(tasks)))
-
 	for _, tt := range tasks {
-		if cmd.User != "" && tt.User != cmd.User {
-			continue
-		}
-
 		fields := []string{
 			tt.ID, tt.Name, currentStatus(tt.Status), lastUpdated(tt.LastUpdated()), tt.User, tt.Image, fmt.Sprintf("%q", tt.Command),
 		}
@@ -207,7 +299,6 @@ func (cmd *listCommand) Run() {
 		fmt.Fprintln(w, strings.Join(fields, "\t"))
 	}
 
-	fmt.Fprintln(w)
 	w.Flush()
 }
 
@@ -242,7 +333,7 @@ func (cmd *logsCommand) Run() {
 		exitWithError(err)
 	}
 
-	fmt.Printf("%s\n", b)
+	fmt.Printf("%s", b)
 }
 
 type versionCommand struct {
