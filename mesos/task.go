@@ -172,9 +172,11 @@ func buildCommandInfo(task eremetic.Task, env *mesosproto.Environment) *mesospro
 	}
 
 	if task.Command != "" {
+		commandInfo.Shell = proto.Bool(true)
 		commandInfo.Value = &task.Command
 	} else {
 		commandInfo.Shell = proto.Bool(false)
+		commandInfo.Arguments = task.Args
 	}
 
 	return commandInfo
