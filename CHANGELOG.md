@@ -1,5 +1,14 @@
 ## Changelog
 
+### v0.25.0 / 2016-09-28
+- [#143](https://github.com/klarna/eremetic/pull/143) Add host ports to task environment (@marcusolsson)
+- [#144](https://github.com/klarna/eremetic/pull/144) Add usage help for hermit (@alde)
+- [#137](https://github.com/klarna/eremetic/pull/137) hermit: Allow filtering output (@marcusolsson, @alde)
+- [#142](https://github.com/klarna/eremetic/pull/142) Merge scheduler into eremetic pkg (@marcusolsson)
+- [#141](https://github.com/klarna/eremetic/pull/141) Update readme with goreportcard (@alde)
+- [#133](https://github.com/klarna/eremetic/pull/133) Add hermit cli (@marcusolsson)
+- [#136](https://github.com/klarna/eremetic/pull/136) List tasks empty db (@keis)
+
 ### v0.24.1 / 2016-09-12
 - [#134](https://github.com/klarna/eremetic/pull/134) Actually build the binary with make docker (@alde)
 
