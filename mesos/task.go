@@ -1,10 +1,14 @@
 package mesos
 
 import (
+	"fmt"
+
 	"github.com/gogo/protobuf/proto"
-	"github.com/klarna/eremetic"
+
 	"github.com/mesos/mesos-go/mesosproto"
 	"github.com/mesos/mesos-go/mesosutil"
+
+	"github.com/klarna/eremetic"
 )
 
 func createTaskInfo(task eremetic.Task, offer *mesosproto.Offer) (eremetic.Task, *mesosproto.TaskInfo) {
@@ -15,12 +19,13 @@ func createTaskInfo(task eremetic.Task, offer *mesosproto.Offer) (eremetic.Task,
 	task.AgentPort = offer.GetUrl().GetAddress().GetPort()
 
 	portMapping, portResources := buildPorts(task, offer)
+	env := buildEnvironment(task, portMapping)
 
 	taskInfo := &mesosproto.TaskInfo{
 		TaskId:  &mesosproto.TaskID{Value: proto.String(task.ID)},
 		SlaveId: offer.SlaveId,
 		Name:    proto.String(task.Name),
-		Command: buildCommandInfo(task),
+		Command: buildCommandInfo(task, env),
 		Container: &mesosproto.ContainerInfo{
 			Type: mesosproto.ContainerInfo_DOCKER.Enum(),
 			Docker: &mesosproto.ContainerInfo_DockerInfo{
@@ -40,7 +45,7 @@ func createTaskInfo(task eremetic.Task, offer *mesosproto.Offer) (eremetic.Task,
 	return task, taskInfo
 }
 
-func buildEnvironment(task eremetic.Task) []*mesosproto.Environment_Variable {
+func buildEnvironment(task eremetic.Task, portMappings []*mesosproto.ContainerInfo_DockerInfo_PortMapping) *mesosproto.Environment {
 	var environment []*mesosproto.Environment_Variable
 	for k, v := range task.Environment {
 		environment = append(environment, &mesosproto.Environment_Variable{
@@ -54,13 +59,27 @@ func buildEnvironment(task eremetic.Task) []*mesosproto.Environment_Variable {
 			Value: proto.String(v),
 		})
 	}
+	for i, m := range portMappings {
+		environment = append(environment, &mesosproto.Environment_Variable{
+			Name:  proto.String(fmt.Sprintf("PORT%d", i)),
+			Value: proto.String(fmt.Sprintf("%d", *m.HostPort)),
+		})
+	}
+	if len(portMappings) > 0 {
+		environment = append(environment, &mesosproto.Environment_Variable{
+			Name:  proto.String("PORT"),
+			Value: proto.String(fmt.Sprintf("%d", *portMappings[0].HostPort)),
+		})
+	}
 
 	environment = append(environment, &mesosproto.Environment_Variable{
 		Name:  proto.String("MESOS_TASK_ID"),
 		Value: proto.String(task.ID),
 	})
 
-	return environment
+	return &mesosproto.Environment{
+		Variables: environment,
+	}
 }
 
 func buildVolumes(task eremetic.Task) []*mesosproto.Volume {
@@ -77,58 +96,58 @@ func buildVolumes(task eremetic.Task) []*mesosproto.Volume {
 }
 
 func buildPorts(task eremetic.Task, offer *mesosproto.Offer) ([]*mesosproto.ContainerInfo_DockerInfo_PortMapping, []*mesosproto.Value_Range) {
-	var portResources []*mesosproto.Value_Range
-	var portMapping []*mesosproto.ContainerInfo_DockerInfo_PortMapping
+	var resources []*mesosproto.Value_Range
+	var mappings []*mesosproto.ContainerInfo_DockerInfo_PortMapping
 
-	if len(task.Ports) > 0 {
-		lastIndex := len(task.Ports)
+	if len(task.Ports) == 0 {
+		return mappings, resources
+	}
 
-		for _, v := range offer.Resources {
-			if lastIndex == 0 {
+	leftToAssign := len(task.Ports)
+
+	for _, rsrc := range offer.Resources {
+		if *rsrc.Name != "ports" {
+			continue
+		}
+
+		for _, rng := range rsrc.Ranges.Range {
+			if leftToAssign == 0 {
 				break
 			}
 
-			if *v.Name != "ports" {
-				continue
-			}
+			start, end := *rng.Begin, *rng.Begin
 
-			for _, p_v := range v.Ranges.Range {
-				if lastIndex == 0 {
+			for hport := int(*rng.Begin); hport <= int(*rng.End); hport++ {
+				if leftToAssign == 0 {
 					break
 				}
 
-				startPort, endPort := *p_v.Begin, int(*p_v.Begin)
-				for portnumber := int(*p_v.Begin); portnumber <= int(*p_v.End); portnumber++ {
-					if lastIndex == 0 {
-						break
-					}
+				leftToAssign--
 
-					lastIndex--
-					ask_port := &task.Ports[lastIndex]
+				tport := &task.Ports[leftToAssign]
 
-					if ask_port.ContainerPort == 0 {
-						continue
-					}
-
-					endPort = portnumber + 1
-
-					ask_port.HostPort = uint32(portnumber)
-
-					portMapping = append(portMapping, &mesosproto.ContainerInfo_DockerInfo_PortMapping{
-						ContainerPort: proto.Uint32(ask_port.ContainerPort),
-						HostPort:      proto.Uint32(ask_port.HostPort),
-						Protocol:      proto.String(ask_port.Protocol),
-					})
-
+				if tport.ContainerPort == 0 {
+					continue
 				}
-				if int(startPort) != endPort {
-					portResources = append(portResources, mesosutil.NewValueRange(startPort, uint64(endPort)))
-				}
+
+				tport.HostPort = uint32(hport)
+
+				end = uint64(hport + 1)
+
+				mappings = append(mappings, &mesosproto.ContainerInfo_DockerInfo_PortMapping{
+					ContainerPort: proto.Uint32(tport.ContainerPort),
+					HostPort:      proto.Uint32(tport.HostPort),
+					Protocol:      proto.String(tport.Protocol),
+				})
+			}
+
+			if start != end {
+				resources = append(resources, mesosutil.NewValueRange(start, end))
 			}
 		}
 	}
 
-	return portMapping, portResources
+	return mappings, resources
 }
 
 func buildURIs(task eremetic.Task) []*mesosproto.CommandInfo_URI {
@@ -145,13 +164,11 @@ func buildURIs(task eremetic.Task) []*mesosproto.CommandInfo_URI {
 	return uris
 }
 
-func buildCommandInfo(task eremetic.Task) *mesosproto.CommandInfo {
+func buildCommandInfo(task eremetic.Task, env *mesosproto.Environment) *mesosproto.CommandInfo {
 	commandInfo := &mesosproto.CommandInfo{
-		User: proto.String(task.User),
-		Environment: &mesosproto.Environment{
-			Variables: buildEnvironment(task),
-		},
-		Uris: buildURIs(task),
+		User:        proto.String(task.User),
+		Environment: env,
+		Uris:        buildURIs(task),
 	}
 
 	if task.Command != "" {

@@ -117,6 +117,22 @@ func TestTask(t *testing.T) {
 			expected_range := mesosutil.NewValueRange(31000, 31001)
 			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetBegin(), ShouldEqual, expected_range.GetBegin())
 			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetEnd(), ShouldEqual, expected_range.GetEnd())
+
+			vars := taskInfo.GetCommand().GetEnvironment().GetVariables()
+
+			var foundPortVar, foundPort0Var bool
+			for _, v := range vars {
+				switch v.GetName() {
+				case "PORT":
+					So(v.GetValue(), ShouldEqual, "31000")
+					foundPortVar = true
+				case "PORT0":
+					So(v.GetValue(), ShouldEqual, "31000")
+					foundPort0Var = true
+				}
+			}
+			So(foundPortVar, ShouldBeTrue)
+			So(foundPort0Var, ShouldBeTrue)
 		})
 
 		Convey("Given archive to fetch", func() {

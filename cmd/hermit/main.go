@@ -88,6 +88,7 @@ type runCommand struct {
 	CPU    float64
 	Memory float64
 	Image  string
+	Port   uint
 
 	flags  *flag.FlagSet
 	client *client.Client
@@ -104,6 +105,7 @@ func (cmd *runCommand) Parse(args []string) {
 	cmd.flags.Float64Var(&cmd.CPU, "cpu", 0.1, "CPU shares to give to the task")
 	cmd.flags.Float64Var(&cmd.Memory, "mem", 128, "Memory in MB to give to the task")
 	cmd.flags.StringVar(&cmd.Image, "image", "busybox", "Image to use")
+	cmd.flags.UintVar(&cmd.Port, "port", 0, "Port for task to listen on")
 	cmd.flags.Parse(args)
 }
 
@@ -121,6 +123,12 @@ func (cmd *runCommand) Run() {
 		DockerImage: cmd.Image,
 		TaskCPUs:    cmd.CPU,
 		TaskMem:     cmd.Memory,
+		Ports: []eremetic.Port{
+			{
+				ContainerPort: uint32(cmd.Port),
+				Protocol:      "tcp",
+			},
+		},
 	}
 
 	if err := cmd.client.AddTask(r); err != nil {
