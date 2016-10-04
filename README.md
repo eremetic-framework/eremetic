@@ -38,6 +38,8 @@ JSON format:
   "force_pull_image": false,
   // String, command to run in the docker container
   "command": "echo date",
+  // Array of Strings, arguements to pass to the docker container entrypoint
+  "args": ["+%s"],
   // Array of Objects, volumes to mount in the container
   "volumes": [
     {

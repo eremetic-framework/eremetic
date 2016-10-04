@@ -97,6 +97,9 @@ definitions:
       command:
         type: string
         description: Command to run in the docker container
+      args:
+        type: array 
+        description: arguements to pass to the docker container entrypoint
       task_cpu:
         type: number
         description: Fractions of a CPU to request

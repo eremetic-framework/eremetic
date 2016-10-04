@@ -73,6 +73,7 @@ type Task struct {
 	TaskCPUs          float64           `json:"task_cpus"`
 	TaskMem           float64           `json:"task_mem"`
 	Command           string            `json:"command"`
+	Args              []string          `json:"args"`
 	User              string            `json:"user"`
 	Environment       map[string]string `json:"env"`
 	MaskedEnvironment map[string]string `json:"masked_env"`
@@ -132,6 +133,7 @@ type Request struct {
 	TaskMem           float64           `json:"task_mem"`
 	DockerImage       string            `json:"docker_image"`
 	Command           string            `json:"command"`
+	Args              []string          `json:"args"`
 	Volumes           []Volume          `json:"volumes"`
 	Ports             []Port            `json:"ports"`
 	Environment       map[string]string `json:"env"`
@@ -160,6 +162,7 @@ func NewTask(request Request, name string) (Task, error) {
 		Name:              name,
 		Status:            status,
 		Command:           request.Command,
+		Args:              request.Args,
 		User:              "root",
 		Environment:       request.Environment,
 		MaskedEnvironment: request.MaskedEnvironment,
