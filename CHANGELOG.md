@@ -1,5 +1,10 @@
 ## Changelog
 
+### v0.26.0 / 2016-10-04
+- [#149](https://github.com/klarna/eremetic/pull/149) Add port mapping when allocating unspecified port (@keis)
+- [#147](https://github.com/klarna/eremetic/pull/147) Fix linter errors (@marcusolsson)
+- [#146](https://github.com/klarna/eremetic/pull/146) Add Args (@Mongey)
+
 ### v0.25.0 / 2016-09-28
 - [#143](https://github.com/klarna/eremetic/pull/143) Add host ports to task environment (@marcusolsson)
 - [#144](https://github.com/klarna/eremetic/pull/144) Add usage help for hermit (@alde)
