@@ -125,12 +125,11 @@ func buildPorts(task eremetic.Task, offer *mesosproto.Offer) ([]*mesosproto.Cont
 				leftToAssign--
 
 				tport := &task.Ports[leftToAssign]
+				tport.HostPort = uint32(hport)
 
 				if tport.ContainerPort == 0 {
-					continue
+					tport.ContainerPort = tport.HostPort
 				}
-
-				tport.HostPort = uint32(hport)
 
 				end = uint64(hport + 1)
 
