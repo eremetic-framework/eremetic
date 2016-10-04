@@ -35,6 +35,12 @@ test-server: ${TOOLS}
 test-docker:
 	$(DOCKER_GOLANG_RUN_CMD) "make test"
 
+vet:
+	go vet ${PACKAGES}
+
+lint:
+	go list ./... | grep -v /vendor/ | grep -v assets | xargs -L1 golint -set_exit_status
+
 server/assets/assets.go: server/generate.go ${STATIC}
 	go generate github.com/klarna/eremetic/server
 

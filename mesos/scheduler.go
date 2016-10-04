@@ -48,7 +48,7 @@ type Scheduler struct {
 	shutdown chan struct{}
 
 	// Handle for current reconciliation job
-	reconcile *Reconcile
+	reconcile *reconciler
 
 	// Handler for storing tasks
 	database eremetic.TaskDB
@@ -82,11 +82,12 @@ func (s *Scheduler) Run(settings *Settings) {
 	logrus.Info("Exiting...")
 }
 
+// Reconcile reconciles the currently scheduled tasks.
 func (s *Scheduler) Reconcile(driver mesossched.SchedulerDriver) {
 	if s.reconcile != nil {
 		s.reconcile.Cancel()
 	}
-	s.reconcile = ReconcileTasks(driver, s.database)
+	s.reconcile = reconcileTasks(driver, s.database)
 }
 
 // Registered is called when the Scheduler is Registered
@@ -142,7 +143,7 @@ loop:
 
 			if offer == nil {
 				logrus.WithField("task_id", tid).Warn("Unable to find a matching offer")
-				TasksDelayed.Inc()
+				tasksDelayed.Inc()
 				go func() { s.tasks <- tid }()
 				break loop
 			}
@@ -154,13 +155,13 @@ loop:
 
 			t, task := createTaskInfo(t, offer)
 			t.UpdateStatus(eremetic.Status{
-				Status: eremetic.TaskState_TASK_STAGING,
+				Status: eremetic.TaskStaging,
 				Time:   time.Now().Unix(),
 			})
 			s.database.PutTask(&t)
 			driver.LaunchTasks([]*mesosproto.OfferID{offer.Id}, []*mesosproto.TaskInfo{task}, defaultFilter)
-			TasksLaunched.Inc()
-			QueueSize.Dec()
+			tasksLaunched.Inc()
+			queueSize.Dec()
 
 			continue
 		default:
@@ -192,11 +193,11 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 	if task.ID == "" {
 		task = eremetic.Task{
 			ID:      id,
-			SlaveId: status.SlaveId.GetValue(),
+			SlaveID: status.SlaveId.GetValue(),
 		}
 	}
 
-	sandboxPath, err := extractSandboxPath(status)
+	sandboxPath, err := extractSandboxPath(status.Data)
 	if err != nil {
 		logrus.WithError(err).Debug("Unable to extract sandbox path")
 	}
@@ -205,12 +206,12 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 		task.SandboxPath = sandboxPath
 	}
 
-	if newState == eremetic.TaskState_TASK_RUNNING && !task.IsRunning() {
-		TasksRunning.Inc()
+	if newState == eremetic.TaskRunning && !task.IsRunning() {
+		tasksRunning.Inc()
 	}
 
 	var shouldRetry bool
-	if newState == eremetic.TaskState_TASK_FAILED && !task.WasRunning() {
+	if newState == eremetic.TaskFailed && !task.WasRunning() {
 		if task.Retry >= maxRetries {
 			logrus.WithFields(logrus.Fields{
 				"task_id": id,
@@ -228,12 +229,12 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 		} else {
 			seq = "final"
 		}
-		TasksTerminated.With(prometheus.Labels{
+		tasksTerminated.With(prometheus.Labels{
 			"status":   string(newState),
 			"sequence": seq,
 		}).Inc()
 		if task.WasRunning() {
-			TasksRunning.Dec()
+			tasksRunning.Dec()
 		}
 	}
 
@@ -245,12 +246,12 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 	if shouldRetry {
 		logrus.WithField("task_id", id).Info("Re-scheduling task that never ran.")
 		task.UpdateStatus(eremetic.Status{
-			Status: eremetic.TaskState_TASK_QUEUED,
+			Status: eremetic.TaskQueued,
 			Time:   time.Now().Unix(),
 		})
 		task.Retry++
 		go func() {
-			QueueSize.Inc()
+			queueSize.Inc()
 			s.tasks <- id
 		}()
 	} else if eremetic.IsTerminal(newState) {
@@ -260,6 +261,7 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 	s.database.PutTask(&task)
 }
 
+// FrameworkMessage is invoked when an executor sends a message.
 func (s *Scheduler) FrameworkMessage(
 	driver mesossched.SchedulerDriver,
 	executorID *mesosproto.ExecutorID,
@@ -282,12 +284,17 @@ func (s *Scheduler) FrameworkMessage(
 	}
 }
 
+// OfferRescinded is invoked when an offer is no longer valid.
 func (s *Scheduler) OfferRescinded(_ mesossched.SchedulerDriver, offerID *mesosproto.OfferID) {
 	logrus.WithField("offer_id", offerID).Debug("Offer Rescinded")
 }
+
+// SlaveLost is invoked when a slave has been determined unreachable.
 func (s *Scheduler) SlaveLost(_ mesossched.SchedulerDriver, slaveID *mesosproto.SlaveID) {
 	logrus.WithField("slave_id", slaveID).Debug("Slave lost")
 }
+
+// ExecutorLost is invoked when an executor has exited/terminated.
 func (s *Scheduler) ExecutorLost(_ mesossched.SchedulerDriver, executorID *mesosproto.ExecutorID, slaveID *mesosproto.SlaveID, status int) {
 	logrus.WithFields(logrus.Fields{
 		"slave_id":    slaveID,
@@ -295,10 +302,13 @@ func (s *Scheduler) ExecutorLost(_ mesossched.SchedulerDriver, executorID *mesos
 	}).Debug("Executor on slave was lost")
 }
 
+// Error is invoked when there is an unrecoverable error in the scheduler or scheduler driver.
 func (s *Scheduler) Error(_ mesossched.SchedulerDriver, err string) {
 	logrus.WithError(errors.New(err)).Debug("Received an error")
 }
 
+// ScheduleTask tries to register a new task in the database to be scheduled.
+// If the queue is full the task will be dropped.
 func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	logrus.WithFields(logrus.Fields{
 		"docker_image":      request.DockerImage,
@@ -315,14 +325,15 @@ func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	select {
 	case s.tasks <- task.ID:
 		s.database.PutTask(&task)
-		TasksCreated.Inc()
-		QueueSize.Inc()
+		tasksCreated.Inc()
+		queueSize.Inc()
 		return task.ID, nil
 	case <-time.After(time.Duration(1) * time.Second):
 		return "", eremetic.ErrQueueFull
 	}
 }
 
+// Stop triggers a shutdown of the scheduler.
 func (s *Scheduler) Stop() {
 	close(s.shutdown)
 }
@@ -340,33 +351,49 @@ func nextID(s *Scheduler) string {
 	return string(b)
 }
 
+// RegisterMetrics registers mesos metrics to a prometheus Registerer.
+func RegisterMetrics(r prometheus.Registerer) error {
+	errs := []error{
+		r.Register(tasksCreated),
+		r.Register(tasksLaunched),
+		r.Register(tasksTerminated),
+		r.Register(tasksDelayed),
+		r.Register(tasksRunning),
+		r.Register(queueSize),
+	}
+	if len(errs) > 0 {
+		return errors.New("unable to register metrics")
+	}
+	return nil
+}
+
 var (
-	TasksCreated = prometheus.NewCounter(prometheus.CounterOpts{
+	tasksCreated = prometheus.NewCounter(prometheus.CounterOpts{
 		Subsystem: "scheduler",
 		Name:      "tasks_created",
 		Help:      "Number of tasks submitted to eremetic",
 	})
-	TasksLaunched = prometheus.NewCounter(prometheus.CounterOpts{
+	tasksLaunched = prometheus.NewCounter(prometheus.CounterOpts{
 		Subsystem: "scheduler",
 		Name:      "tasks_launched",
 		Help:      "Number of tasks launched by eremetic",
 	})
-	TasksTerminated = prometheus.NewCounterVec(prometheus.CounterOpts{
+	tasksTerminated = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Subsystem: "scheduler",
 		Name:      "tasks_terminated",
 		Help:      "Number of terminated tasks by terminal status",
 	}, []string{"status", "sequence"})
-	TasksDelayed = prometheus.NewCounter(prometheus.CounterOpts{
+	tasksDelayed = prometheus.NewCounter(prometheus.CounterOpts{
 		Subsystem: "scheduler",
 		Name:      "tasks_delayed",
 		Help:      "Number of times the launch of a task has been delayed",
 	})
-	TasksRunning = prometheus.NewGauge(prometheus.GaugeOpts{
+	tasksRunning = prometheus.NewGauge(prometheus.GaugeOpts{
 		Subsystem: "scheduler",
 		Name:      "tasks_running",
 		Help:      "Number of tasks currently running",
 	})
-	QueueSize = prometheus.NewGauge(prometheus.GaugeOpts{
+	queueSize = prometheus.NewGauge(prometheus.GaugeOpts{
 		Subsystem: "scheduler",
 		Name:      "queue_size",
 		Help:      "Number of tasks in the queue",

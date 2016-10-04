@@ -18,7 +18,7 @@ func TestReconcile(t *testing.T) {
 	Convey("ReconcileTasks", t, func() {
 		Convey("Finishes when there are no tasks", func() {
 			driver := NewMockScheduler()
-			r := ReconcileTasks(driver, db)
+			r := reconcileTasks(driver, db)
 
 			select {
 			case <-r.done:
@@ -35,7 +35,7 @@ func TestReconcile(t *testing.T) {
 					panic("mock error")
 				}
 				t.UpdateStatus(eremetic.Status{
-					Status: eremetic.TaskState_TASK_RUNNING,
+					Status: eremetic.TaskRunning,
 					Time:   time.Now().Unix() + 1,
 				})
 				db.PutTask(&t)
@@ -45,13 +45,13 @@ func TestReconcile(t *testing.T) {
 				ID: "1234",
 				Status: []eremetic.Status{
 					eremetic.Status{
-						Status: eremetic.TaskState_TASK_STAGING,
+						Status: eremetic.TaskStaging,
 						Time:   time.Now().Unix(),
 					},
 				},
 			})
 
-			r := ReconcileTasks(driver, db)
+			r := reconcileTasks(driver, db)
 
 			select {
 			case <-r.done:
@@ -67,13 +67,13 @@ func TestReconcile(t *testing.T) {
 				ID: "1234",
 				Status: []eremetic.Status{
 					eremetic.Status{
-						Status: eremetic.TaskState_TASK_STAGING,
+						Status: eremetic.TaskStaging,
 						Time:   time.Now().Unix(),
 					},
 				},
 			})
 
-			r := ReconcileTasks(driver, db)
+			r := reconcileTasks(driver, db)
 			r.Cancel()
 
 			select {

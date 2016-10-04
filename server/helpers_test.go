@@ -19,7 +19,7 @@ func TestHandlingHelpers(t *testing.T) {
 
 	status := []eremetic.Status{
 		eremetic.Status{
-			Status: eremetic.TaskState_TASK_RUNNING,
+			Status: eremetic.TaskRunning,
 			Time:   time.Now().Unix(),
 		},
 	}

@@ -3,13 +3,11 @@ package mesos
 import (
 	"testing"
 
-	"github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func mockStatusWithSandbox() *mesosproto.TaskStatus {
-	return &mesosproto.TaskStatus{
-		Data: []byte(`[
+func mockStatusWithSandbox() []byte {
+	return []byte(`[
                     {
                       "Mounts": [
                         {
@@ -20,13 +18,11 @@ func mockStatusWithSandbox() *mesosproto.TaskStatus {
                         }
                       ]
                     }
-                  ]`),
-	}
+                  ]`)
 }
 
-func mockStatusWithoutSandbox() *mesosproto.TaskStatus {
-	return &mesosproto.TaskStatus{
-		Data: []byte(`[
+func mockStatusWithoutSandbox() []byte {
+	return []byte(`[
                     {
                       "Mounts": [
                         {
@@ -37,18 +33,15 @@ func mockStatusWithoutSandbox() *mesosproto.TaskStatus {
                         }
                       ]
                     }
-                  ]`),
-	}
+                  ]`)
 }
 
-func mockStatusNoMounts() *mesosproto.TaskStatus {
-	return &mesosproto.TaskStatus{
-		Data: []byte(`[
+func mockStatusNoMounts() []byte {
+	return []byte(`[
                     {
                       "Mounts": []
                     }
-                  ]`),
-	}
+                  ]`)
 }
 
 func TestExtractor(t *testing.T) {
@@ -75,7 +68,7 @@ func TestExtractor(t *testing.T) {
 		})
 
 		Convey("Empty data", func() {
-			sandbox, err := extractSandboxPath(&mesosproto.TaskStatus{Data: []byte("")})
+			sandbox, err := extractSandboxPath([]byte(""))
 			So(sandbox, ShouldBeEmpty)
 			So(err, ShouldBeNil)
 		})

@@ -61,13 +61,13 @@ func TestMatch(t *testing.T) {
 
 	Convey("CPUAvailable", t, func() {
 		Convey("Above", func() {
-			m := CPUAvailable(0.4)
+			m := cpuAvailable(0.4)
 			err := m.Matches(offerA)
 			So(err, ShouldBeNil)
 		})
 
 		Convey("Below", func() {
-			m := CPUAvailable(0.8)
+			m := cpuAvailable(0.8)
 			err := m.Matches(offerA)
 			So(err, ShouldNotBeNil)
 		})
@@ -76,13 +76,13 @@ func TestMatch(t *testing.T) {
 	Convey("MemoryAvailable", t, func() {
 		Convey("Above", func() {
 
-			m := MemoryAvailable(128.0)
+			m := memoryAvailable(128.0)
 			err := m.Matches(offerA)
 			So(err, ShouldBeNil)
 		})
 
 		Convey("Below", func() {
-			m := MemoryAvailable(256.0)
+			m := memoryAvailable(256.0)
 			err := m.Matches(offerA)
 			So(err, ShouldNotBeNil)
 		})
@@ -90,7 +90,7 @@ func TestMatch(t *testing.T) {
 
 	Convey("AttributeMatch", t, func() {
 		Convey("Does match", func() {
-			m := AttributeMatch([]eremetic.SlaveConstraint{
+			m := attributeMatch([]eremetic.SlaveConstraint{
 				eremetic.SlaveConstraint{
 					AttributeName:  "node_name",
 					AttributeValue: "node1",
@@ -100,7 +100,7 @@ func TestMatch(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 		Convey("Does not match", func() {
-			m := AttributeMatch([]eremetic.SlaveConstraint{
+			m := attributeMatch([]eremetic.SlaveConstraint{
 				eremetic.SlaveConstraint{
 					AttributeName:  "node_name",
 					AttributeValue: "node2",

@@ -15,16 +15,16 @@ var (
 	maxReconciliationDelay = 120
 )
 
-type Reconcile struct {
+type reconciler struct {
 	cancel chan struct{}
 	done   chan struct{}
 }
 
-func (r *Reconcile) Cancel() {
+func (r *reconciler) Cancel() {
 	close(r.cancel)
 }
 
-func ReconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB) *Reconcile {
+func reconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB) *reconciler {
 	cancel := make(chan struct{})
 	done := make(chan struct{})
 
@@ -72,7 +72,7 @@ func ReconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB)
 						statuses = append(statuses, &mesosproto.TaskStatus{
 							State:   mesosproto.TaskState_TASK_STAGING.Enum(),
 							TaskId:  &mesosproto.TaskID{Value: proto.String(t.ID)},
-							SlaveId: &mesosproto.SlaveID{Value: proto.String(t.SlaveId)},
+							SlaveId: &mesosproto.SlaveID{Value: proto.String(t.SlaveID)},
 						})
 					}
 					logrus.WithField("reconciliation_request_count", c).Debug("Sending reconciliation request")
@@ -94,7 +94,7 @@ func ReconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB)
 		close(done)
 	}()
 
-	return &Reconcile{
+	return &reconciler{
 		cancel: cancel,
 		done:   done,
 	}

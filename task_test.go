@@ -159,7 +159,7 @@ func TestTask(t *testing.T) {
 			So(task.Image, ShouldEqual, "busybox")
 			So(task.Volumes, ShouldBeEmpty)
 			So(task.Status, ShouldHaveLength, 1)
-			So(task.Status[0].Status, ShouldEqual, TaskState_TASK_QUEUED)
+			So(task.Status[0].Status, ShouldEqual, TaskQueued)
 		})
 
 		Convey("Given a volume and environment", func() {
@@ -284,16 +284,16 @@ func TestTask(t *testing.T) {
 	})
 	Convey("states", t, func() {
 		terminalStates := []TaskState{
-			TaskState_TASK_FINISHED,
-			TaskState_TASK_FAILED,
-			TaskState_TASK_KILLED,
-			TaskState_TASK_LOST,
+			TaskFinished,
+			TaskFailed,
+			TaskKilled,
+			TaskLost,
 		}
 
 		nonTerminalStates := []TaskState{
-			TaskState_TASK_RUNNING,
-			TaskState_TASK_STAGING,
-			TaskState_TASK_STARTING,
+			TaskRunning,
+			TaskStaging,
+			TaskStarting,
 		}
 
 		Convey("IsTerminal", func() {

@@ -30,6 +30,7 @@ type connector interface {
 	Connect(path string) (connection, error)
 }
 
+// TaskDB is a Zookeeper implementation of the task database.
 type TaskDB struct {
 	conn connection
 	path string
@@ -54,6 +55,7 @@ func parsePath(zkpath string) (string, string, error) {
 	return u.Host, path, nil
 }
 
+// NewTaskDB returns a new instance of a Zookeeper TaskDB.
 func NewTaskDB(zk string) (*TaskDB, error) {
 	return newCustomTaskDB(defaultConnector{}, zk)
 }
@@ -95,15 +97,18 @@ func newCustomTaskDB(c connector, path string) (*TaskDB, error) {
 	}, nil
 }
 
+// Close closes the connection to the database.
 func (z *TaskDB) Close() {
 	z.conn.Close()
 }
 
+// Clean removes all tasks from the database.
 func (z *TaskDB) Clean() error {
 	path := fmt.Sprintf("%s/", z.path)
 	return z.conn.Delete(path, -1)
 }
 
+// PutTask adds a new task to the database.
 func (z *TaskDB) PutTask(task *eremetic.Task) error {
 	path := fmt.Sprintf("%s/%s", z.path, task.ID)
 
@@ -130,6 +135,7 @@ func (z *TaskDB) PutTask(task *eremetic.Task) error {
 	return err
 }
 
+// ReadTask returns a task with a given id, or an error if not found.
 func (z *TaskDB) ReadTask(id string) (eremetic.Task, error) {
 	task, err := z.ReadUnmaskedTask(id)
 
@@ -138,6 +144,7 @@ func (z *TaskDB) ReadTask(id string) (eremetic.Task, error) {
 	return task, err
 }
 
+// ReadUnmaskedTask returns a task with all its environment variables unmasked.
 func (z *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	var task eremetic.Task
 	path := fmt.Sprintf("%s/%s", z.path, id)
@@ -149,6 +156,7 @@ func (z *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 
 }
 
+// ListNonTerminalTasks returns all non-terminal tasks.
 func (z *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 	tasks := []*eremetic.Task{}
 	paths, _, _ := z.conn.Children(z.path)

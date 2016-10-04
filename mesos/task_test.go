@@ -15,7 +15,7 @@ func TestTask(t *testing.T) {
 
 	status := []eremetic.Status{
 		eremetic.Status{
-			Status: eremetic.TaskState_TASK_RUNNING,
+			Status: eremetic.TaskRunning,
 			Time:   time.Now().Unix(),
 		},
 	}
@@ -60,7 +60,7 @@ func TestTask(t *testing.T) {
 			So(taskInfo.GetResources()[1].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskMem)
 			So(taskInfo.Container.GetType().String(), ShouldEqual, "DOCKER")
 			So(taskInfo.Container.Docker.GetImage(), ShouldEqual, "busybox")
-			So(net.SlaveId, ShouldEqual, "slave-id")
+			So(net.SlaveID, ShouldEqual, "slave-id")
 			So(taskInfo.Container.Docker.GetForcePullImage(), ShouldBeFalse)
 		})
 
@@ -114,9 +114,9 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Container.Docker.GetPortMappings()[0].GetContainerPort(), ShouldEqual, ports[0].ContainerPort)
 			So(taskInfo.GetResources()[2].GetName(), ShouldEqual, "ports")
 
-			expected_range := mesosutil.NewValueRange(31000, 31001)
-			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetBegin(), ShouldEqual, expected_range.GetBegin())
-			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetEnd(), ShouldEqual, expected_range.GetEnd())
+			expectedRange := mesosutil.NewValueRange(31000, 31001)
+			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetBegin(), ShouldEqual, expectedRange.GetBegin())
+			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetEnd(), ShouldEqual, expectedRange.GetEnd())
 
 			vars := taskInfo.GetCommand().GetEnvironment().GetVariables()
 

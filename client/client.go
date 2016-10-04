@@ -10,11 +10,13 @@ import (
 	"github.com/klarna/eremetic"
 )
 
+// Client is used for communicating with an Eremetic server.
 type Client struct {
 	httpClient *http.Client
 	endpoint   string
 }
 
+// New returns a new instance of a Client.
 func New(endpoint string, client *http.Client) (*Client, error) {
 	return &Client{
 		httpClient: client,
@@ -22,6 +24,7 @@ func New(endpoint string, client *http.Client) (*Client, error) {
 	}, nil
 }
 
+// AddTask sends a request for a new task to be scheduled.
 func (c *Client) AddTask(r eremetic.Request) error {
 	var buf bytes.Buffer
 
@@ -43,6 +46,7 @@ func (c *Client) AddTask(r eremetic.Request) error {
 	return nil
 }
 
+// Task returns a task with a given ID.
 func (c *Client) Task(id string) (*eremetic.Task, error) {
 	req, err := http.NewRequest("GET", c.endpoint+"/task/"+id, nil)
 	if err != nil {
@@ -64,6 +68,7 @@ func (c *Client) Task(id string) (*eremetic.Task, error) {
 	return &task, nil
 }
 
+// Tasks returns all current tasks.
 func (c *Client) Tasks() ([]eremetic.Task, error) {
 	req, err := http.NewRequest("GET", c.endpoint+"/task", nil)
 	if err != nil {
@@ -85,6 +90,7 @@ func (c *Client) Tasks() ([]eremetic.Task, error) {
 	return tasks, nil
 }
 
+// Sandbox returns a sandbox resource for a given task.
 func (c *Client) Sandbox(taskID, file string) ([]byte, error) {
 	u := fmt.Sprintf("%s/task/%s/%s", c.endpoint, taskID, file)
 	req, err := http.NewRequest("GET", u, nil)
@@ -105,6 +111,7 @@ func (c *Client) Sandbox(taskID, file string) ([]byte, error) {
 	return b, nil
 }
 
+// Version returns the version of the Eremetic server.
 func (c *Client) Version() (string, error) {
 	u := fmt.Sprintf("%s/version", c.endpoint)
 	req, err := http.NewRequest("GET", u, nil)
