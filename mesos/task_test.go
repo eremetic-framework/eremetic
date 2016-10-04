@@ -96,7 +96,7 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.Environment.Variables[1].GetValue(), ShouldEqual, eremeticTask.ID)
 		})
 
-		Convey("Given a portMapping", func() {
+		Convey("Given a port", func() {
 			var ports []eremetic.Port
 
 			ports = append(ports,
@@ -117,6 +117,45 @@ func TestTask(t *testing.T) {
 			expectedRange := mesosutil.NewValueRange(31000, 31001)
 			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetBegin(), ShouldEqual, expectedRange.GetBegin())
 			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetEnd(), ShouldEqual, expectedRange.GetEnd())
+
+			vars := taskInfo.GetCommand().GetEnvironment().GetVariables()
+
+			var foundPortVar, foundPort0Var bool
+			for _, v := range vars {
+				switch v.GetName() {
+				case "PORT":
+					So(v.GetValue(), ShouldEqual, "31000")
+					foundPortVar = true
+				case "PORT0":
+					So(v.GetValue(), ShouldEqual, "31000")
+					foundPort0Var = true
+				}
+			}
+			So(foundPortVar, ShouldBeTrue)
+			So(foundPort0Var, ShouldBeTrue)
+		})
+
+		Convey("Given unspecified port", func() {
+			var ports []eremetic.Port
+
+			ports = append(ports,
+				eremetic.Port{
+					ContainerPort: 0,
+					Protocol:      "tcp",
+				},
+			)
+
+			eremeticTask.Ports = ports
+
+			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(len(taskInfo.Container.Docker.PortMappings), ShouldEqual, 1)
+			So(taskInfo.Container.Docker.GetPortMappings()[0].GetContainerPort(), ShouldEqual, 31000)
+			So(taskInfo.GetResources()[2].GetName(), ShouldEqual, "ports")
+
+			expected_range := mesosutil.NewValueRange(31000, 31001)
+			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetBegin(), ShouldEqual, expected_range.GetBegin())
+			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetEnd(), ShouldEqual, expected_range.GetEnd())
 
 			vars := taskInfo.GetCommand().GetEnvironment().GetVariables()
 
