@@ -52,3 +52,21 @@ func TestClient_Tasks(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestClient_KillTask(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusAccepted)
+	}))
+	defer ts.Close()
+
+	var httpClient http.Client
+
+	c, err := New(ts.URL, &httpClient)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := c.Kill("1234"); err != nil {
+		t.Fatal(err)
+	}
+}

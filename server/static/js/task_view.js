@@ -36,6 +36,9 @@ $(document).ready(function() {
       method: 'GET',
       url: '/task/' + taskId + '/' + logfile,
       success: function(data) {
+        if (typeof data === 'undefined') {
+          return
+        }
         if (data.length == 0) {
           $('div.logs').hide();
           return;
@@ -54,6 +57,26 @@ $(document).ready(function() {
       }
     });
   }
+
+  $('body').on('click', '#kill', function(e) {
+    e.preventDefault();
+    $.ajax({
+      method: 'POST',
+      url: '/task/' + taskId + '/kill',
+      success: function() {
+        window.location = window.location;
+      },
+      error: function(xhr, e) {
+        $('.error.hidden').removeClass('hidden')
+        $('.error .information').text(xhr.responseText)
+      }
+    });
+  })
+
+  $('body').on('click', '.close', function(e) {
+    e.preventDefault();
+    $(this).parents('.ui.error').addClass('hidden')
+  })
 
   $('body').on('click', '#show_stdout', function(e) {
     e.preventDefault();

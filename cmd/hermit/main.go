@@ -45,6 +45,7 @@ func main() {
 		"ls":      newListCommand(ec),
 		"logs":    newLogsCommand(ec),
 		"version": newVersionCommand(ec),
+		"kill":    newKillCommand(ec),
 	}
 
 	if len(os.Args) < 2 || os.Args[1] == "-help" || os.Args[1] == "-h" {
@@ -55,7 +56,7 @@ func main() {
 	cmd, ok := cmds[os.Args[1]]
 	if !ok {
 		usage(cmds)
-		os.Exit(1)
+		exitWithError(errors.New("Unknown command"))
 	}
 
 	cmd.Parse(os.Args[2:])
@@ -377,6 +378,37 @@ func (cmd *versionCommand) Run() {
 	fmt.Println()
 	fmt.Println("Server:")
 	fmt.Printf(" Version: %s", b)
+}
+
+type killCommand struct {
+	flags  *flag.FlagSet
+	client *client.Client
+}
+
+func newKillCommand(c *client.Client) *killCommand {
+	return &killCommand{
+		flags:  newFlagSet("kill", "hermit kill TASKID", "Kill a given task"),
+		client: c,
+	}
+}
+
+func (cmd *killCommand) Parse(args []string) {
+	cmd.flags.Parse(args)
+}
+
+func (cmd *killCommand) Run() {
+	taskID := cmd.flags.Arg(0)
+	if taskID == "" {
+		cmd.flags.Usage()
+		os.Exit(1)
+	}
+
+	err := cmd.client.Kill(taskID)
+	if err != nil {
+		exitWithError(err)
+	}
+
+	fmt.Printf("Killed task %s\n", taskID)
 }
 
 // ByLastUpdated sorts tasks based by when they were last updated.

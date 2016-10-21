@@ -25,6 +25,10 @@
             </div>
         </div>
         <div class="ui main container">
+            <div class="ui error message hidden">
+              <i class="close icon"></i>
+              <div class="information"></div>
+            </div>
             <h1 class="ui header center aligned">
                 {{.Name}}
             </h1>
@@ -59,7 +63,14 @@
                 <div class="column">
                     <h2 class="ui header">
                         <i class="blue circular tasks icon"></i>
-                        <div class="content">Task Info</div>
+                        <div class="content">
+                          Task Info
+                          {{if not .Terminated}}
+                            <span id="kill" class="ui" title="kill task">
+                              <i class="ban icon red"></i>
+                            </span>
+                          {{end}}
+                        </div>
                     </h2>
                     <div class="ui list big">
                         {{if .FrameworkID}}

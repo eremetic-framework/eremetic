@@ -174,3 +174,19 @@ func (h Handler) StaticAssets() http.Handler {
 		"/static/", http.FileServer(
 			&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, AssetInfo: assets.AssetInfo, Prefix: "static"}))
 }
+
+func (h Handler) KillTask(conf *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["taskId"]
+		logrus.WithField("task_id", id).Debug("Killing task")
+		err := h.scheduler.Kill(id)
+		respStatus := http.StatusAccepted
+		var body string
+		if err != nil {
+			respStatus = http.StatusInternalServerError
+			body = err.Error()
+		}
+		writeJSON(respStatus, body, w)
+	}
+}

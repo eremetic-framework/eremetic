@@ -10,12 +10,19 @@ import (
 type Scheduler struct {
 	ScheduleTaskFn      func(req eremetic.Request) (string, error)
 	ScheduleTaskInvoked bool
+	KillFn              func(id string) error
+	KillInvoked         bool
 }
 
 // ScheduleTask invokes the ScheduleTaskFn function.
 func (s *Scheduler) ScheduleTask(req eremetic.Request) (string, error) {
 	s.ScheduleTaskInvoked = true
 	return s.ScheduleTaskFn(req)
+}
+
+func (s *Scheduler) Kill(id string) error {
+	s.KillInvoked = true
+	return s.KillFn(id)
 }
 
 // TaskDB mocks the eremetic task database.
@@ -71,7 +78,10 @@ func (s *ErrScheduler) ScheduleTask(request eremetic.Request) (string, error) {
 
 	}
 	return "eremetic-task.mock", nil
+}
 
+func (s *ErrScheduler) Kill(_id string) error {
+	return nil
 }
 
 // ErrorReader simulates a failure to read stream.

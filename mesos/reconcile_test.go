@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mesos/mesos-go/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/klarna/eremetic"
+	"github.com/klarna/eremetic/mock"
 )
 
 func TestReconcile(t *testing.T) {
@@ -17,29 +18,31 @@ func TestReconcile(t *testing.T) {
 
 	Convey("ReconcileTasks", t, func() {
 		Convey("Finishes when there are no tasks", func() {
-			driver := NewMockScheduler()
+			driver := mock.NewMesosScheduler()
 			r := reconcileTasks(driver, db)
 
 			select {
 			case <-r.done:
 			}
 
-			So(driver.AssertNotCalled(t, "ReconcileTasks"), ShouldBeTrue)
+			So(driver.ReconcileTasksFnInvoked, ShouldBeFalse)
 		})
 
 		Convey("Sends reconcile request", func() {
-			driver := NewMockScheduler()
-			driver.On("ReconcileTasks").Run(func(mock.Arguments) {
+			driver := mock.NewMesosScheduler()
+			driver.ReconcileTasksFn = func(ts []*mesosproto.TaskStatus) (mesosproto.Status, error) {
 				t, err := db.ReadTask("1234")
 				if err != nil {
-					panic("mock error")
+					return mesosproto.Status_DRIVER_RUNNING, err
 				}
 				t.UpdateStatus(eremetic.Status{
 					Status: eremetic.TaskRunning,
 					Time:   time.Now().Unix() + 1,
 				})
 				db.PutTask(&t)
-			}).Once()
+
+				return mesosproto.Status_DRIVER_RUNNING, nil
+			}
 
 			db.PutTask(&eremetic.Task{
 				ID: "1234",
@@ -57,11 +60,11 @@ func TestReconcile(t *testing.T) {
 			case <-r.done:
 			}
 
-			So(driver.AssertCalled(t, "ReconcileTasks"), ShouldBeTrue)
+			So(driver.ReconcileTasksFnInvoked, ShouldBeTrue)
 		})
 
 		Convey("Cancel reconciliation", func() {
-			driver := NewMockScheduler()
+			driver := mock.NewMesosScheduler()
 
 			db.PutTask(&eremetic.Task{
 				ID: "1234",
@@ -80,7 +83,7 @@ func TestReconcile(t *testing.T) {
 			case <-r.done:
 			}
 
-			So(driver.AssertNotCalled(t, "ReconcileTasks"), ShouldBeTrue)
+			So(driver.ReconcileTasksFnInvoked, ShouldBeFalse)
 		})
 	})
 }
