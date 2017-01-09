@@ -196,7 +196,7 @@ func (h Handler) DeleteTask(conf *config.Config) http.HandlerFunc {
 		vars := mux.Vars(r)
 		id := vars["taskId"]
 		logrus.WithField("task_id", id).Debug("Deleting task")
-		err :=  h.database.DeleteTask(id)
+		err := h.database.DeleteTask(id)
 		respStatus := http.StatusAccepted
 		var body string
 		if err != nil {
@@ -206,4 +206,3 @@ func (h Handler) DeleteTask(conf *config.Config) http.HandlerFunc {
 		writeJSON(respStatus, body, w)
 	}
 }
-

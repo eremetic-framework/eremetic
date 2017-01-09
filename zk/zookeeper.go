@@ -167,7 +167,6 @@ func (z *TaskDB) DeleteTask(id string) error {
 	return err
 }
 
-
 // ListNonTerminalTasks returns all non-terminal tasks.
 func (z *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 	tasks := []*eremetic.Task{}

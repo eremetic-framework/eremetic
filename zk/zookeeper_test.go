@@ -208,7 +208,7 @@ func TestZKDatabase(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(object.AssertCalled(t, "Exists", "/testdb/1234"), ShouldBeTrue)
 			So(object.AssertNumberOfCalls(t, "Delete", 1), ShouldBeTrue)
-			So(object.AssertCalled(t, "Delete","/testdb/1234", int32(0)), ShouldBeTrue)
+			So(object.AssertCalled(t, "Delete", "/testdb/1234", int32(0)), ShouldBeTrue)
 		})
 
 		Convey("Error", func() {
