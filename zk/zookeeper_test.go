@@ -195,6 +195,36 @@ func TestZKDatabase(t *testing.T) {
 		})
 	})
 
+	Convey("DeleteTask", t, func() {
+		Convey("Success", func() {
+			setup()
+			defer teardown()
+
+			object.On("Exists", mock.AnythingOfType("string")).Return(true, &zk.Stat{}, nil)
+			object.On("Delete", mock.AnythingOfType("string"), mock.AnythingOfType("int32")).Return(nil)
+
+			err := db.DeleteTask(task.ID)
+
+			So(err, ShouldBeNil)
+			So(object.AssertCalled(t, "Exists", "/testdb/1234"), ShouldBeTrue)
+			So(object.AssertNumberOfCalls(t, "Delete", 1), ShouldBeTrue)
+			So(object.AssertCalled(t, "Delete","/testdb/1234", int32(0)), ShouldBeTrue)
+		})
+
+		Convey("Error", func() {
+			setup()
+			defer teardown()
+
+			object.On("Exists", mock.AnythingOfType("string")).Return(false, &zk.Stat{}, errors.New("Bad Connection"))
+
+			err := db.DeleteTask(task.ID)
+
+			So(err, ShouldNotBeNil)
+			So(object.AssertCalled(t, "Exists", "/testdb/1234"), ShouldBeTrue)
+			So(object.AssertNumberOfCalls(t, "Delete", 0), ShouldBeTrue)
+		})
+	})
+
 	Convey("ReadUnmaskedTask", t, func() {
 		Convey("Success", func() {
 			setup()

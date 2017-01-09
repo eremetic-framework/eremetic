@@ -28,14 +28,14 @@ func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db eremetic.Ta
 
 	for _, route := range routes(h, conf) {
 		router.
-			Methods(route.Method).
+		Methods(route.Method).
 			Path(route.Pattern).
 			Name(route.Name).
 			Handler(prometheus.InstrumentHandler(route.Name, route.Handler))
 	}
 
 	router.
-		PathPrefix("/static/").
+	PathPrefix("/static/").
 		Handler(h.StaticAssets())
 
 	router.NotFoundHandler = http.HandlerFunc(h.NotFound())
@@ -74,6 +74,12 @@ func routes(h Handler, conf *config.Config) Routes {
 			Method:  "POST",
 			Pattern: "/task/{taskId}/kill",
 			Handler: h.KillTask(conf),
+		},
+		Route{
+			Name:    "Delete",
+			Method:  "DELETE",
+			Pattern: "/task/{taskId}",
+			Handler: h.DeleteTask(conf),
 		},
 		Route{
 			Name:    "ListRunningTasks",

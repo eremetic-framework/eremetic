@@ -202,6 +202,27 @@ func TestBoltDatabase(t *testing.T) {
 		So(task.ID, ShouldEqual, "2345")
 	})
 
+	Convey("DeleteTask", t, func() {
+		Convey("Success", func() {
+			setup()
+			defer teardown()
+			defer db.Close()
+			db.Clean()
+
+			var maskedEnv = make(map[string]string)
+			maskedEnv["foo"] = "bar"
+
+			task1 := eremetic.Task{ID: "1234"}
+			db.PutTask(&task1)
+			t1, err := db.ReadUnmaskedTask(task1.ID)
+			So(t1, ShouldResemble, task1)
+			So(err, ShouldBeNil)
+
+			err = db.DeleteTask(task1.ID)
+			So(err, ShouldBeNil)
+		})
+	})
+
 	Convey("List non-terminal tasks no running task", t, func() {
 		setup()
 		defer teardown()

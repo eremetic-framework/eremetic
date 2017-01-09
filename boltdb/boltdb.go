@@ -131,6 +131,16 @@ func (db *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	return task, err
 }
 
+func (db *TaskDB) DeleteTask(id string) error {
+	return db.conn.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("tasks"))
+		if err != nil {
+			return err
+		}
+		return b.Delete([]byte(id))
+	})
+}
+
 // ListNonTerminalTasks returns a list of tasks that are not yet finished in one
 // way or another.
 func (db *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {

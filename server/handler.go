@@ -190,3 +190,20 @@ func (h Handler) KillTask(conf *config.Config) http.HandlerFunc {
 		writeJSON(respStatus, body, w)
 	}
 }
+
+func (h Handler) DeleteTask(conf *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["taskId"]
+		logrus.WithField("task_id", id).Debug("Deleting task")
+		err :=  h.database.DeleteTask(id)
+		respStatus := http.StatusAccepted
+		var body string
+		if err != nil {
+			respStatus = http.StatusInternalServerError
+			body = err.Error()
+		}
+		writeJSON(respStatus, body, w)
+	}
+}
+
