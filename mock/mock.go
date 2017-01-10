@@ -32,6 +32,7 @@ type TaskDB struct {
 	PutTaskFn              func(*eremetic.Task) error
 	ReadTaskFn             func(string) (eremetic.Task, error)
 	ReadUnmaskedTaskFn     func(string) (eremetic.Task, error)
+	DeleteTaskFn           func(string) error
 	ListNonTerminalTasksFn func() ([]*eremetic.Task, error)
 }
 
@@ -58,6 +59,11 @@ func (db *TaskDB) ReadTask(id string) (eremetic.Task, error) {
 // ReadUnmaskedTask invokes the ReadUnmaskedTaskFn function.
 func (db *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	return db.ReadUnmaskedTaskFn(id)
+}
+
+// ReadUnmaskedTask invokes the ReadUnmaskedTaskFn function.
+func (db *TaskDB) DeleteTask(id string) error {
+	return db.DeleteTaskFn(id)
 }
 
 // ListNonTerminalTasks invokes the ListNonTerminalTasksFn function.

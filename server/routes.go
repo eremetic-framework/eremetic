@@ -76,6 +76,12 @@ func routes(h Handler, conf *config.Config) Routes {
 			Handler: h.KillTask(conf),
 		},
 		Route{
+			Name:    "Delete",
+			Method:  "DELETE",
+			Pattern: "/task/{taskId}",
+			Handler: h.DeleteTask(conf),
+		},
+		Route{
 			Name:    "ListRunningTasks",
 			Method:  "GET",
 			Pattern: "/task",

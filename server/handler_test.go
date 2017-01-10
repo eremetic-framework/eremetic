@@ -256,6 +256,58 @@ func TestHandling(t *testing.T) {
 			So(string(body), ShouldEqual, "\"test\"\n")
 		})
 
+		Convey("Delete task", func() {
+			r, _ := http.NewRequest("DELETE", fmt.Sprintf("/task/%s", id), nil)
+			m.HandleFunc("/task/{taskId}", h.DeleteTask(&config.Config{})).Methods("DELETE")
+
+			Convey("Task deleted successfully", func() {
+				statusQueued := []eremetic.Status{
+					eremetic.Status{
+						Status: eremetic.TaskQueued,
+						Time:   time.Now().Unix(),
+					},
+				}
+				task := eremetic.Task{
+					TaskCPUs:          0.2,
+					TaskMem:           0.5,
+					Command:           "test",
+					Image:             "test",
+					Status:            statusQueued,
+					ID:                id,
+					MaskedEnvironment: maskedEnv,
+				}
+				db.PutTask(&task)
+				r.URL, _ = url.Parse(fmt.Sprintf("/task/%s", id))
+
+				m.HandleFunc("/task/{task}", h.DeleteTask(&config.Config{}))
+				m.ServeHTTP(wr, r)
+
+				So(wr.Code, ShouldEqual, http.StatusAccepted)
+
+			})
+
+			Convey("Task is in running state", func() {
+				db.PutTask(&task)
+				r.URL, _ = url.Parse(fmt.Sprintf("/task/%s", id))
+
+				m.HandleFunc("/task/{task}", h.DeleteTask(&config.Config{}))
+				m.ServeHTTP(wr, r)
+
+				So(wr.Code, ShouldEqual, http.StatusConflict)
+			})
+
+			Convey("Task not found", func() {
+				id = "eremetic-task.4567"
+				r.URL, _ = url.Parse(fmt.Sprintf("/task/%s", id))
+
+				m.HandleFunc("/task/{task}", h.DeleteTask(&config.Config{}))
+				m.ServeHTTP(wr, r)
+
+				So(wr.Code, ShouldEqual, http.StatusNotFound)
+			})
+
+		})
+
 		Convey("Index", func() {
 			r, _ := http.NewRequest("GET", "/", nil)
 

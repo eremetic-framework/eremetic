@@ -156,6 +156,17 @@ func (z *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 
 }
 
+func (z *TaskDB) DeleteTask(id string) error {
+	path := fmt.Sprintf("%s/%s", z.path, id)
+	_, stat, err := z.conn.Exists(path)
+	if err != nil {
+		logrus.WithError(err).Error("Unable to check existance of database.")
+		return err
+	}
+	err = z.conn.Delete(path, stat.Version)
+	return err
+}
+
 // ListNonTerminalTasks returns all non-terminal tasks.
 func (z *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 	tasks := []*eremetic.Task{}
