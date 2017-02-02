@@ -15,6 +15,7 @@ import (
 
 	"github.com/klarna/eremetic"
 	"github.com/klarna/eremetic/client"
+	"log"
 )
 
 var defaultEremeticServer = "http://localhost:8000"
@@ -90,6 +91,7 @@ type runCommand struct {
 	Memory float64
 	Image  string
 	Port   uint
+	EnvVars EnvironmentVariables
 
 	flags  *flag.FlagSet
 	client *client.Client
@@ -102,11 +104,29 @@ func newRunCommand(c *client.Client) *runCommand {
 	}
 }
 
+func (env *EnvironmentVariables) String() string {
+	return "Environment variables"
+}
+
+type EnvironmentVariables map[string]string
+
+func (env *EnvironmentVariables) Set(value string) error {
+	envVar := strings.Split(value, "=")
+	if (len(envVar) == 2) {
+		(*env)[envVar[0]] = envVar[1]
+	} else {
+		log.Printf("Cannot parse the environment variables.")
+	}
+	return nil
+}
+
 func (cmd *runCommand) Parse(args []string) {
+	cmd.EnvVars = make(EnvironmentVariables)
 	cmd.flags.Float64Var(&cmd.CPU, "cpu", 0.1, "CPU shares to give to the task")
 	cmd.flags.Float64Var(&cmd.Memory, "mem", 128, "Memory in MB to give to the task")
 	cmd.flags.StringVar(&cmd.Image, "image", "busybox", "Image to use")
 	cmd.flags.UintVar(&cmd.Port, "port", 0, "Port for task to listen on")
+	cmd.flags.Var(&cmd.EnvVars, "e", "Envrionment variables. e.g. -e MYVAR1=myvalue1 -e MYVAR2=myvalue2")
 	cmd.flags.Parse(args)
 }
 
@@ -130,6 +150,7 @@ func (cmd *runCommand) Run() {
 				Protocol:      "tcp",
 			},
 		},
+		Environment: cmd.EnvVars,
 	}
 
 	if err := cmd.client.AddTask(r); err != nil {
@@ -171,6 +192,7 @@ func (cmd *taskCommand) Run() {
 	fmt.Println("Image:", task.Image)
 	fmt.Println("CPU:", task.TaskCPUs)
 	fmt.Println("Memory:", task.TaskMem)
+	fmt.Println("Environment Variables:", task.Environment)
 	fmt.Println("State:", currentStatus(task.Status))
 	fmt.Println("Last updated:", lastUpdated(task.LastUpdated()))
 }
