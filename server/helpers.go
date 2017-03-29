@@ -1,7 +1,9 @@
 package server
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -152,4 +154,72 @@ func absURL(r *http.Request, path string) string {
 		Path:   path,
 	}
 	return url.String()
+}
+
+func parseHTTPCredentials(credentials string) (string, string) {
+	if credentials == "" {
+		return "", ""
+	}
+
+	pair := strings.SplitN(credentials, ":", 2)
+	if len(pair) != 2 {
+		logrus.WithField("http_credentials", credentials).Error("using 'username:password' format for http_credentials")
+		return "", ""
+	}
+
+	return pair[0], pair[1]
+}
+
+func checkAuth(r *http.Request, user string, password string) error {
+	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+	badErr := errors.New("bad authorization")
+
+	if len(s) != 2 || s[0] != "Basic" {
+		return badErr
+	}
+
+	b, err := base64.StdEncoding.DecodeString(s[1])
+	if err != nil {
+		return err
+	}
+
+	pair := strings.SplitN(string(b), ":", 2)
+	if len(pair) != 2 {
+		return badErr
+	}
+	if pair[0] != user || pair[1] != password {
+		return badErr
+	}
+	return nil
+}
+
+func requireAuth(w http.ResponseWriter, r *http.Request) {
+	if strings.Contains(r.Header.Get("Accept"), "text/html") {
+		src, _ := assets.Asset("templates/error_401.html")
+		tpl, err := template.New("401").Parse(string(src))
+		if err == nil {
+			w.Header().Set("WWW-Authenticate", `basic realm="Eremetic"`)
+			w.WriteHeader(http.StatusUnauthorized)
+			tpl.Execute(w, nil)
+			return
+		}
+		logrus.WithError(err).WithField("template", "error_401.html").Error("Unable to load template")
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusUnauthorized)
+	json.NewEncoder(w).Encode(nil)
+}
+
+func authWrap(fn http.Handler, username, password string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		err := checkAuth(r, username, password)
+		if err != nil {
+			requireAuth(w, r)
+			return
+		}
+
+		fn.ServeHTTP(w, r)
+	}
 }

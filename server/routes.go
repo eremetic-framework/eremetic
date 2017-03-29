@@ -40,6 +40,18 @@ func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db eremetic.Ta
 
 	router.NotFoundHandler = http.HandlerFunc(h.NotFound())
 
+	username, password := parseHTTPCredentials(conf.HTTPCredentials)
+	if username != "" && password != "" {
+		router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+			name := route.GetName()
+			// `/version` can be used as health check, so ignore auth required for it
+			if name != "Version" {
+				route.Handler(authWrap(route.GetHandler(), username, password))
+			}
+			return nil
+		})
+	}
+
 	return router
 }
 
