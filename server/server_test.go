@@ -255,5 +255,51 @@ func TestServer(t *testing.T) {
 				So(rec.Code, ShouldEqual, http.StatusNoContent)
 			})
 		})
+		Convey("Auth", func() {
+			Convey("IndexUnauthorized", func() {
+				sched := mock.Scheduler{}
+
+				db := mock.TaskDB{
+					ListNonTerminalTasksFn: func() ([]*eremetic.Task, error) {
+						return []*eremetic.Task{}, nil
+					},
+				}
+
+				cfg := config.Config{HTTPCredentials: "admin:admin"}
+
+				srv := NewRouter(&sched, &cfg, &db)
+
+				rec := httptest.NewRecorder()
+				r, _ := http.NewRequest("GET", "http://example.com/", nil)
+				r.Header.Set("Accept", "text/html")
+
+				srv.ServeHTTP(rec, r)
+
+				So(rec.Code, ShouldEqual, http.StatusUnauthorized)
+			})
+
+			Convey("IndexOK", func() {
+				sched := mock.Scheduler{}
+
+				db := mock.TaskDB{
+					ListNonTerminalTasksFn: func() ([]*eremetic.Task, error) {
+						return []*eremetic.Task{}, nil
+					},
+				}
+
+				cfg := config.Config{HTTPCredentials: "admin:admin"}
+
+				srv := NewRouter(&sched, &cfg, &db)
+
+				rec := httptest.NewRecorder()
+				r, _ := http.NewRequest("GET", "http://example.com/", nil)
+				r.Header.Set("Accept", "text/html")
+				r.SetBasicAuth("admin", "admin")
+
+				srv.ServeHTTP(rec, r)
+
+				So(rec.Code, ShouldEqual, http.StatusOK)
+			})
+		})
 	})
 }

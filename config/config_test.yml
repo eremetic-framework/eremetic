@@ -1,5 +1,6 @@
 address: 0.0.0.0
 port: 8080
+http_credentials: admin:admin
 master: zk://10.10.10.10:2182/mesos
 messenger_address: <callback address for mesos>
 messenger_port: <port for mesos to communicate on>

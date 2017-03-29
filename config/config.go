@@ -7,7 +7,7 @@ import (
 
 	"github.com/kardianos/osext"
 	"github.com/kelseyhightower/envconfig"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // The Config struct holds the Eremetic Configuration
@@ -17,8 +17,9 @@ type Config struct {
 	LogFormat string `yaml:"logformat"`
 
 	// Server
-	Address string `yaml:"address"`
-	Port    int    `yaml:"port"`
+	Address         string `yaml:"address"`
+	Port            int    `yaml:"port"`
+	HTTPCredentials string `yaml:"http_credentials" envconfig:"http_credentials"`
 
 	// Database
 	DatabaseDriver string `yaml:"database_driver" envconfig:"database_driver"`

@@ -19,6 +19,7 @@ func TestConfig(t *testing.T) {
 			ReadConfigFile(conf, fmt.Sprintf("%s/config_test.yml", wd))
 			So(conf.Port, ShouldEqual, 8080)
 			So(conf.Address, ShouldEqual, "0.0.0.0")
+			So(conf.HTTPCredentials, ShouldEqual, "admin:admin")
 			So(conf.CredentialsFile, ShouldEqual, "/tmp/secret_file")
 		})
 
@@ -26,16 +27,19 @@ func TestConfig(t *testing.T) {
 			master := "zk://local.host:2182/mesos"
 			dbPath := "db/eremetic.db"
 			frameworkID := "a_framework_id"
+			httpCredentials := "admin:admin"
 
 			os.Setenv("MASTER", master)
 			os.Setenv("DATABASE", dbPath)
 			os.Setenv("FRAMEWORK_ID", frameworkID)
+			os.Setenv("HTTP_CREDENTIALS", httpCredentials)
 
 			ReadEnvironment(conf)
 
 			So(conf.Master, ShouldEqual, master)
 			So(conf.DatabasePath, ShouldEqual, dbPath)
 			So(conf.FrameworkID, ShouldEqual, frameworkID)
+			So(conf.HTTPCredentials, ShouldEqual, httpCredentials)
 		})
 	})
 }
