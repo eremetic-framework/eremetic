@@ -87,14 +87,16 @@ func newFlagSet(name string, synopsis string, description string) *flag.FlagSet 
 }
 
 type runCommand struct {
-	CPU    float64
-	Memory float64
-	Image  string
-	Port   uint
-	EnvVars EnvironmentVariables
+	CPU     float64
+	Memory  float64
+	Image   string
+	Port    uint
+	EnvVars VariablesMap
+	URIs    StringSlice
+	Args    StringSlice
 
-	flags  *flag.FlagSet
-	client *client.Client
+	flags   *flag.FlagSet
+	client  *client.Client
 }
 
 func newRunCommand(c *client.Client) *runCommand {
@@ -104,38 +106,48 @@ func newRunCommand(c *client.Client) *runCommand {
 	}
 }
 
-func (env *EnvironmentVariables) String() string {
+
+type StringSlice []string
+
+func (stringSlice *StringSlice) String() string {
+	return "String slice"
+}
+
+func (stringSlice *StringSlice) Set(value string) error {
+	*stringSlice = append(*stringSlice, value)
+	return nil
+}
+
+func (env *VariablesMap) String() string {
 	return "Environment variables"
 }
 
-type EnvironmentVariables map[string]string
+type VariablesMap map[string]string
 
-func (env *EnvironmentVariables) Set(value string) error {
+func (env *VariablesMap) Set(value string) error {
 	envVar := strings.Split(value, "=")
 	if (len(envVar) == 2) {
 		(*env)[envVar[0]] = envVar[1]
 	} else {
-		log.Printf("Cannot parse the environment variables.")
+		log.Printf("Cannot parse the variables.")
 	}
 	return nil
 }
 
 func (cmd *runCommand) Parse(args []string) {
-	cmd.EnvVars = make(EnvironmentVariables)
+	cmd.EnvVars = make(VariablesMap)
 	cmd.flags.Float64Var(&cmd.CPU, "cpu", 0.1, "CPU shares to give to the task")
 	cmd.flags.Float64Var(&cmd.Memory, "mem", 128, "Memory in MB to give to the task")
 	cmd.flags.StringVar(&cmd.Image, "image", "busybox", "Image to use")
 	cmd.flags.UintVar(&cmd.Port, "port", 0, "Port for task to listen on")
-	cmd.flags.Var(&cmd.EnvVars, "e", "Envrionment variables. e.g. -e MYVAR1=myvalue1 -e MYVAR2=myvalue2")
+	cmd.flags.Var(&cmd.EnvVars, "e", "Environment variables. e.g. -e MYVAR1=myvalue1 -e MYVAR2=myvalue2")
+	cmd.flags.Var(&cmd.URIs, "uri", "URIs of resource to download")
+	cmd.flags.Var(&cmd.Args, "arg", "Arguments to pass to the docker container entrypoint")
 	cmd.flags.Parse(args)
 }
 
 func (cmd *runCommand) Run() {
 	args := cmd.flags.Args()
-	if len(args) == 0 {
-		cmd.flags.Usage()
-		os.Exit(1)
-	}
 
 	cmdStr := strings.Join(args, " ")
 
@@ -151,6 +163,8 @@ func (cmd *runCommand) Run() {
 			},
 		},
 		Environment: cmd.EnvVars,
+		URIs:     cmd.URIs,
+		Args:     cmd.Args,
 	}
 
 	if err := cmd.client.AddTask(r); err != nil {
