@@ -87,10 +87,12 @@ func newFlagSet(name string, synopsis string, description string) *flag.FlagSet 
 }
 
 type runCommand struct {
-	CPU    float64
-	Memory float64
-	Image  string
-	Port   uint
+	CPU     float64
+	Memory  float64
+	Image   string
+	Port    uint
+	Network string
+	DNS     string
 	EnvVars EnvironmentVariables
 
 	flags  *flag.FlagSet
@@ -126,6 +128,8 @@ func (cmd *runCommand) Parse(args []string) {
 	cmd.flags.Float64Var(&cmd.Memory, "mem", 128, "Memory in MB to give to the task")
 	cmd.flags.StringVar(&cmd.Image, "image", "busybox", "Image to use")
 	cmd.flags.UintVar(&cmd.Port, "port", 0, "Port for task to listen on")
+	cmd.flags.StringVar(&cmd.Network, "network", "BRIDGE", "Network mode for the task. default value is BRIDGE")
+	cmd.flags.StringVar(&cmd.DNS, "dns", "", "Dns to be used by the task")
 	cmd.flags.Var(&cmd.EnvVars, "e", "Envrionment variables. e.g. -e MYVAR1=myvalue1 -e MYVAR2=myvalue2")
 	cmd.flags.Parse(args)
 }
@@ -151,6 +155,8 @@ func (cmd *runCommand) Run() {
 			},
 		},
 		Environment: cmd.EnvVars,
+		Network:     cmd.Network,
+		DNS:         cmd.DNS,
 	}
 
 	if err := cmd.client.AddTask(r); err != nil {
