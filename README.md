@@ -47,6 +47,10 @@ JSON format:
       "host_path": "/var/run/docker.sock"
     }
   ],
+  //String, network mode to pass to the container.
+  "network" : "BRIDGE",
+  //String, DNS address to be used by the container.
+   "dns" : "172.0.0.2",
   // Array of Objects, ports to forward to the container.
   // Assigned host ports are available as environment variables (e.g. PORT0, PORT1 and so on with PORT being an alias for PORT0).
   "ports": [

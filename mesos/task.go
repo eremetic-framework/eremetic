@@ -65,15 +65,10 @@ func buildDockerCliParameters(task eremetic.Task) []*mesosproto.Parameter {
 }
 
 func buildNetwork(task eremetic.Task) *mesosproto.ContainerInfo_DockerInfo_Network {
-	var network mesosproto.ContainerInfo_DockerInfo_Network
 	if task.Network == "" {
-		network = mesosproto.ContainerInfo_DockerInfo_Network(mesosproto.ContainerInfo_DockerInfo_Network_value[mesosproto.ContainerInfo_DockerInfo_BRIDGE.String()])
-	} else {
-		network = mesosproto.ContainerInfo_DockerInfo_Network(mesosproto.ContainerInfo_DockerInfo_Network_value[task.Network])
+		return mesosproto.ContainerInfo_DockerInfo_BRIDGE.Enum()
 	}
-	p := new(mesosproto.ContainerInfo_DockerInfo_Network)
-	*p = network
-	return p
+	return mesosproto.ContainerInfo_DockerInfo_Network(mesosproto.ContainerInfo_DockerInfo_Network_value[task.Network]).Enum()
 }
 
 func buildEnvironment(task eremetic.Task, portMappings []*mesosproto.ContainerInfo_DockerInfo_PortMapping) *mesosproto.Environment {
