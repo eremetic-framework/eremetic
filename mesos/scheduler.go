@@ -9,8 +9,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
-	"github.com/mesos/mesos-go/mesosproto"
-	mesossched "github.com/mesos/mesos-go/scheduler"
+	"github.com/mesos/mesos-go/api/v0/mesosproto"
+	mesossched "github.com/mesos/mesos-go/api/v0/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/klarna/eremetic"

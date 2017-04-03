@@ -5,8 +5,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/mesos/mesos-go/mesosproto"
-	"github.com/mesos/mesos-go/mesosutil"
+	"github.com/mesos/mesos-go/api/v0/mesosproto"
+	"github.com/mesos/mesos-go/api/v0/mesosutil"
 
 	"github.com/klarna/eremetic"
 )
