@@ -97,6 +97,12 @@ definitions:
       command:
         type: string
         description: Command to run in the docker container
+      network:
+        type: string
+        description: Network mode to pass to the container
+      dns:
+        type: string
+        description: DNS to be used by the container
       args:
         type: array 
         description: arguements to pass to the docker container entrypoint

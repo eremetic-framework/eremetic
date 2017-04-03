@@ -93,6 +93,8 @@ type Task struct {
 	Status            []Status          `json:"status"`
 	ID                string            `json:"id"`
 	Name              string            `json:"name"`
+	Network           string            `json:"network"`
+	DNS               string            `json:"dns"`
 	FrameworkID       string            `json:"framework_id"`
 	SlaveID           string            `json:"slave_id"`
 	SlaveConstraints  []SlaveConstraint `json:"slave_constraints"`
@@ -146,6 +148,8 @@ type Request struct {
 	Args              []string          `json:"args"`
 	Volumes           []Volume          `json:"volumes"`
 	Ports             []Port            `json:"ports"`
+	Network           string            `json:"network"`
+	DNS               string            `json:"dns"`
 	Environment       map[string]string `json:"env"`
 	MaskedEnvironment map[string]string `json:"masked_env"`
 	SlaveConstraints  []SlaveConstraint `json:"slave_constraints"`
@@ -171,6 +175,8 @@ func NewTask(request Request, name string) (Task, error) {
 		TaskCPUs:          request.TaskCPUs,
 		TaskMem:           request.TaskMem,
 		Name:              name,
+		Network:           request.Network,
+		DNS:               request.DNS,
 		Status:            status,
 		Command:           request.Command,
 		Args:              request.Args,

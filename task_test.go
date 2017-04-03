@@ -194,6 +194,26 @@ func TestTask(t *testing.T) {
 			So(task.MaskedEnvironment["foo"], ShouldEqual, "bar")
 		})
 
+		Convey("Given a network type", func() {
+			network := "HOST"
+
+			request.Network = network
+			task, err := NewTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.Network, ShouldEqual, "HOST")
+		})
+
+		Convey("Given a dns", func() {
+			dns := "172.17.0.1"
+
+			request.DNS = dns
+			task, err := NewTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.DNS, ShouldEqual, "172.17.0.1")
+		})
+
 		Convey("Given URI (via uris) to download", func() {
 			request.URIs = []string{"http://foobar.local/kitten.jpg"}
 

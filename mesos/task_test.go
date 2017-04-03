@@ -96,6 +96,22 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.Environment.Variables[1].GetValue(), ShouldEqual, eremeticTask.ID)
 		})
 
+		Convey("Given no network", func() {
+			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
+			So(taskInfo.Container.Docker.Network.String(), ShouldEqual, "BRIDGE")
+		})
+
+		Convey("Given network", func() {
+			eremeticTask.Network = "HOST"
+			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+
+			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
+			So(taskInfo.Container.Docker.Network.String(), ShouldEqual, "HOST")
+			So(taskInfo.Container.Docker.PortMappings, ShouldBeEmpty)
+		})
+
 		Convey("Given a port", func() {
 			var ports []eremetic.Port
 

@@ -91,6 +91,8 @@ type runCommand struct {
 	Memory  float64
 	Image   string
 	Port    uint
+	Network string
+	DNS     string
 	EnvVars VariablesMap
 	URIs    StringSlice
 	Args    StringSlice
@@ -140,6 +142,8 @@ func (cmd *runCommand) Parse(args []string) {
 	cmd.flags.Float64Var(&cmd.Memory, "mem", 128, "Memory in MB to give to the task")
 	cmd.flags.StringVar(&cmd.Image, "image", "busybox", "Image to use")
 	cmd.flags.UintVar(&cmd.Port, "port", 0, "Port for task to listen on")
+	cmd.flags.StringVar(&cmd.Network, "network", "BRIDGE", "Network mode for the task. default value is BRIDGE")
+	cmd.flags.StringVar(&cmd.DNS, "dns", "", "Dns to be used by the task")
 	cmd.flags.Var(&cmd.EnvVars, "e", "Environment variables. e.g. -e MYVAR1=myvalue1 -e MYVAR2=myvalue2")
 	cmd.flags.Var(&cmd.URIs, "uri", "URIs of resource to download")
 	cmd.flags.Var(&cmd.Args, "arg", "Arguments to pass to the docker container entrypoint")
@@ -163,6 +167,8 @@ func (cmd *runCommand) Run() {
 			},
 		},
 		Environment: cmd.EnvVars,
+		Network:     cmd.Network,
+		DNS:         cmd.DNS,
 		URIs:     cmd.URIs,
 		Args:     cmd.Args,
 	}
