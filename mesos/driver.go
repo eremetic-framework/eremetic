@@ -8,9 +8,9 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
-	"github.com/mesos/mesos-go/auth"
-	"github.com/mesos/mesos-go/mesosproto"
-	mesossched "github.com/mesos/mesos-go/scheduler"
+	"github.com/mesos/mesos-go/api/v0/auth"
+	"github.com/mesos/mesos-go/api/v0/mesosproto"
+	mesossched "github.com/mesos/mesos-go/api/v0/scheduler"
 	"golang.org/x/net/context"
 )
 

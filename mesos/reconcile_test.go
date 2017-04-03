@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mesos/mesos-go/mesosproto"
+	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/klarna/eremetic"

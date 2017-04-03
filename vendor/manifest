@@ -127,66 +127,12 @@
 			"notests": true
 		},
 		{
-			"importpath": "github.com/mesos/mesos-go/auth",
+			"importpath": "github.com/mesos/mesos-go/api",
 			"repository": "https://github.com/mesos/mesos-go",
 			"vcs": "git",
-			"revision": "2b28dad0aa75289407717b98d82c7871543bb4db",
+			"revision": "42e45a820ca7a7953c34c62c9b29b545e2275b0b",
 			"branch": "master",
-			"path": "auth",
-			"notests": true
-		},
-		{
-			"importpath": "github.com/mesos/mesos-go/detector",
-			"repository": "https://github.com/mesos/mesos-go",
-			"vcs": "git",
-			"revision": "2b28dad0aa75289407717b98d82c7871543bb4db",
-			"branch": "master",
-			"path": "detector",
-			"notests": true
-		},
-		{
-			"importpath": "github.com/mesos/mesos-go/mesosproto",
-			"repository": "https://github.com/mesos/mesos-go",
-			"vcs": "git",
-			"revision": "2b28dad0aa75289407717b98d82c7871543bb4db",
-			"branch": "master",
-			"path": "/mesosproto",
-			"notests": true
-		},
-		{
-			"importpath": "github.com/mesos/mesos-go/mesosutil",
-			"repository": "https://github.com/mesos/mesos-go",
-			"vcs": "git",
-			"revision": "2b28dad0aa75289407717b98d82c7871543bb4db",
-			"branch": "master",
-			"path": "/mesosutil",
-			"notests": true
-		},
-		{
-			"importpath": "github.com/mesos/mesos-go/messenger",
-			"repository": "https://github.com/mesos/mesos-go",
-			"vcs": "git",
-			"revision": "2b28dad0aa75289407717b98d82c7871543bb4db",
-			"branch": "master",
-			"path": "messenger",
-			"notests": true
-		},
-		{
-			"importpath": "github.com/mesos/mesos-go/scheduler",
-			"repository": "https://github.com/mesos/mesos-go",
-			"vcs": "git",
-			"revision": "2b28dad0aa75289407717b98d82c7871543bb4db",
-			"branch": "master",
-			"path": "/scheduler",
-			"notests": true
-		},
-		{
-			"importpath": "github.com/mesos/mesos-go/upid",
-			"repository": "https://github.com/mesos/mesos-go",
-			"vcs": "git",
-			"revision": "2b28dad0aa75289407717b98d82c7871543bb4db",
-			"branch": "master",
-			"path": "upid",
+			"path": "/api",
 			"notests": true
 		},
 		{
@@ -195,6 +141,15 @@
 			"vcs": "git",
 			"revision": "b984ec7fa9ff9e428bd0cf0abf429384dfbe3e37",
 			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/pquerna/ffjson/fflib/v1",
+			"repository": "https://github.com/pquerna/ffjson",
+			"vcs": "git",
+			"revision": "f60b597ded7e7542b36fe20999dfd48166abd5ae",
+			"branch": "master",
+			"path": "/fflib/v1",
 			"notests": true
 		},
 		{

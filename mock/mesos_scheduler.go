@@ -1,8 +1,8 @@
 package mock
 
 import (
-	"github.com/mesos/mesos-go/mesosproto"
-	"github.com/mesos/mesos-go/scheduler"
+	"github.com/mesos/mesos-go/api/v0/mesosproto"
+	"github.com/mesos/mesos-go/api/v0/scheduler"
 )
 
 // MesosScheduler implements a mocked mesos scheduler iterface for testing
