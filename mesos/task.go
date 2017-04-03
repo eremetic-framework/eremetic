@@ -57,7 +57,7 @@ func buildDockerCliParameters(task eremetic.Task) []*mesosproto.Parameter {
 	var parameters []*mesosproto.Parameter
 	for k, v := range params {
 		parameters = append(parameters, &mesosproto.Parameter{
-			Key: proto.String(k),
+			Key:   proto.String(k),
 			Value: proto.String(v),
 		})
 	}
@@ -66,7 +66,7 @@ func buildDockerCliParameters(task eremetic.Task) []*mesosproto.Parameter {
 
 func buildNetwork(task eremetic.Task) *mesosproto.ContainerInfo_DockerInfo_Network {
 	var network mesosproto.ContainerInfo_DockerInfo_Network
-	if (task.Network == "") {
+	if task.Network == "" {
 		network = mesosproto.ContainerInfo_DockerInfo_Network(mesosproto.ContainerInfo_DockerInfo_Network_value[mesosproto.ContainerInfo_DockerInfo_BRIDGE.String()])
 	} else {
 		network = mesosproto.ContainerInfo_DockerInfo_Network(mesosproto.ContainerInfo_DockerInfo_Network_value[task.Network])
@@ -126,7 +126,7 @@ func buildVolumes(task eremetic.Task) []*mesosproto.Volume {
 	return volumes
 }
 
-func buildPorts(task eremetic.Task, network  *mesosproto.ContainerInfo_DockerInfo_Network, offer *mesosproto.Offer) ([]*mesosproto.ContainerInfo_DockerInfo_PortMapping, []*mesosproto.Value_Range) {
+func buildPorts(task eremetic.Task, network *mesosproto.ContainerInfo_DockerInfo_Network, offer *mesosproto.Offer) ([]*mesosproto.ContainerInfo_DockerInfo_PortMapping, []*mesosproto.Value_Range) {
 	var resources []*mesosproto.Value_Range
 	var mappings []*mesosproto.ContainerInfo_DockerInfo_PortMapping
 
