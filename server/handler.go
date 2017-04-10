@@ -40,7 +40,7 @@ func NewHandler(scheduler eremetic.Scheduler, database eremetic.TaskDB) Handler 
 }
 
 // AddTask handles adding a task to the queue
-func (h Handler) AddTask() http.HandlerFunc {
+func (h Handler) AddTask(conf *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request eremetic.Request
 
@@ -71,7 +71,7 @@ func (h Handler) AddTask() http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Location", absURL(r, fmt.Sprintf("/task/%s", taskID)))
+		w.Header().Set("Location", absURL(r, fmt.Sprintf("/task/%s", taskID), conf))
 		writeJSON(http.StatusAccepted, taskID, w)
 	}
 }
@@ -199,12 +199,12 @@ func (h Handler) DeleteTask(conf *config.Config) http.HandlerFunc {
 		respStatus := http.StatusAccepted
 		var body string
 		task, err := h.database.ReadTask(id)
-		if (err != nil) {
+		if err != nil {
 			respStatus = http.StatusNotFound
 			writeJSON(respStatus, err.Error(), w)
 			return
 		}
-		if (task.IsRunning()) {
+		if task.IsRunning() {
 			respStatus = http.StatusConflict
 			errMsg := fmt.Sprintf("Cannot delete the task [%s]. As it is still running.", id)
 			logrus.WithField("task_id", id).Debug(errMsg)

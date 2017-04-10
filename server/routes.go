@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -25,6 +26,11 @@ type Routes []Route
 func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db eremetic.TaskDB) *mux.Router {
 	h := NewHandler(scheduler, db)
 	router := mux.NewRouter().StrictSlash(true)
+
+	if conf.URLPrefix != "" {
+		logrus.Debug("Injecting URLPrefix path prefix: %s", conf.URLPrefix)
+		router = router.PathPrefix(conf.URLPrefix).Subrouter()
+	}
 
 	for _, route := range routes(h, conf) {
 		router.
@@ -61,7 +67,7 @@ func routes(h Handler, conf *config.Config) Routes {
 			Name:    "AddTask",
 			Method:  "POST",
 			Pattern: "/task",
-			Handler: h.AddTask(),
+			Handler: h.AddTask(conf),
 		},
 		Route{
 			Name:    "Status",

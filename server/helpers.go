@@ -142,10 +142,14 @@ func makeMap(task eremetic.Task) map[string]interface{} {
 	return data
 }
 
-func absURL(r *http.Request, path string) string {
+func absURL(r *http.Request, path string, conf *config.Config) string {
 	scheme := r.Header.Get("X-Forwarded-Proto")
 	if scheme == "" {
 		scheme = "http"
+	}
+
+	if conf.URLPrefix != "" {
+		path = fmt.Sprintf("%s%s", conf.URLPrefix, path)
 	}
 
 	url := url.URL{
