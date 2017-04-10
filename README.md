@@ -119,6 +119,8 @@ create /etc/eremetic/eremetic.yml with:
     messenger_port: <port for mesos to communicate on>
     loglevel: DEBUG
     logformat: json
+    queue_size: 100
+    url_prefix: <prefix to shim relative URLs behind a reverse proxy>
 
 ## Database
 Eremetic uses a database to store task information. The driver can be configured
