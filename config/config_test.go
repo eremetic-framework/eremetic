@@ -2,9 +2,8 @@ package config
 
 import (
 	"fmt"
-	"testing"
-
 	"os"
+	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -28,11 +27,13 @@ func TestConfig(t *testing.T) {
 			dbPath := "db/eremetic.db"
 			frameworkID := "a_framework_id"
 			httpCredentials := "admin:admin"
+			urlPrefix := "/service/eremetic"
 
 			os.Setenv("MASTER", master)
 			os.Setenv("DATABASE", dbPath)
 			os.Setenv("FRAMEWORK_ID", frameworkID)
 			os.Setenv("HTTP_CREDENTIALS", httpCredentials)
+			os.Setenv("URL_PREFIX", urlPrefix)
 
 			ReadEnvironment(conf)
 
@@ -40,6 +41,7 @@ func TestConfig(t *testing.T) {
 			So(conf.DatabasePath, ShouldEqual, dbPath)
 			So(conf.FrameworkID, ShouldEqual, frameworkID)
 			So(conf.HTTPCredentials, ShouldEqual, httpCredentials)
+			So(conf.URLPrefix, ShouldEqual, urlPrefix)
 		})
 	})
 }

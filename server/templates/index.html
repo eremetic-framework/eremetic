@@ -2,20 +2,21 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <link rel="icon" href="/static/images/favicon.ico">
-        <link rel="stylesheet" type="text/css" href="/static/css/semantic.min.css" />
-        <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
-        <script src="/static/js/jquery-2.1.4.min.js"></script>
-        <script src="/static/js/semantic.min.js"></script>
-        <script src="/static/js/serialize_object.min.js"></script>
-        <script src="/static/js/eremetic.js"></script>
+        <link rel="icon" href="{{.URLPrefix}}/static/images/favicon.ico">
+        <link rel="stylesheet" type="text/css" href="{{.URLPrefix}}/static/css/semantic.min.css" />
+        <link rel="stylesheet" type="text/css" href="{{.URLPrefix}}/static/css/style.css" />
+        <script>EREMETIC_URL_PREFIX="{{.URLPrefix}}"</script>
+        <script src="{{.URLPrefix}}/static/js/jquery-2.1.4.min.js"></script>
+        <script src="{{.URLPrefix}}/static/js/semantic.min.js"></script>
+        <script src="{{.URLPrefix}}/static/js/serialize_object.min.js"></script>
+        <script src="{{.URLPrefix}}/static/js/eremetic.js"></script>
         <title>Eremetic</title>
     </head>
     <body>
         <div class="ui fixed inverted menu">
             <div class="ui container">
                 <div class="header item">
-                    <img class="logo eremetic" src="/static/images/eremiteLOGO_02.png">
+                    <img class="logo eremetic" src="{{.URLPrefix}}/static/images/eremiteLOGO_02.png">
                 </div>
                 <div class="header item right">
                   <div id='eremetic-version'>{{.Version}}</div>

@@ -138,6 +138,7 @@ func (h Handler) IndexHandler(conf *config.Config) http.HandlerFunc {
 			tpl, err := template.New("index").Parse(string(src))
 			data := make(map[string]interface{})
 			data["Version"] = version.Version
+			data["URLPrefix"] = conf.URLPrefix
 			if err == nil {
 				tpl.Execute(w, data)
 				return
@@ -161,17 +162,17 @@ func (h Handler) Version(conf *config.Config) http.HandlerFunc {
 }
 
 // NotFound is in charge of reporting that a task can not be found.
-func (h Handler) NotFound() http.HandlerFunc {
+func (h Handler) NotFound(conf *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Proxy to the notFound helper function
-		notFound(w, r)
+		notFound(w, r, conf)
 	}
 }
 
 // StaticAssets handles the serving of compiled static assets.
-func (h Handler) StaticAssets() http.Handler {
+func (h Handler) StaticAssets(conf *config.Config) http.Handler {
 	return http.StripPrefix(
-		"/static/", http.FileServer(
+		conf.URLPrefix+"/static/", http.FileServer(
 			&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, AssetInfo: assets.AssetInfo, Prefix: "static"}))
 }
 

@@ -25,11 +25,11 @@
 }
 
 .ui.cpu.icon.svg {
-    background: url("/static/images/cpu.svg");
+    background: url("../images/cpu.svg");
     background-size: 100% 100%;
 }
 .ui.ram.icon.svg {
-    background: url("/static/images/ram.svg");
+    background: url("../images/ram.svg");
     background-size: 100% 100%;
 }
 

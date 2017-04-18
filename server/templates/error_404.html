@@ -2,24 +2,24 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <link rel="icon" href="/static/images/favicon.ico">
-        <link rel="stylesheet" type="text/css" href="/static/css/semantic.min.css" />
-        <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
-        <script src="/static/js/jquery-2.1.4.min.js"></script>
-        <script src="/static/js/semantic.min.js"></script>
+        <link rel="icon" href="{{.URLPrefix}}/static/images/favicon.ico">
+        <link rel="stylesheet" type="text/css" href="{{.URLPrefix}}/static/css/semantic.min.css" />
+        <link rel="stylesheet" type="text/css" href="{{.URLPrefix}}/static/css/style.css" />
+        <script src="{{.URLPrefix}}/static/js/jquery-2.1.4.min.js"></script>
+        <script src="{{.URLPrefix}}/static/js/semantic.min.js"></script>
         <title>404 Not Found | Eremetic</title>
     </head>
     <body>
         <div class="ui fixed inverted menu">
             <div class="ui container">
                 <div class="header item">
-                    <img class="logo eremetic" src="/static/images/eremiteLOGO_02.png">
+                    <img class="logo eremetic" src="{{.URLPrefix}}/static/images/eremiteLOGO_02.png">
                 </div>
             </div>
         </div>
         <div class="ui main container">
             <div class="ui image content">
-                <img src="/static/images/disappointed_minion.png">
+                <img src="{{.URLPrefix}}/static/images/disappointed_minion.png">
             </div>
             <div class="ui floating message error_message">
                 {{if .TaskID}}

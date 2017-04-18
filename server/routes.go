@@ -28,8 +28,9 @@ func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db eremetic.Ta
 	router := mux.NewRouter().StrictSlash(true)
 
 	if conf.URLPrefix != "" {
-		logrus.Debug("Injecting URLPrefix path prefix: %s", conf.URLPrefix)
-		router = router.PathPrefix(conf.URLPrefix).Subrouter()
+		logrus.Debugf("Injecting URLPrefix path prefix: %s", conf.URLPrefix)
+		subrouter := router.PathPrefix(conf.URLPrefix).Subrouter()
+		router = subrouter
 	}
 
 	for _, route := range routes(h, conf) {
@@ -42,9 +43,9 @@ func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db eremetic.Ta
 
 	router.
 		PathPrefix("/static/").
-		Handler(h.StaticAssets())
+		Handler(h.StaticAssets(conf))
 
-	router.NotFoundHandler = http.HandlerFunc(h.NotFound())
+	router.NotFoundHandler = http.HandlerFunc(h.NotFound(conf))
 
 	username, password := parseHTTPCredentials(conf.HTTPCredentials)
 	if username != "" && password != "" {
@@ -57,6 +58,17 @@ func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db eremetic.Ta
 			return nil
 		})
 	}
+
+	// Print out routes for debug purposes
+	logrus.Debugf("Registered route handlers:")
+	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		t, err := route.GetPathTemplate()
+		if err != nil {
+			logrus.Debugf("Unable to list routes.")
+		}
+		logrus.Debugf(t)
+		return nil
+	})
 
 	return router
 }

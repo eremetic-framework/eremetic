@@ -133,7 +133,7 @@ func TestHandling(t *testing.T) {
 			r.Host = "localhost"
 
 			Convey("It should respond with a location header", func() {
-				handler := h.AddTask()
+				handler := h.AddTask(&config.Config{})
 				handler(wr, r)
 
 				location := wr.HeaderMap["Location"][0]
@@ -141,11 +141,22 @@ func TestHandling(t *testing.T) {
 				So(wr.Code, ShouldEqual, http.StatusAccepted)
 			})
 
+			Convey("It should respond with a location per URL prefix header", func() {
+				conf := config.Config{}
+				conf.URLPrefix = "/service/eremetic"
+				handler := h.AddTask(&conf)
+				handler(wr, r)
+
+				location := wr.HeaderMap["Location"][0]
+				So(location, ShouldStartWith, "http://localhost/service/eremetic/task/eremetic-task.")
+				So(wr.Code, ShouldEqual, http.StatusAccepted)
+			})
+
 			Convey("Failed to schedule", func() {
 				err := errors.New("A random error")
 				scheduler.NextError = &err
 
-				handler := h.AddTask()
+				handler := h.AddTask(&config.Config{})
 				handler(wr, r)
 
 				So(wr.Code, ShouldEqual, 500)
@@ -154,7 +165,7 @@ func TestHandling(t *testing.T) {
 			Convey("Error on bad input stream", func() {
 				r.Body = ioutil.NopCloser(&mock.ErrorReader{})
 
-				handler := h.AddTask()
+				handler := h.AddTask(&config.Config{})
 				handler(wr, r)
 
 				So(wr.Code, ShouldEqual, 422)
@@ -164,7 +175,7 @@ func TestHandling(t *testing.T) {
 				data = []byte(`{"key:123}`)
 				r.Body = ioutil.NopCloser(bytes.NewBuffer(data))
 
-				handler := h.AddTask()
+				handler := h.AddTask(&config.Config{})
 				handler(wr, r)
 
 				So(wr.Code, ShouldEqual, 422)

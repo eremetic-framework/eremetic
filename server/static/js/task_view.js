@@ -34,7 +34,7 @@ $(document).ready(function() {
     }
     $.ajax({
       method: 'GET',
-      url: '/task/' + taskId + '/' + logfile,
+      url: EREMETIC_URL_PREFIX + '/task/' + taskId + '/' + logfile,
       success: function(data) {
         if (typeof data === 'undefined') {
           return
@@ -62,7 +62,7 @@ $(document).ready(function() {
     e.preventDefault();
     $.ajax({
       method: 'POST',
-      url: '/task/' + taskId + '/kill',
+      url: EREMETIC_URL_PREFIX + '/task/' + taskId + '/kill',
       success: function() {
         window.location = window.location;
       },
