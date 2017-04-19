@@ -1,5 +1,16 @@
 ## Changelog
 
+### v0.27.0 / 2017-04-19
+- [#166](https://github.com/klarna/eremetic/pull/166) Add URL Prefix support for DCOS package (@gisjedi)
+- [#165](https://github.com/klarna/eremetic/pull/165) Adding icon assets to support DCOS Universe package. (@gisjedi)
+- [#162](https://github.com/klarna/eremetic/pull/162) Update the vendored mesos-go (@keis)
+- [#159](https://github.com/klarna/eremetic/pull/159) Add support for network host mode and pass dns to the docker (#159) (@zmalik)
+- [#158](https://github.com/klarna/eremetic/pull/158) Add args and uris in the hermit client (@zmalik)
+- [#157](https://github.com/klarna/eremetic/pull/157) add basic auth support (@heww)
+- [#154](https://github.com/klarna/eremetic/pull/154) Add support for environment variables in hermit (@zmalik)
+- [#152](https://github.com/klarna/eremetic/pull/152) Implemented delete task and added test for zk and bolt (@zmalik)
+- [#140](https://github.com/klarna/eremetic/pull/140) Add killswitch for tasks (@alde)
+
 ### v0.26.0 / 2016-10-04
 - [#149](https://github.com/klarna/eremetic/pull/149) Add port mapping when allocating unspecified port (@keis)
 - [#147](https://github.com/klarna/eremetic/pull/147) Fix linter errors (@marcusolsson)
@@ -67,6 +78,7 @@
 - [#83](https://github.com/klarna/eremetic/pull/83) Make the queue size configurable (@alde)
 
 ### v0.17.0 / 2016-04-30
+- [#81](https://github.com/klarna/eremetic/pull/81) Adding authentication support (#81) (@mcgin)
 - [#77](https://github.com/klarna/eremetic/pull/77) Exit eremetic when framework driver closes (@keis)
 - [#76](https://github.com/klarna/eremetic/pull/76) Add example usage (@keis)
 
