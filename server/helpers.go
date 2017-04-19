@@ -78,13 +78,14 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task eremetic.Task, task
 	}
 
 	if reflect.DeepEqual(task, (eremetic.Task{})) {
-		notFound(w, r)
+		notFound(w, r, conf)
 		return
 	}
 
 	templateFile = "task.html"
 	data = makeMap(task)
 	data["Version"] = version.Version
+	data["URLPrefix"] = conf.URLPrefix
 
 	source, _ := assets.Asset(fmt.Sprintf("templates/%s", templateFile))
 	tpl, err := template.New(templateFile).Funcs(funcMap).Parse(string(source))
@@ -101,8 +102,11 @@ func renderHTML(w http.ResponseWriter, r *http.Request, task eremetic.Task, task
 	}
 }
 
-func notFound(w http.ResponseWriter, r *http.Request) {
+func notFound(w http.ResponseWriter, r *http.Request, conf *config.Config) {
 	w.WriteHeader(http.StatusNotFound)
+
+	data := make(map[string]interface{})
+	data["URLPrefix"] = conf.URLPrefix
 
 	if strings.Contains(r.Header.Get("Accept"), "text/html") {
 		src, _ := assets.Asset("templates/error_404.html")
@@ -110,7 +114,7 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			logrus.WithError(err).WithField("template", "error_404.html").Error("Unable to load template")
 		}
-		err = tpl.Execute(w, nil)
+		err = tpl.Execute(w, data)
 		if err != nil {
 			logrus.WithError(err).WithField("template", "error_404.html").Error("Unable to execute template")
 		}
@@ -142,10 +146,15 @@ func makeMap(task eremetic.Task) map[string]interface{} {
 	return data
 }
 
-func absURL(r *http.Request, path string) string {
+func absURL(r *http.Request, path string, conf *config.Config) string {
 	scheme := r.Header.Get("X-Forwarded-Proto")
 	if scheme == "" {
 		scheme = "http"
+	}
+
+	if conf.URLPrefix != "" {
+		path = fmt.Sprintf("%s%s", conf.URLPrefix, path)
+		logrus.WithField("path", path).Debug("absurl was computed")
 	}
 
 	url := url.URL{

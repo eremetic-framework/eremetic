@@ -20,6 +20,7 @@ type Config struct {
 	Address         string `yaml:"address"`
 	Port            int    `yaml:"port"`
 	HTTPCredentials string `yaml:"http_credentials" envconfig:"http_credentials"`
+	URLPrefix       string `yaml:"url_prefix" envconfig:"url_prefix"`
 
 	// Database
 	DatabaseDriver string `yaml:"database_driver" envconfig:"database_driver"`

@@ -68,7 +68,7 @@ $(document).ready(function() {
 
     $.ajax({
       method: 'POST',
-      url: '/task',
+      url: EREMETIC_URL_PREFIX + '/task',
       data: JSON.stringify(json),
       contentType: 'application/json',
       dataType: 'json',

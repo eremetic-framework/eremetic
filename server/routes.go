@@ -38,7 +38,7 @@ func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db eremetic.Ta
 		PathPrefix("/static/").
 		Handler(h.StaticAssets())
 
-	router.NotFoundHandler = http.HandlerFunc(h.NotFound())
+	router.NotFoundHandler = http.HandlerFunc(h.NotFound(conf))
 
 	username, password := parseHTTPCredentials(conf.HTTPCredentials)
 	if username != "" && password != "" {
@@ -61,7 +61,7 @@ func routes(h Handler, conf *config.Config) Routes {
 			Name:    "AddTask",
 			Method:  "POST",
 			Pattern: "/task",
-			Handler: h.AddTask(),
+			Handler: h.AddTask(conf),
 		},
 		Route{
 			Name:    "Status",

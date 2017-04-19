@@ -95,7 +95,7 @@ func TestHandlingHelpers(t *testing.T) {
 		Convey("text/html", func() {
 			r.Header.Add("Accept", "text/html")
 
-			notFound(wr, r)
+			notFound(wr, r, &config.Config{})
 			b, _ := ioutil.ReadAll(wr.Body)
 			body := string(b)
 			So(wr.Code, ShouldEqual, http.StatusNotFound)
@@ -103,7 +103,7 @@ func TestHandlingHelpers(t *testing.T) {
 		})
 
 		Convey("application/json", func() {
-			notFound(wr, r)
+			notFound(wr, r, &config.Config{})
 			So(wr.Code, ShouldEqual, http.StatusNotFound)
 			So(wr.Header().Get("Content-Type"), ShouldContainSubstring, "application/json")
 		})
