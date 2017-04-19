@@ -329,9 +329,11 @@ func TestHandling(t *testing.T) {
 				So(wr.Code, ShouldEqual, http.StatusNoContent)
 			})
 
-			Convey("Renders the html template for html requests", func() {
+			Convey("Renders the html template for html requests when URLPrefix is empty", func() {
+				conf := config.DefaultConfig()
+
 				r.Header.Add("Accept", "text/html")
-				m.HandleFunc("/", h.IndexHandler(&config.Config{}))
+				m.HandleFunc("/", h.IndexHandler(conf))
 				m.ServeHTTP(wr, r)
 
 				b, _ := ioutil.ReadAll(wr.Body)
@@ -340,6 +342,24 @@ func TestHandling(t *testing.T) {
 				So(wr.Code, ShouldEqual, http.StatusOK)
 				So(body, ShouldContainSubstring, "<html>")
 				So(body, ShouldContainSubstring, "<div id='eremetic-version'>test</div>")
+				So(body, ShouldNotContainSubstring, "/service/eremetic")
+			})
+
+			Convey("Renders the html template for html requests when URLPrefix is set", func() {
+				conf := config.DefaultConfig()
+				conf.URLPrefix = "/service/eremetic"
+
+				r.Header.Add("Accept", "text/html")
+				m.HandleFunc("/", h.IndexHandler(conf))
+				m.ServeHTTP(wr, r)
+
+				b, _ := ioutil.ReadAll(wr.Body)
+				body := string(b)
+
+				So(wr.Code, ShouldEqual, http.StatusOK)
+				So(body, ShouldContainSubstring, "<html>")
+				So(body, ShouldContainSubstring, "<div id='eremetic-version'>test</div>")
+				So(body, ShouldContainSubstring, "/service/eremetic")
 			})
 		})
 

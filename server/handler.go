@@ -170,9 +170,9 @@ func (h Handler) NotFound(conf *config.Config) http.HandlerFunc {
 }
 
 // StaticAssets handles the serving of compiled static assets.
-func (h Handler) StaticAssets(conf *config.Config) http.Handler {
+func (h Handler) StaticAssets() http.Handler {
 	return http.StripPrefix(
-		conf.URLPrefix+"/static/", http.FileServer(
+		"/static/", http.FileServer(
 			&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, AssetInfo: assets.AssetInfo, Prefix: "static"}))
 }
 
