@@ -9,6 +9,7 @@ import (
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 
 	"github.com/klarna/eremetic"
+	"time"
 )
 
 type resourceMatcher struct {
@@ -18,6 +19,10 @@ type resourceMatcher struct {
 
 type attributeMatcher struct {
 	constraint eremetic.SlaveConstraint
+}
+
+type availabilityMatcher struct {
+
 }
 
 func (m *resourceMatcher) Matches(o interface{}) error {
@@ -52,6 +57,10 @@ func memoryAvailable(v float64) ogle.Matcher {
 	return &resourceMatcher{"mem", v}
 }
 
+func availabilityMatch() ogle.Matcher {
+	return &availabilityMatcher{}
+}
+
 func (m *attributeMatcher) Matches(o interface{}) error {
 	offer := o.(*mesosproto.Offer)
 
@@ -66,6 +75,28 @@ func (m *attributeMatcher) Matches(o interface{}) error {
 	}
 
 	return errors.New("")
+}
+
+func (m *availabilityMatcher) Matches(o interface{}) error {
+	offer := o.(*mesosproto.Offer)
+
+	if offer.Unavailability == nil {
+		return nil
+	}
+
+	now := time.Now().UnixNano()
+	if start := offer.Unavailability.GetStart(); start != nil && now >= *start.Nanoseconds {
+		if duration := offer.Unavailability.GetDuration(); duration == nil {
+			return errors.New("Node is on indefinite period of maintenance.")
+		} else if now <= *duration.Nanoseconds {
+			return errors.New("Node is currently in maintenance mode.")
+		}
+	}
+	return nil
+}
+
+func (m *availabilityMatcher) Description() string {
+	return fmt.Sprintf("availability matcher")
 }
 
 func (m *attributeMatcher) Description() string {
@@ -88,6 +119,7 @@ func createMatcher(task eremetic.Task) ogle.Matcher {
 		cpuAvailable(task.TaskCPUs),
 		memoryAvailable(task.TaskMem),
 		attributeMatch(task.SlaveConstraints),
+		availabilityMatch(),
 	)
 }
 

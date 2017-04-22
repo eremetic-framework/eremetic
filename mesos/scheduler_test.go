@@ -143,7 +143,7 @@ func TestScheduler(t *testing.T) {
 			})
 			Convey("When there are no tasks", func() {
 				offers := []*mesosproto.Offer{
-					offer("1234", 1.0, 128),
+					offer("1234", 1.0, 128, &mesosproto.Unavailability{}),
 				}
 				driver.DeclineOfferFn = func(_ *mesosproto.OfferID, _ *mesosproto.Filters) (mesosproto.Status, error) {
 					return mesosproto.Status_DRIVER_RUNNING, nil
@@ -160,7 +160,7 @@ func TestScheduler(t *testing.T) {
 			})
 			Convey("When a task is able to launch", func() {
 				offers := []*mesosproto.Offer{
-					offer("1234", 1.0, 128),
+					offer("1234", 1.0, 128, &mesosproto.Unavailability{}),
 				}
 				driver.LaunchTasksFn = func(_ []*mesosproto.OfferID, _ []*mesosproto.TaskInfo, _ *mesosproto.Filters) (mesosproto.Status, error) {
 					return mesosproto.Status_DRIVER_RUNNING, nil
@@ -194,7 +194,7 @@ func TestScheduler(t *testing.T) {
 
 			Convey("When a task unable to launch", func() {
 				offers := []*mesosproto.Offer{
-					offer("1234", 1.0, 128),
+					offer("1234", 1.0, 128, &mesosproto.Unavailability{}),
 				}
 				driver.DeclineOfferFn = func(_ *mesosproto.OfferID, _ *mesosproto.Filters) (mesosproto.Status, error) {
 					return mesosproto.Status_DRIVER_RUNNING, nil
@@ -219,7 +219,7 @@ func TestScheduler(t *testing.T) {
 			})
 
 			Convey("When a task is marked for termination", func() {
-				offers := []*mesosproto.Offer{offer("1234", 1.0, 128)}
+				offers := []*mesosproto.Offer{offer("1234", 1.0, 128, &mesosproto.Unavailability{})}
 				driver.DeclineOfferFn = func(_ *mesosproto.OfferID, _ *mesosproto.Filters) (mesosproto.Status, error) {
 					return mesosproto.Status_DRIVER_RUNNING, nil
 				}
