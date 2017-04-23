@@ -88,7 +88,7 @@ func (m *availabilityMatcher) Matches(o interface{}) error {
 	if start := offer.Unavailability.GetStart(); start != nil && now >= *start.Nanoseconds {
 		if duration := offer.Unavailability.GetDuration(); duration == nil {
 			return errors.New("Node is on indefinite period of maintenance.")
-		} else if now <= *duration.Nanoseconds {
+		} else if now <= *start.Nanoseconds + *duration.Nanoseconds {
 			return errors.New("Node is currently in maintenance mode.")
 		}
 	}

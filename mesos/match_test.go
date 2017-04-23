@@ -68,7 +68,7 @@ func TestMatch(t *testing.T) {
 				Nanoseconds: proto.Int64(time.Now().UnixNano()),
 			},
 			Duration: &mesosproto.DurationInfo{
-				Nanoseconds: proto.Int64(time.Now().Add(1 * time.Hour).UnixNano()),
+				Nanoseconds: proto.Int64(time.Unix(0, 0).Add(1 * time.Hour).UnixNano()),
 			},
 		},
 		&mesosproto.Attribute{
@@ -99,7 +99,7 @@ func TestMatch(t *testing.T) {
 				Nanoseconds: proto.Int64(time.Now().Add(-2 * time.Hour).UnixNano()),
 			},
 			Duration: &mesosproto.DurationInfo{
-				Nanoseconds: proto.Int64(time.Now().Add(-1 * time.Hour).UnixNano()),
+				Nanoseconds: proto.Int64(time.Unix(0, 0).Add(1 * time.Hour).UnixNano()),
 			},
 		},
 		&mesosproto.Attribute{
