@@ -22,7 +22,7 @@ type attributeMatcher struct {
 }
 
 type availabilityMatcher struct {
-
+	time.Time
 }
 
 func (m *resourceMatcher) Matches(o interface{}) error {
@@ -57,8 +57,8 @@ func memoryAvailable(v float64) ogle.Matcher {
 	return &resourceMatcher{"mem", v}
 }
 
-func availabilityMatch() ogle.Matcher {
-	return &availabilityMatcher{}
+func availabilityMatch(matchTime time.Time) ogle.Matcher {
+	return &availabilityMatcher{matchTime}
 }
 
 func (m *attributeMatcher) Matches(o interface{}) error {
@@ -84,11 +84,10 @@ func (m *availabilityMatcher) Matches(o interface{}) error {
 		return nil
 	}
 
-	now := time.Now().UnixNano()
-	if start := offer.Unavailability.GetStart(); start != nil && now >= *start.Nanoseconds {
+	if start := offer.Unavailability.GetStart(); start != nil && m.UnixNano() >= *start.Nanoseconds {
 		if duration := offer.Unavailability.GetDuration(); duration == nil {
 			return errors.New("Node is on indefinite period of maintenance.")
-		} else if now <= *start.Nanoseconds + *duration.Nanoseconds {
+		} else if m.UnixNano() <= *start.Nanoseconds+*duration.Nanoseconds {
 			return errors.New("Node is currently in maintenance mode.")
 		}
 	}
@@ -119,7 +118,7 @@ func createMatcher(task eremetic.Task) ogle.Matcher {
 		cpuAvailable(task.TaskCPUs),
 		memoryAvailable(task.TaskMem),
 		attributeMatch(task.SlaveConstraints),
-		availabilityMatch(),
+		availabilityMatch(time.Now()),
 	)
 }
 

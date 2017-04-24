@@ -29,7 +29,7 @@ func offer(id string, cpu float64, mem float64, unavailability *mesosproto.Unava
 			mesosutil.NewScalarResource("cpus", cpu),
 			mesosutil.NewScalarResource("mem", mem),
 		},
-		Attributes: attributes,
+		Attributes:     attributes,
 		Unavailability: unavailability,
 	}
 }
@@ -93,7 +93,7 @@ func TestMatch(t *testing.T) {
 			},
 		},
 	)
-	offerE := offer("offer-c", 1.8, 512.0,
+	offerE := offer("offer-e", 1.8, 512.0,
 		&mesosproto.Unavailability{
 			Start: &mesosproto.TimeInfo{
 				Nanoseconds: proto.Int64(time.Now().Add(-2 * time.Hour).UnixNano()),
@@ -142,19 +142,19 @@ func TestMatch(t *testing.T) {
 
 	Convey("Maintenance node", t, func() {
 		Convey("Does not match (Defined maintenence window)", func() {
-			m := availabilityMatch()
+			m := availabilityMatch(time.Now())
 			err := m.Matches(offerC)
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Does not match (Undefined maintenence window)", func() {
-			m := availabilityMatch()
+			m := availabilityMatch(time.Now())
 			err := m.Matches(offerD)
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Does match (Maintenence window in past)", func() {
-			m := availabilityMatch()
+			m := availabilityMatch(time.Now())
 			err := m.Matches(offerE)
 			So(err, ShouldBeNil)
 		})
