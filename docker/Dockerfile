@@ -1,4 +1,4 @@
-FROM alpine:3.2
+FROM alpine:3.5
 
 RUN mkdir -p /opt/eremetic
 
