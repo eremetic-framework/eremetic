@@ -17,7 +17,7 @@ before_install:
 
 script:
  - make eremetic
- - overalls -project=github.com/klarna/eremetic -covermode=count
+ - overalls -project=github.com/eremetic-framework/eremetic -covermode=count
  - goveralls -coverprofile=overalls.coverprofile -service travis-ci
 
 after_success:
