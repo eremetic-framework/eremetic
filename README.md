@@ -1,8 +1,8 @@
 # <img src="server/static/images/eremiteLOGO_02.png" width="400px" alt="Eremetic">
 
-[![Build Status][travis-image]](https://travis-ci.org/klarna/eremetic)
-[![Coverage Status][coveralls-image]](https://coveralls.io/r/klarna/eremetic?branch=master)
-[![Go Report][goreport-image]](https://goreportcard.com/report/github.com/klarna/eremetic)
+[![Build Status][travis-image]](https://travis-ci.org/eremetic-framework/eremetic)
+[![Coverage Status][coveralls-image]](https://coveralls.io/r/eremetic-framework/eremetic?branch=master)
+[![Go Report][goreport-image]](https://goreportcard.com/report/github.com/eremetic-framework/eremetic)
 
 ## Purpose
 Eremetic is a Mesos Framework to run one-shot tasks. The vision is to provide a
@@ -214,6 +214,6 @@ Thanks to Sebastian Norde for the awesome logo!
 ## Licensing
 Apache-2
 
-[travis-image]: https://img.shields.io/travis/klarna/eremetic.svg?style=flat
-[coveralls-image]: https://img.shields.io/coveralls/klarna/eremetic.svg?style=flat
-[goreport-image]: https://goreportcard.com/badge/github.com/klarna/eremetic
+[travis-image]: https://img.shields.io/travis/eremetic-framework/eremetic.svg?style=flat
+[coveralls-image]: https://img.shields.io/coveralls/eremetic-framework/eremetic.svg?style=flat
+[goreport-image]: https://goreportcard.com/badge/github.com/eremetic-framework/eremetic
