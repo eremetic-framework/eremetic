@@ -8,7 +8,7 @@ import (
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	"github.com/mesos/mesos-go/api/v0/mesosutil"
 
-	"github.com/klarna/eremetic"
+	"github.com/eremetic-framework/eremetic"
 )
 
 func createTaskInfo(task eremetic.Task, offer *mesosproto.Offer) (eremetic.Task, *mesosproto.TaskInfo) {

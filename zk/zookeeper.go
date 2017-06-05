@@ -11,7 +11,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/samuel/go-zookeeper/zk"
 
-	"github.com/klarna/eremetic"
+	"github.com/eremetic-framework/eremetic"
 )
 
 // connection wraps a zk.Conn struct for testability

@@ -9,7 +9,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
 
-	"github.com/klarna/eremetic"
+	"github.com/eremetic-framework/eremetic"
 )
 
 // connection defines the functions needed to interact with a bolt database

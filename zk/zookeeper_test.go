@@ -10,7 +10,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/klarna/eremetic"
+	"github.com/eremetic-framework/eremetic"
 )
 
 func TestZKDatabase(t *testing.T) {

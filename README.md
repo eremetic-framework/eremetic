@@ -151,7 +151,7 @@ The file should contain the Principal to authenticate and the secret separated b
 ## Building
 
 ### Environment
-Clone the repository into `$GOPATH/src/github.com/klarna/eremetic`.
+Clone the repository into `$GOPATH/src/github.com/eremetic-framework/eremetic`.
 This is needed because of internal package dependencies
 
 ### Install dependencies

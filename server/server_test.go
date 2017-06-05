@@ -12,9 +12,9 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/mock"
+	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/config"
+	"github.com/eremetic-framework/eremetic/mock"
 )
 
 func TestServer(t *testing.T) {

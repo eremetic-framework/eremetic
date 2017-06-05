@@ -13,7 +13,7 @@ import (
 	mesossched "github.com/mesos/mesos-go/api/v0/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/klarna/eremetic"
+	"github.com/eremetic-framework/eremetic"
 )
 
 var (

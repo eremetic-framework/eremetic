@@ -3,7 +3,7 @@ package mock
 import (
 	"errors"
 
-	"github.com/klarna/eremetic"
+	"github.com/eremetic-framework/eremetic"
 )
 
 // Scheduler mocks the eremetic scheduler.

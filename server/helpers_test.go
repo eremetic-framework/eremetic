@@ -11,8 +11,8 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/config"
+	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/config"
 )
 
 func TestHandlingHelpers(t *testing.T) {

@@ -15,10 +15,10 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/config"
-	"github.com/klarna/eremetic/server/assets"
-	"github.com/klarna/eremetic/version"
+	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/config"
+	"github.com/eremetic-framework/eremetic/server/assets"
+	"github.com/eremetic-framework/eremetic/version"
 )
 
 // getFile handles the actual fetching of file from the agent.

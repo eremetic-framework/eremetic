@@ -8,7 +8,7 @@ import (
 	"github.com/mesos/mesos-go/api/v0/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/klarna/eremetic"
+	"github.com/eremetic-framework/eremetic"
 	"time"
 )
 

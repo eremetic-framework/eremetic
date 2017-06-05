@@ -8,7 +8,7 @@ import (
 	ogle "github.com/jacobsa/oglematchers"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 
-	"github.com/klarna/eremetic"
+	"github.com/eremetic-framework/eremetic"
 	"time"
 )
 

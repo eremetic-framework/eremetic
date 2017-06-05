@@ -13,8 +13,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/client"
+	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/client"
 	"log"
 )
 

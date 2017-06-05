@@ -7,8 +7,8 @@ import (
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/klarna/eremetic"
-	"github.com/klarna/eremetic/mock"
+	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/mock"
 )
 
 func TestReconcile(t *testing.T) {
