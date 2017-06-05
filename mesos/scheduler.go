@@ -14,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/metrics"
 )
 
 var (
@@ -157,7 +158,7 @@ loop:
 
 			if offer == nil {
 				logrus.WithField("task_id", tid).Warn("Unable to find a matching offer")
-				tasksDelayed.Inc()
+				metrics.TasksDelayed.Inc()
 				go func() { s.tasks <- tid }()
 				break loop
 			}
@@ -174,8 +175,8 @@ loop:
 			})
 			s.database.PutTask(&t)
 			driver.LaunchTasks([]*mesosproto.OfferID{offer.Id}, []*mesosproto.TaskInfo{task}, defaultFilter)
-			tasksLaunched.Inc()
-			queueSize.Dec()
+			metrics.TasksLaunched.Inc()
+			metrics.QueueSize.Dec()
 
 			continue
 		default:
@@ -221,7 +222,7 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 	}
 
 	if newState == eremetic.TaskRunning && !task.IsRunning() {
-		tasksRunning.Inc()
+		metrics.TasksRunning.Inc()
 	}
 
 	var shouldRetry bool
@@ -243,12 +244,12 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 		} else {
 			seq = "final"
 		}
-		tasksTerminated.With(prometheus.Labels{
+		metrics.TasksTerminated.With(prometheus.Labels{
 			"status":   string(newState),
 			"sequence": seq,
 		}).Inc()
 		if task.WasRunning() {
-			tasksRunning.Dec()
+			metrics.TasksRunning.Dec()
 		}
 	}
 
@@ -265,7 +266,7 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 		})
 		task.Retry++
 		go func() {
-			queueSize.Inc()
+			metrics.QueueSize.Inc()
 			s.tasks <- id
 		}()
 	} else if eremetic.IsTerminal(newState) {
@@ -339,8 +340,8 @@ func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	select {
 	case s.tasks <- task.ID:
 		s.database.PutTask(&task)
-		tasksCreated.Inc()
-		queueSize.Inc()
+		metrics.TasksCreated.Inc()
+		metrics.QueueSize.Inc()
 		return task.ID, nil
 	case <-time.After(time.Duration(1) * time.Second):
 		return "", eremetic.ErrQueueFull
@@ -391,52 +392,3 @@ func nextID(s *Scheduler) string {
 
 	return string(b)
 }
-
-// RegisterMetrics registers mesos metrics to a prometheus Registerer.
-func RegisterMetrics(r prometheus.Registerer) error {
-	errs := []error{
-		r.Register(tasksCreated),
-		r.Register(tasksLaunched),
-		r.Register(tasksTerminated),
-		r.Register(tasksDelayed),
-		r.Register(tasksRunning),
-		r.Register(queueSize),
-	}
-	if len(errs) > 0 {
-		return errors.New("unable to register metrics")
-	}
-	return nil
-}
-
-var (
-	tasksCreated = prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: "scheduler",
-		Name:      "tasks_created",
-		Help:      "Number of tasks submitted to eremetic",
-	})
-	tasksLaunched = prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: "scheduler",
-		Name:      "tasks_launched",
-		Help:      "Number of tasks launched by eremetic",
-	})
-	tasksTerminated = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Subsystem: "scheduler",
-		Name:      "tasks_terminated",
-		Help:      "Number of terminated tasks by terminal status",
-	}, []string{"status", "sequence"})
-	tasksDelayed = prometheus.NewCounter(prometheus.CounterOpts{
-		Subsystem: "scheduler",
-		Name:      "tasks_delayed",
-		Help:      "Number of times the launch of a task has been delayed",
-	})
-	tasksRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: "scheduler",
-		Name:      "tasks_running",
-		Help:      "Number of tasks currently running",
-	})
-	queueSize = prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: "scheduler",
-		Name:      "queue_size",
-		Help:      "Number of tasks in the queue",
-	})
-)
