@@ -6,7 +6,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	ogle "github.com/jacobsa/oglematchers"
-	"github.com/mesos/mesos-go/api/v0/mesosproto"
+	"github.com/mesos/mesos-go/api/v1/lib"
 
 	"github.com/eremetic-framework/eremetic"
 	"time"
@@ -26,12 +26,12 @@ type availabilityMatcher struct {
 }
 
 func (m *resourceMatcher) Matches(o interface{}) error {
-	offer := o.(*mesosproto.Offer)
+	offer := o.(mesos.Offer)
 	err := errors.New("")
 
 	for _, res := range offer.Resources {
 		if res.GetName() == m.name {
-			if res.GetType() != mesosproto.Value_SCALAR {
+			if res.GetType() != mesos.SCALAR {
 				return err
 			}
 
@@ -62,11 +62,11 @@ func availabilityMatch(matchTime time.Time) ogle.Matcher {
 }
 
 func (m *attributeMatcher) Matches(o interface{}) error {
-	offer := o.(*mesosproto.Offer)
+	offer := o.(mesos.Offer)
 
 	for _, attr := range offer.Attributes {
 		if attr.GetName() == m.constraint.AttributeName {
-			if attr.GetType() != mesosproto.Value_TEXT ||
+			if attr.GetType() != mesos.TEXT ||
 				attr.Text.GetValue() != m.constraint.AttributeValue {
 				return errors.New("")
 			}
@@ -78,16 +78,18 @@ func (m *attributeMatcher) Matches(o interface{}) error {
 }
 
 func (m *availabilityMatcher) Matches(o interface{}) error {
-	offer := o.(*mesosproto.Offer)
+	offer := o.(mesos.Offer)
 
 	if offer.Unavailability == nil {
 		return nil
 	}
 
-	if start := offer.Unavailability.GetStart(); start != nil && m.UnixNano() >= *start.Nanoseconds {
-		if duration := offer.Unavailability.GetDuration(); duration == nil {
+	start := &offer.Unavailability.Start
+	if m.UnixNano() >= start.GetNanoseconds() {
+		duration := offer.Unavailability.GetDuration()
+		if duration == nil {
 			return errors.New("Node is on indefinite period of maintenance.")
-		} else if m.UnixNano() <= *start.Nanoseconds+*duration.Nanoseconds {
+		} else if m.UnixNano() <= start.GetNanoseconds()+duration.GetNanoseconds() {
 			return errors.New("Node is currently in maintenance mode.")
 		}
 	}
@@ -127,16 +129,16 @@ func matches(matcher ogle.Matcher, o interface{}) bool {
 	return err == nil
 }
 
-func matchOffer(task eremetic.Task, offers []*mesosproto.Offer) (*mesosproto.Offer, []*mesosproto.Offer) {
+func matchOffer(task eremetic.Task, offers []mesos.Offer) (*mesos.Offer, []mesos.Offer) {
 	var matcher = createMatcher(task)
 	for i, off := range offers {
 		if matches(matcher, off) {
 			offers[i] = offers[len(offers)-1]
 			offers = offers[:len(offers)-1]
-			return off, offers
+			return &off, offers
 		}
 		logrus.WithFields(logrus.Fields{
-			"offer_id": off.Id.GetValue(),
+			"offer_id": off.ID.GetValue(),
 			"matcher":  matcher.Description(),
 			"task_id":  task.ID,
 		}).Debug("Unable to match offer")

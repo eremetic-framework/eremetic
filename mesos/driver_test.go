@@ -13,6 +13,7 @@ func TestDriver(t *testing.T) {
 
 			driver, err := createDriver(&scheduler, &Settings{})
 
+			So(err, ShouldNotBeNil)
 			So(err.Error(), ShouldEqual, "Missing master location URL.")
 			So(driver, ShouldBeNil)
 		})
@@ -28,7 +29,7 @@ func TestDriver(t *testing.T) {
 			fid := getFrameworkID(&Scheduler{
 				frameworkID: "zoidberg",
 			})
-			So(*fid.Value, ShouldEqual, "zoidberg")
+			So(fid.Value, ShouldEqual, "zoidberg")
 		})
 	})
 }

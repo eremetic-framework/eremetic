@@ -1,63 +1,61 @@
 package mesos
 
 import (
-	"github.com/golang/protobuf/proto"
-	"github.com/mesos/mesos-go/api/v0/mesosproto"
-	"github.com/mesos/mesos-go/api/v0/mesosutil"
+	"github.com/mesos/mesos-go/api/v1/lib"
 )
 
 // Optional attributes can be added.
-func offer(id string, cpu float64, mem float64, unavailability *mesosproto.Unavailability, extra ...interface{}) *mesosproto.Offer {
-	attributes := []*mesosproto.Attribute{}
-	resources := []*mesosproto.Resource{
-		mesosutil.NewScalarResource("cpus", cpu),
-		mesosutil.NewScalarResource("mem", mem),
+func offer(id string, cpu float64, mem float64, unavailability *mesos.Unavailability, extra ...interface{}) mesos.Offer {
+	attributes := []mesos.Attribute{}
+	resources := []mesos.Resource{
+		NewScalarResource("cpus", cpu),
+		NewScalarResource("mem", mem),
 	}
 	for _, r := range extra {
 		switch r.(type) {
-		case *mesosproto.Attribute:
-			attributes = append(attributes, r.(*mesosproto.Attribute))
-		case *mesosproto.Resource:
-			resources = append(resources, r.(*mesosproto.Resource))
+		case mesos.Attribute:
+			attributes = append(attributes, r.(mesos.Attribute))
+		case mesos.Resource:
+			resources = append(resources, r.(mesos.Resource))
 		}
 	}
-	return &mesosproto.Offer{
-		Id: &mesosproto.OfferID{
-			Value: proto.String(id),
+	return mesos.Offer{
+		ID: mesos.OfferID{
+			Value: id,
 		},
-		FrameworkId: &mesosproto.FrameworkID{
-			Value: proto.String("framework-1234"),
+		FrameworkID: mesos.FrameworkID{
+			Value: "framework-1234",
 		},
-		SlaveId: &mesosproto.SlaveID{
-			Value: proto.String("agent-id"),
+		AgentID: mesos.AgentID{
+			Value: "agent-id",
 		},
-		Hostname:       proto.String("localhost"),
+		Hostname:       "localhost",
 		Resources:      resources,
 		Attributes:     attributes,
 		Unavailability: unavailability,
 	}
 }
 
-func textAttribute(name string, value string) *mesosproto.Attribute {
-	return &mesosproto.Attribute{
-		Name: proto.String(name),
-		Type: mesosproto.Value_TEXT.Enum(),
-		Text: &mesosproto.Value_Text{
-			Value: proto.String(value),
+func textAttribute(name string, value string) mesos.Attribute {
+	return mesos.Attribute{
+		Name: name,
+		Type: mesos.TEXT,
+		Text: &mesos.Value_Text{
+			Value: value,
 		},
 	}
 }
 
-func unavailability(details ...int64) *mesosproto.Unavailability {
-	un := mesosproto.Unavailability{}
+func unavailability(details ...int64) *mesos.Unavailability {
+	un := mesos.Unavailability{}
 	if len(details) >= 1 {
-		un.Start = &mesosproto.TimeInfo{
-			Nanoseconds: proto.Int64(details[0]),
+		un.Start = mesos.TimeInfo{
+			Nanoseconds: details[0],
 		}
 	}
 	if len(details) >= 2 {
-		un.Duration = &mesosproto.DurationInfo{
-			Nanoseconds: proto.Int64(details[1]),
+		un.Duration = &mesos.DurationInfo{
+			Nanoseconds: details[1],
 		}
 	}
 	return &un
