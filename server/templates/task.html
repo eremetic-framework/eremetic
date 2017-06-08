@@ -90,11 +90,11 @@
                             </div>
                         </div>
                         {{end}}
-                        {{if .SlaveID}}
+                        {{if .AgentID}}
                         <div class="item" title="slave id">
                             <i class="child icon"></i>
                             <div class="content">
-                                {{.SlaveID}}
+                                {{.AgentID}}
                             </div>
                         </div>
                         {{end}}
@@ -110,12 +110,12 @@
                                 {{.Memory}}
                             </div>
                         </div>
-                        {{if .SlaveConstraints}}
+                        {{if .AgentConstraints}}
                             <div class="item" title="slave constraints">
                                 <i class="lock icon"></i>
                                 <div class="content">
-                                    <strong>Slave constraints:</strong>
-                                    {{range $index, $constraint := .SlaveConstraints}}
+                                    <strong>Agent constraints:</strong>
+                                    {{range $index, $constraint := .AgentConstraints}}
                                         <br/>{{$constraint.AttributeName}}={{$constraint.AttributeValue}}
                                     {{end}}
                                 </div>

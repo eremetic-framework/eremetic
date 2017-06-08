@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/eremetic-framework/eremetic"
+	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	"github.com/mesos/mesos-go/api/v0/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
@@ -37,7 +37,7 @@ func TestTask(t *testing.T) {
 				Value: proto.String("framework-id"),
 			},
 			SlaveId: &mesosproto.SlaveID{
-				Value: proto.String("slave-id"),
+				Value: proto.String("agent-id"),
 			},
 			Hostname: proto.String("hostname"),
 			Resources: []*mesosproto.Resource{&mesosproto.Resource{
@@ -60,7 +60,7 @@ func TestTask(t *testing.T) {
 			So(taskInfo.GetResources()[1].GetScalar().GetValue(), ShouldEqual, eremeticTask.TaskMem)
 			So(taskInfo.Container.GetType().String(), ShouldEqual, "DOCKER")
 			So(taskInfo.Container.Docker.GetImage(), ShouldEqual, "busybox")
-			So(net.SlaveID, ShouldEqual, "slave-id")
+			So(net.AgentID, ShouldEqual, "agent-id")
 			So(taskInfo.Container.Docker.GetForcePullImage(), ShouldBeFalse)
 		})
 

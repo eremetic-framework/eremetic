@@ -172,8 +172,8 @@ func TestMatch(t *testing.T) {
 
 	Convey("AttributeMatch", t, func() {
 		Convey("Does match", func() {
-			m := attributeMatch([]eremetic.SlaveConstraint{
-				eremetic.SlaveConstraint{
+			m := attributeMatch([]eremetic.AgentConstraint{
+				eremetic.AgentConstraint{
 					AttributeName:  "node_name",
 					AttributeValue: "node1",
 				},
@@ -182,8 +182,8 @@ func TestMatch(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 		Convey("Does not match", func() {
-			m := attributeMatch([]eremetic.SlaveConstraint{
-				eremetic.SlaveConstraint{
+			m := attributeMatch([]eremetic.AgentConstraint{
+				eremetic.AgentConstraint{
 					AttributeName:  "node_name",
 					AttributeValue: "node2",
 				},
@@ -194,7 +194,7 @@ func TestMatch(t *testing.T) {
 	})
 
 	Convey("matchOffer", t, func() {
-		Convey("Tasks without SlaveConstraints", func() {
+		Convey("Tasks without AgentConstraints", func() {
 			Convey("Match", func() {
 				task := eremetic.Task{
 					TaskCPUs: 0.8,
@@ -230,14 +230,14 @@ func TestMatch(t *testing.T) {
 			})
 		})
 
-		Convey("Tasks with SlaveConstraints", func() {
-			Convey("Match slave with attribute", func() {
+		Convey("Tasks with AgentConstraints", func() {
+			Convey("Match agent with attribute", func() {
 				// Use task/mem constraints which match both offers.
 				task := eremetic.Task{
 					TaskCPUs: 0.5,
 					TaskMem:  128.0,
-					SlaveConstraints: []eremetic.SlaveConstraint{
-						eremetic.SlaveConstraint{
+					AgentConstraints: []eremetic.AgentConstraint{
+						eremetic.AgentConstraint{
 							AttributeName:  "node_name",
 							AttributeValue: "node2",
 						},
@@ -255,8 +255,8 @@ func TestMatch(t *testing.T) {
 				task := eremetic.Task{
 					TaskCPUs: 0.5,
 					TaskMem:  128.0,
-					SlaveConstraints: []eremetic.SlaveConstraint{
-						eremetic.SlaveConstraint{
+					AgentConstraints: []eremetic.AgentConstraint{
+						eremetic.AgentConstraint{
 							AttributeName:  "node_name",
 							AttributeValue: "sherah",
 						},
@@ -283,12 +283,12 @@ func TestMatch(t *testing.T) {
 				task := eremetic.Task{
 					TaskCPUs: 0.5,
 					TaskMem:  128.0,
-					SlaveConstraints: []eremetic.SlaveConstraint{
-						eremetic.SlaveConstraint{
+					AgentConstraints: []eremetic.AgentConstraint{
+						eremetic.AgentConstraint{
 							AttributeName:  "role",
 							AttributeValue: "badassmofo",
 						},
-						eremetic.SlaveConstraint{
+						eremetic.AgentConstraint{
 							AttributeName:  "node_name",
 							AttributeValue: "node3",
 						},

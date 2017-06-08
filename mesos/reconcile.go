@@ -72,7 +72,7 @@ func reconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB)
 						statuses = append(statuses, &mesosproto.TaskStatus{
 							State:   mesosproto.TaskState_TASK_STAGING.Enum(),
 							TaskId:  &mesosproto.TaskID{Value: proto.String(t.ID)},
-							SlaveId: &mesosproto.SlaveID{Value: proto.String(t.SlaveID)},
+							SlaveId: &mesosproto.SlaveID{Value: proto.String(t.AgentID)},
 						})
 					}
 					logrus.WithField("reconciliation_request_count", c).Debug("Sending reconciliation request")

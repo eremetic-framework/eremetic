@@ -18,7 +18,7 @@ type resourceMatcher struct {
 }
 
 type attributeMatcher struct {
-	constraint eremetic.SlaveConstraint
+	constraint eremetic.AgentConstraint
 }
 
 type availabilityMatcher struct {
@@ -99,15 +99,15 @@ func (m *availabilityMatcher) Description() string {
 }
 
 func (m *attributeMatcher) Description() string {
-	return fmt.Sprintf("slave attribute constraint %s=%s",
+	return fmt.Sprintf("agent attribute constraint %s=%s",
 		m.constraint.AttributeName,
 		m.constraint.AttributeValue,
 	)
 }
 
-func attributeMatch(slaveConstraints []eremetic.SlaveConstraint) ogle.Matcher {
+func attributeMatch(agentConstraints []eremetic.AgentConstraint) ogle.Matcher {
 	var submatchers []ogle.Matcher
-	for _, constraint := range slaveConstraints {
+	for _, constraint := range agentConstraints {
 		submatchers = append(submatchers, &attributeMatcher{constraint})
 	}
 	return ogle.AllOf(submatchers...)
@@ -117,7 +117,7 @@ func createMatcher(task eremetic.Task) ogle.Matcher {
 	return ogle.AllOf(
 		cpuAvailable(task.TaskCPUs),
 		memoryAvailable(task.TaskMem),
-		attributeMatch(task.SlaveConstraints),
+		attributeMatch(task.AgentConstraints),
 		availabilityMatch(time.Now()),
 	)
 }
