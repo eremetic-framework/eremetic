@@ -63,9 +63,9 @@ type Port struct {
 	Protocol      string `json:"protocol"`
 }
 
-// SlaveConstraint is a constraint that is validated for each slave when
+// AgentConstraint is a constraint that is validated for each agent when
 // determining where to schedule a task.
-type SlaveConstraint struct {
+type AgentConstraint struct {
 	AttributeName  string `json:"attribute_name"`
 	AttributeValue string `json:"attribute_value"`
 }
@@ -96,8 +96,8 @@ type Task struct {
 	Network           string            `json:"network"`
 	DNS               string            `json:"dns"`
 	FrameworkID       string            `json:"framework_id"`
-	SlaveID           string            `json:"slave_id"`
-	SlaveConstraints  []SlaveConstraint `json:"slave_constraints"`
+	AgentID           string            `json:"slave_id"`
+	AgentConstraints  []AgentConstraint `json:"slave_constraints"`
 	Hostname          string            `json:"hostname"`
 	Retry             int               `json:"retry"`
 	CallbackURI       string            `json:"callback_uri"`
@@ -152,7 +152,7 @@ type Request struct {
 	DNS               string            `json:"dns"`
 	Environment       map[string]string `json:"env"`
 	MaskedEnvironment map[string]string `json:"masked_env"`
-	SlaveConstraints  []SlaveConstraint `json:"slave_constraints"`
+	AgentConstraints  []AgentConstraint `json:"slave_constraints"`
 	CallbackURI       string            `json:"callback_uri"`
 	URIs              []string          `json:"uris"`
 	Fetch             []URI             `json:"fetch"`
@@ -183,7 +183,7 @@ func NewTask(request Request, name string) (Task, error) {
 		User:              "root",
 		Environment:       request.Environment,
 		MaskedEnvironment: request.MaskedEnvironment,
-		SlaveConstraints:  request.SlaveConstraints,
+		AgentConstraints:  request.AgentConstraints,
 		Image:             request.DockerImage,
 		Volumes:           request.Volumes,
 		Ports:             request.Ports,

@@ -208,7 +208,7 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 	if task.ID == "" {
 		task = eremetic.Task{
 			ID:      id,
-			SlaveID: status.SlaveId.GetValue(),
+			AgentID: status.SlaveId.GetValue(),
 		}
 	}
 
@@ -312,7 +312,7 @@ func (s *Scheduler) SlaveLost(_ mesossched.SchedulerDriver, slaveID *mesosproto.
 // ExecutorLost is invoked when an executor has exited/terminated.
 func (s *Scheduler) ExecutorLost(_ mesossched.SchedulerDriver, executorID *mesosproto.ExecutorID, slaveID *mesosproto.SlaveID, status int) {
 	logrus.WithFields(logrus.Fields{
-		"slave_id":    slaveID,
+		"agent_id":    slaveID,
 		"executor_id": executorID,
 	}).Debug("Executor on slave was lost")
 }
@@ -328,7 +328,7 @@ func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	logrus.WithFields(logrus.Fields{
 		"docker_image":      request.DockerImage,
 		"command":           request.Command,
-		"slave_constraints": request.SlaveConstraints,
+		"agent_constraints": request.AgentConstraints,
 		"ports":             request.Ports,
 	}).Debug("Adding task to queue")
 

@@ -40,7 +40,7 @@ func getFile(file string, task eremetic.Task) (int, io.ReadCloser) {
 	response, err := http.Get(url)
 
 	if err != nil {
-		logrus.WithError(err).Errorf("Unable to fetch %s from agent %s.", file, task.SlaveID)
+		logrus.WithError(err).Errorf("Unable to fetch %s from agent %s.", file, task.AgentID)
 		return http.StatusInternalServerError, ioutil.NopCloser(strings.NewReader("Unable to fetch upstream file."))
 	}
 
@@ -136,8 +136,8 @@ func makeMap(task eremetic.Task) map[string]interface{} {
 	data["FrameworkID"] = task.FrameworkID
 	data["Hostname"] = task.Hostname
 	data["Name"] = task.Name
-	data["SlaveID"] = task.SlaveID
-	data["SlaveConstraints"] = task.SlaveConstraints
+	data["AgentID"] = task.AgentID
+	data["AgentConstraints"] = task.AgentConstraints
 	data["Status"] = task.Status
 	data["CPU"] = fmt.Sprintf("%.2f", task.TaskCPUs)
 	data["Memory"] = fmt.Sprintf("%.2f", task.TaskMem)
