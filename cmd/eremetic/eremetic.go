@@ -14,6 +14,7 @@ import (
 	"github.com/eremetic-framework/eremetic/boltdb"
 	"github.com/eremetic-framework/eremetic/config"
 	"github.com/eremetic-framework/eremetic/mesos"
+	"github.com/eremetic-framework/eremetic/metrics"
 	"github.com/eremetic-framework/eremetic/server"
 	"github.com/eremetic-framework/eremetic/version"
 	"github.com/eremetic-framework/eremetic/zk"
@@ -62,7 +63,7 @@ func main() {
 
 	setupLogging(config.LogFormat, config.LogLevel)
 
-	mesos.RegisterMetrics(prometheus.DefaultRegisterer)
+	metrics.RegisterMetrics(prometheus.DefaultRegisterer)
 
 	db, err := NewDB(config.DatabaseDriver, config.DatabasePath)
 	if err != nil {
