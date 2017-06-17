@@ -40,6 +40,7 @@ type Settings struct {
 type Scheduler struct {
 	settings *Settings
 
+	frameworkID  string
 	tasksCreated int
 	initialised  bool
 	driver       mesossched.SchedulerDriver
@@ -61,10 +62,11 @@ type Scheduler struct {
 // NewScheduler returns a new instance of the default scheduler.
 func NewScheduler(settings *Settings, db eremetic.TaskDB) *Scheduler {
 	return &Scheduler{
-		settings: settings,
-		shutdown: make(chan struct{}),
-		tasks:    make(chan string, settings.MaxQueueSize),
-		database: db,
+		settings:    settings,
+		shutdown:    make(chan struct{}),
+		tasks:       make(chan string, settings.MaxQueueSize),
+		database:    db,
+		frameworkID: settings.FrameworkID,
 	}
 }
 
@@ -105,6 +107,7 @@ func (s *Scheduler) Registered(driver mesossched.SchedulerDriver, frameworkID *m
 		"master":       masterInfo.GetHostname(),
 	}).Debug("Framework registered with master.")
 
+	s.frameworkID = frameworkID.GetValue()
 	if !s.initialised {
 		driver.ReconcileTasks([]*mesosproto.TaskStatus{})
 		s.initialised = true

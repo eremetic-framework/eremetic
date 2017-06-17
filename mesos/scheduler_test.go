@@ -80,6 +80,10 @@ func TestScheduler(t *testing.T) {
 				Convey("The tasks should be reconciled", func() {
 					So(driver.ReconcileTasksFnInvoked, ShouldBeTrue)
 				})
+
+				Convey("The framework ID is stored", func() {
+					So(s.frameworkID, ShouldEqual, "1234")
+				})
 			})
 
 			Convey("When the scheduler is reregistered", func() {

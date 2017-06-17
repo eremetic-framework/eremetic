@@ -20,13 +20,13 @@ func TestDriver(t *testing.T) {
 
 	Convey("getFrameworkID", t, func() {
 		Convey("Empty ID", func() {
-			fid := getFrameworkID(&Settings{})
+			fid := getFrameworkID(&Scheduler{})
 			So(fid, ShouldBeNil)
 		})
 
 		Convey("Some random string", func() {
-			fid := getFrameworkID(&Settings{
-				FrameworkID: "zoidberg",
+			fid := getFrameworkID(&Scheduler{
+				frameworkID: "zoidberg",
 			})
 			So(*fid.Value, ShouldEqual, "zoidberg")
 		})
