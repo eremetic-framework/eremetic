@@ -38,6 +38,8 @@ type Settings struct {
 
 // Scheduler holds the structure of the Eremetic Scheduler
 type Scheduler struct {
+	settings *Settings
+
 	tasksCreated int
 	initialised  bool
 	driver       mesossched.SchedulerDriver
@@ -57,17 +59,18 @@ type Scheduler struct {
 }
 
 // NewScheduler returns a new instance of the default scheduler.
-func NewScheduler(queueSize int, db eremetic.TaskDB) *Scheduler {
+func NewScheduler(settings *Settings, db eremetic.TaskDB) *Scheduler {
 	return &Scheduler{
+		settings: settings,
 		shutdown: make(chan struct{}),
-		tasks:    make(chan string, queueSize),
+		tasks:    make(chan string, settings.MaxQueueSize),
 		database: db,
 	}
 }
 
 // Run the eremetic scheduler
-func (s *Scheduler) Run(settings *Settings) {
-	driver, err := createDriver(s, settings)
+func (s *Scheduler) Run() {
+	driver, err := createDriver(s, s.settings)
 	s.driver = driver
 
 	if err != nil {
