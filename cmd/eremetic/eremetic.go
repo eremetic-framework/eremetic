@@ -71,10 +71,11 @@ func main() {
 	}
 	defer db.Close()
 
-	sched := mesos.NewScheduler(config.QueueSize, db)
+	settings := getSchedulerSettings(config)
+	sched := mesos.NewScheduler(settings, db)
 
 	go func() {
-		sched.Run(getSchedulerSettings(config))
+		sched.Run()
 		manners.Close()
 	}()
 

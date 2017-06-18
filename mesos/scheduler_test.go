@@ -58,7 +58,7 @@ func TestScheduler(t *testing.T) {
 
 			Convey("When creating a new scheduler", func() {
 				queueSize := 200
-				s = NewScheduler(queueSize, db)
+				s = NewScheduler(&Settings{MaxQueueSize: queueSize}, db)
 
 				Convey("The settings should have default values", func() {
 					So(s.tasksCreated, ShouldEqual, 0)
@@ -79,6 +79,10 @@ func TestScheduler(t *testing.T) {
 
 				Convey("The tasks should be reconciled", func() {
 					So(driver.ReconcileTasksFnInvoked, ShouldBeTrue)
+				})
+
+				Convey("The framework ID is stored", func() {
+					So(s.frameworkID, ShouldEqual, "1234")
 				})
 			})
 

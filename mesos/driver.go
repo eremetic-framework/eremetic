@@ -14,10 +14,10 @@ import (
 	"golang.org/x/net/context"
 )
 
-func getFrameworkID(settings *Settings) *mesosproto.FrameworkID {
-	if settings.FrameworkID != "" {
+func getFrameworkID(scheduler *Scheduler) *mesosproto.FrameworkID {
+	if scheduler.frameworkID != "" {
 		return &mesosproto.FrameworkID{
-			Value: proto.String(settings.FrameworkID),
+			Value: proto.String(scheduler.frameworkID),
 		}
 	}
 	return nil
@@ -75,7 +75,7 @@ func createDriver(scheduler *Scheduler, settings *Settings) (*mesossched.MesosSc
 	return mesossched.NewMesosSchedulerDriver(mesossched.DriverConfig{
 		Master: settings.Master,
 		Framework: &mesosproto.FrameworkInfo{
-			Id:              getFrameworkID(settings),
+			Id:              getFrameworkID(scheduler),
 			Name:            proto.String(settings.Name),
 			User:            proto.String(settings.User),
 			Checkpoint:      proto.Bool(settings.Checkpoint),
