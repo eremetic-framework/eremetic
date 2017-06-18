@@ -2,12 +2,12 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/api"
 	"github.com/eremetic-framework/eremetic/config"
 	"github.com/eremetic-framework/eremetic/server/assets"
 	"github.com/eremetic-framework/eremetic/version"
@@ -40,7 +41,7 @@ func NewHandler(scheduler eremetic.Scheduler, database eremetic.TaskDB) Handler 
 }
 
 // AddTask handles adding a task to the queue
-func (h Handler) AddTask(conf *config.Config) http.HandlerFunc {
+func (h Handler) AddTask(conf *config.Config, apiVersion string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request eremetic.Request
 
@@ -49,14 +50,35 @@ func (h Handler) AddTask(conf *config.Config) http.HandlerFunc {
 			handleError(err, w, "Unable to read payload.")
 			return
 		}
-
-		err = json.Unmarshal(body, &request)
-		if err != nil {
-			handleError(err, w, "Unable to parse body into a valid request.")
+		format := ""
+		switch apiVersion {
+		case api.V0:
+			deprecated(w)
+			var req api.RequestV0
+			err = json.Unmarshal(body, &req)
+			request = api.RequestFromV0(req)
+			format = "/task/%s"
+			if err != nil {
+				handleError(err, w, "Unable to parse body into a valid request.")
+				return
+			}
+		case api.V1:
+			var req api.RequestV1
+			err = json.Unmarshal(body, &req)
+			request = api.RequestFromV1(req)
+			format = "/api/v1/task/%s"
+			if err != nil {
+				handleError(err, w, "Unable to parse body into a valid request.")
+				return
+			}
+		default:
+			handleError(errors.New("Invalid API version"), w, "Invalid API version.")
 			return
 		}
 
 		taskID, err := h.scheduler.ScheduleTask(request)
+		location := fmt.Sprintf(format, taskID)
+
 		if err != nil {
 			logrus.WithError(err).Error("Unable to create task.")
 			httpStatus := 500
@@ -71,14 +93,17 @@ func (h Handler) AddTask(conf *config.Config) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Location", absURL(r, fmt.Sprintf("/task/%s", taskID), conf))
+		w.Header().Set("Location", absURL(r, location, conf))
 		writeJSON(http.StatusAccepted, taskID, w)
 	}
 }
 
 // GetFromSandbox fetches a file from the sandbox of the agent that ran the task
-func (h Handler) GetFromSandbox(file string) http.HandlerFunc {
+func (h Handler) GetFromSandbox(file string, apiVersion string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if apiVersion == api.V0 {
+			deprecated(w)
+		}
 		vars := mux.Vars(r)
 		taskID := vars["taskId"]
 		task, _ := h.database.ReadTask(taskID)
@@ -98,27 +123,24 @@ func (h Handler) GetFromSandbox(file string) http.HandlerFunc {
 }
 
 // GetTaskInfo returns information about the given task.
-func (h Handler) GetTaskInfo(conf *config.Config) http.HandlerFunc {
+func (h Handler) GetTaskInfo(conf *config.Config, apiVersion string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["taskId"]
 		logrus.WithField("task_id", id).Debug("Fetching task")
-		task, _ := h.database.ReadTask(id)
-
-		if strings.Contains(r.Header.Get("Accept"), "text/html") {
-			renderHTML(w, r, task, id, conf)
-		} else {
-			if reflect.DeepEqual(task, (eremetic.Task{})) {
-				writeJSON(http.StatusNotFound, nil, w)
-				return
-			}
-			writeJSON(http.StatusOK, task, w)
+		task0, _ := h.database.ReadTask(id)
+		switch apiVersion {
+		case api.V0:
+			deprecated(w)
+			getTaskInfoV0(task0, conf, id, w, r)
+		case api.V1:
+			getTaskInfoV1(task0, conf, id, w, r)
 		}
 	}
 }
 
 // ListRunningTasks returns information about running tasks in the database.
-func (h Handler) ListRunningTasks() http.HandlerFunc {
+func (h Handler) ListRunningTasks(apiVersion string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logrus.Debug("Fetching all tasks")
 		tasks, err := h.database.ListNonTerminalTasks()
@@ -126,7 +148,21 @@ func (h Handler) ListRunningTasks() http.HandlerFunc {
 			handleError(err, w, "Unable to fetch running tasks from the database")
 			return
 		}
-		writeJSON(200, tasks, w)
+		switch apiVersion {
+		case api.V0:
+			deprecated(w)
+			tasksV0 := []api.TaskV0{}
+			for _, t := range tasks {
+				tasksV0 = append(tasksV0, api.TaskV0FromTask(t))
+			}
+			writeJSON(200, tasksV0, w)
+		case api.V1:
+			tasksV1 := []api.TaskV1{}
+			for _, t := range tasks {
+				tasksV1 = append(tasksV1, api.TaskV1FromTask(t))
+			}
+			writeJSON(200, tasksV1, w)
+		}
 	}
 }
 
@@ -153,8 +189,11 @@ func (h Handler) IndexHandler(conf *config.Config) http.HandlerFunc {
 }
 
 // Version returns the currently running Eremetic version.
-func (h Handler) Version(conf *config.Config) http.HandlerFunc {
+func (h Handler) Version(conf *config.Config, apiVersion string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if apiVersion == api.V0 {
+			deprecated(w)
+		}
 		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(version.Version)
@@ -176,8 +215,12 @@ func (h Handler) StaticAssets() http.Handler {
 			&assetfs.AssetFS{Asset: assets.Asset, AssetDir: assets.AssetDir, AssetInfo: assets.AssetInfo, Prefix: "static"}))
 }
 
-func (h Handler) KillTask(conf *config.Config) http.HandlerFunc {
+// KillTask handles killing a task.
+func (h Handler) KillTask(conf *config.Config, apiVersion string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if apiVersion == api.V0 {
+			deprecated(w)
+		}
 		vars := mux.Vars(r)
 		id := vars["taskId"]
 		logrus.WithField("task_id", id).Debug("Killing task")
@@ -192,8 +235,12 @@ func (h Handler) KillTask(conf *config.Config) http.HandlerFunc {
 	}
 }
 
-func (h Handler) DeleteTask(conf *config.Config) http.HandlerFunc {
+// DeleteTask takes care of API calls to remove a task
+func (h Handler) DeleteTask(conf *config.Config, apiVersion string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if apiVersion == api.V0 {
+			deprecated(w)
+		}
 		vars := mux.Vars(r)
 		id := vars["taskId"]
 		logrus.WithField("task_id", id).Debug("Deleting task")

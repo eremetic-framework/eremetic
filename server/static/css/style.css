@@ -128,7 +128,7 @@
 .uri .field input,
 .ports .field input,
 .ports .field select,
-.slave_constraints .field input {
+.agent_constraints .field input {
   width: auto !important;
 }
 

@@ -76,7 +76,7 @@ func (db *DefaultTaskDB) ReadTask(id string) (Task, error) {
 	return Task{}, errors.New("unknown task")
 }
 
-// Deletes the task with a given id, or an error if not found.
+// DeleteTask removes the task with a given id, or an error if not found.
 func (db *DefaultTaskDB) DeleteTask(id string) error {
 	db.mtx.RLock()
 	defer db.mtx.RUnlock()
@@ -86,7 +86,6 @@ func (db *DefaultTaskDB) DeleteTask(id string) error {
 	}
 	return errors.New("unknown task")
 }
-
 
 // ReadUnmaskedTask returns a task with all its environment variables unmasked.
 func (db *DefaultTaskDB) ReadUnmaskedTask(id string) (Task, error) {

@@ -8,3 +8,4 @@ server/assets/assets.go
 ._*
 *\.sw[op]
 vendor/*
+*.orig

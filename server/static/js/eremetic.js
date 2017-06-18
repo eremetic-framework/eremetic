@@ -27,8 +27,8 @@ $(document).ready(function() {
       }, {});
     }
 
-    if (typeof json.slave_constraints !== "undefined") {
-      json.slave_constraints = json.slave_constraints.reduce(function(collector, element) {
+    if (typeof json.agent_constraints !== "undefined") {
+      json.agent_constraints = json.agent_constraints.reduce(function(collector, element) {
         collector.push({ 'attribute_name': element.attribute_name, 'attribute_value': element.attribute_value });
         return collector;
       }, []);
@@ -41,8 +41,8 @@ $(document).ready(function() {
       }, []);
     }
 
-    json.task_cpus = parseFloat(json.task_cpus);
-    json.task_mem = parseFloat(json.task_mem);
+    json.cpu = parseFloat(json.cpu);
+    json.mem = parseFloat(json.mem);
 
     return json;
   }
@@ -68,7 +68,7 @@ $(document).ready(function() {
 
     $.ajax({
       method: 'POST',
-      url: EREMETIC_URL_PREFIX + '/task',
+      url: EREMETIC_URL_PREFIX + '/api/v1/task',
       data: JSON.stringify(json),
       contentType: 'application/json',
       dataType: 'json',
@@ -94,14 +94,14 @@ $(document).ready(function() {
           placeholder: 'value'
         }
       }
-    } else if (type === 'slave_constraints') {
+    } else if (type === 'agent_constraints') {
       input = {
         one: {
-          name: 'slave_constraints['+number+'][attribute_name]',
+          name: 'agent_constraints['+number+'][attribute_name]',
           placeholder: 'Attribute Name'
         },
         two: {
-          name: 'slave_constraints['+number+'][attribute_value]',
+          name: 'agent_constraints['+number+'][attribute_value]',
           placeholder: 'Attribute Value'
         }
       }
@@ -216,10 +216,10 @@ $(document).ready(function() {
 
   }
 
-  function addSlaveConstraints(e) {
-    var   $cont = $('#slave_constraints')
+  function addAgentConstraints(e) {
+    var   $cont = $('#agent_constraints')
         , index = $cont.data('count') + 1
-        , $input = createInput('slave_constraints', index)
+        , $input = createInput('agent_constraints', index)
         ;
 
     e.preventDefault();
@@ -240,7 +240,7 @@ $(document).ready(function() {
   $('#new_task #ports .plus').on('click', addPorts);
   $('#new_task #env .plus').on('click', addEnvironments);
   $('#new_task #uris .plus').on('click', addURIs);
-  $('#new_task #slave_constraints .plus').on('click', addSlaveConstraints);
+  $('#new_task #agent_constraints .plus').on('click', addAgentConstraints);
   $('#new_task #cancel').on('click', function(e) {
     e.preventDefault();
     window.location = window.location;
