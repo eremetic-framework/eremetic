@@ -12,42 +12,32 @@ import (
 
 func TestMatch(t *testing.T) {
 	offerA := offer("offer-a", 0.6, 200.0,
-		&mesosproto.Unavailability{},
+		unavailability(),
 		textAttribute("role", "badassmofo"),
 		textAttribute("node_name", "node1"),
 	)
 	offerB := offer("offer-b", 1.8, 512.0,
-		&mesosproto.Unavailability{},
+		unavailability(),
 		textAttribute("node_name", "node2"),
 	)
 	offerC := offer("offer-c", 1.8, 512.0,
-		&mesosproto.Unavailability{
-			Start: &mesosproto.TimeInfo{
-				Nanoseconds: proto.Int64(time.Now().UnixNano()),
-			},
-			Duration: &mesosproto.DurationInfo{
-				Nanoseconds: proto.Int64(time.Unix(0, 0).Add(1 * time.Hour).UnixNano()),
-			},
-		},
+		unavailability(
+			time.Now().UnixNano(),
+			time.Unix(0, 0).Add(1*time.Hour).UnixNano(),
+		),
 		textAttribute("node_name", "node3"),
 	)
 	offerD := offer("offer-d", 1.8, 512.0,
-		&mesosproto.Unavailability{
-			Start: &mesosproto.TimeInfo{
-				Nanoseconds: proto.Int64(time.Now().UnixNano()),
-			},
-		},
+		unavailability(
+			time.Now().UnixNano(),
+		),
 		textAttribute("node_name", "node4"),
 	)
 	offerE := offer("offer-e", 1.8, 512.0,
-		&mesosproto.Unavailability{
-			Start: &mesosproto.TimeInfo{
-				Nanoseconds: proto.Int64(time.Now().Add(-2 * time.Hour).UnixNano()),
-			},
-			Duration: &mesosproto.DurationInfo{
-				Nanoseconds: proto.Int64(time.Unix(0, 0).Add(1 * time.Hour).UnixNano()),
-			},
-		},
+		unavailability(
+			time.Now().Add(-2*time.Hour).UnixNano(),
+			time.Unix(0, 0).Add(1*time.Hour).UnixNano(),
+		),
 		textAttribute("node_name", "node3"),
 	)
 
@@ -211,12 +201,12 @@ func TestMatch(t *testing.T) {
 			Convey("Match slave with mulitple attributes", func() {
 				// Build two new offers, both with the same role as offerA.
 				offerC := offer("offer-c", 0.6, 200.0,
-					&mesosproto.Unavailability{},
+					unavailability(),
 					textAttribute("role", "badassmofo"),
 					textAttribute("node_name", "node3"),
 				)
 				offerD := offer("offer-d", 0.6, 200.0,
-					&mesosproto.Unavailability{},
+					unavailability(),
 					textAttribute("role", "badassmofo"),
 				)
 

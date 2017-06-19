@@ -47,3 +47,18 @@ func textAttribute(name string, value string) *mesosproto.Attribute {
 		},
 	}
 }
+
+func unavailability(details ...int64) *mesosproto.Unavailability {
+	un := mesosproto.Unavailability{}
+	if len(details) >= 1 {
+		un.Start = &mesosproto.TimeInfo{
+			Nanoseconds: proto.Int64(details[0]),
+		}
+	}
+	if len(details) >= 2 {
+		un.Duration = &mesosproto.DurationInfo{
+			Nanoseconds: proto.Int64(details[1]),
+		}
+	}
+	return &un
+}
