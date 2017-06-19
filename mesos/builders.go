@@ -37,3 +37,13 @@ func offer(id string, cpu float64, mem float64, unavailability *mesosproto.Unava
 		Unavailability: unavailability,
 	}
 }
+
+func textAttribute(name string, value string) *mesosproto.Attribute {
+	return &mesosproto.Attribute{
+		Name: proto.String(name),
+		Type: mesosproto.Value_TEXT.Enum(),
+		Text: &mesosproto.Value_Text{
+			Value: proto.String(value),
+		},
+	}
+}
