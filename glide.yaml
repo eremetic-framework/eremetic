@@ -1,0 +1,51 @@
+package: github.com/eremetic-framework/eremetic
+import:
+- package: github.com/Sirupsen/logrus
+  version: ~1.0.0
+- package: github.com/boltdb/bolt
+  version: ~1.3.0
+- package: github.com/braintree/manners
+  version: ~0.4.0
+- package: github.com/elazarl/go-bindata-assetfs
+- package: github.com/gogo/protobuf
+  version: ~0.4.0
+  subpackages:
+  - proto
+- package: github.com/golang/protobuf
+  subpackages:
+  - proto
+- package: github.com/gorilla/mux
+  version: ~1.4.0
+- package: github.com/jacobsa/oglematchers
+- package: github.com/kardianos/osext
+- package: github.com/kelseyhightower/envconfig
+  version: ~1.3.0
+- package: github.com/mesos/mesos-go
+  version: f2cd423e881bdfb0658479ca4ef433e30f4906cd
+  subpackages:
+  - api/v0/auth
+  - api/v0/mesosproto
+  - api/v0/mesosutil
+  - api/v0/scheduler
+- package: github.com/pborman/uuid
+  version: ~1.0.0
+- package: github.com/prometheus/client_golang
+  version: ~0.8.0
+  subpackages:
+  - prometheus
+- package: github.com/samuel/go-zookeeper
+  subpackages:
+  - zk
+- package: github.com/stretchr/testify
+  version: ~1.1.4
+  subpackages:
+  - mock
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: gopkg.in/yaml.v2
+testImport:
+- package: github.com/smartystreets/goconvey
+  version: ~1.6.2
+  subpackages:
+  - convey

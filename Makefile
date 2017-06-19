@@ -20,7 +20,10 @@ PACKAGES=$(shell go list ./... | grep -v /vendor/)
 
 all: test
 
-${TOOLS}:
+deps:
+	glide install
+
+${TOOLS}: deps
 	go get github.com/jteeuwen/go-bindata/...
 	go get github.com/elazarl/go-bindata-assetfs/...
 	go get github.com/smartystreets/goconvey
