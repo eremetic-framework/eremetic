@@ -5,34 +5,11 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
-	"github.com/mesos/mesos-go/api/v0/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/eremetic-framework/eremetic"
 	"time"
 )
-
-// Optional attributes can be added.
-func offer(id string, cpu float64, mem float64, unavailability *mesosproto.Unavailability, attributes ...*mesosproto.Attribute) *mesosproto.Offer {
-	return &mesosproto.Offer{
-		Id: &mesosproto.OfferID{
-			Value: proto.String(id),
-		},
-		FrameworkId: &mesosproto.FrameworkID{
-			Value: proto.String("framework-1234"),
-		},
-		SlaveId: &mesosproto.SlaveID{
-			Value: proto.String("slave-1234"),
-		},
-		Hostname: proto.String("localhost"),
-		Resources: []*mesosproto.Resource{
-			mesosutil.NewScalarResource("cpus", cpu),
-			mesosutil.NewScalarResource("mem", mem),
-		},
-		Attributes:     attributes,
-		Unavailability: unavailability,
-	}
-}
 
 func TestMatch(t *testing.T) {
 	offerA := offer("offer-a", 0.6, 200.0,
