@@ -3,112 +3,42 @@ package mesos
 import (
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
-	"github.com/mesos/mesos-go/api/v0/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/eremetic-framework/eremetic"
 	"time"
 )
 
-// Optional attributes can be added.
-func offer(id string, cpu float64, mem float64, unavailability *mesosproto.Unavailability, attributes ...*mesosproto.Attribute) *mesosproto.Offer {
-	return &mesosproto.Offer{
-		Id: &mesosproto.OfferID{
-			Value: proto.String(id),
-		},
-		FrameworkId: &mesosproto.FrameworkID{
-			Value: proto.String("framework-1234"),
-		},
-		SlaveId: &mesosproto.SlaveID{
-			Value: proto.String("slave-1234"),
-		},
-		Hostname: proto.String("localhost"),
-		Resources: []*mesosproto.Resource{
-			mesosutil.NewScalarResource("cpus", cpu),
-			mesosutil.NewScalarResource("mem", mem),
-		},
-		Attributes:     attributes,
-		Unavailability: unavailability,
-	}
-}
-
 func TestMatch(t *testing.T) {
 	offerA := offer("offer-a", 0.6, 200.0,
-		&mesosproto.Unavailability{},
-		&mesosproto.Attribute{
-			Name: proto.String("role"),
-			Type: mesosproto.Value_TEXT.Enum(),
-			Text: &mesosproto.Value_Text{
-				Value: proto.String("badassmofo"),
-			},
-		},
-		&mesosproto.Attribute{
-			Name: proto.String("node_name"),
-			Type: mesosproto.Value_TEXT.Enum(),
-			Text: &mesosproto.Value_Text{
-				Value: proto.String("node1"),
-			},
-		},
+		unavailability(),
+		textAttribute("role", "badassmofo"),
+		textAttribute("node_name", "node1"),
 	)
 	offerB := offer("offer-b", 1.8, 512.0,
-		&mesosproto.Unavailability{},
-		&mesosproto.Attribute{
-			Name: proto.String("node_name"),
-			Type: mesosproto.Value_TEXT.Enum(),
-			Text: &mesosproto.Value_Text{
-				Value: proto.String("node2"),
-			},
-		},
+		unavailability(),
+		textAttribute("node_name", "node2"),
 	)
 	offerC := offer("offer-c", 1.8, 512.0,
-		&mesosproto.Unavailability{
-			Start: &mesosproto.TimeInfo{
-				Nanoseconds: proto.Int64(time.Now().UnixNano()),
-			},
-			Duration: &mesosproto.DurationInfo{
-				Nanoseconds: proto.Int64(time.Unix(0, 0).Add(1 * time.Hour).UnixNano()),
-			},
-		},
-		&mesosproto.Attribute{
-			Name: proto.String("node_name"),
-			Type: mesosproto.Value_TEXT.Enum(),
-			Text: &mesosproto.Value_Text{
-				Value: proto.String("node3"),
-			},
-		},
+		unavailability(
+			time.Now().UnixNano(),
+			time.Unix(0, 0).Add(1*time.Hour).UnixNano(),
+		),
+		textAttribute("node_name", "node3"),
 	)
 	offerD := offer("offer-d", 1.8, 512.0,
-		&mesosproto.Unavailability{
-			Start: &mesosproto.TimeInfo{
-				Nanoseconds: proto.Int64(time.Now().UnixNano()),
-			},
-		},
-		&mesosproto.Attribute{
-			Name: proto.String("node_name"),
-			Type: mesosproto.Value_TEXT.Enum(),
-			Text: &mesosproto.Value_Text{
-				Value: proto.String("node4"),
-			},
-		},
+		unavailability(
+			time.Now().UnixNano(),
+		),
+		textAttribute("node_name", "node4"),
 	)
 	offerE := offer("offer-e", 1.8, 512.0,
-		&mesosproto.Unavailability{
-			Start: &mesosproto.TimeInfo{
-				Nanoseconds: proto.Int64(time.Now().Add(-2 * time.Hour).UnixNano()),
-			},
-			Duration: &mesosproto.DurationInfo{
-				Nanoseconds: proto.Int64(time.Unix(0, 0).Add(1 * time.Hour).UnixNano()),
-			},
-		},
-		&mesosproto.Attribute{
-			Name: proto.String("node_name"),
-			Type: mesosproto.Value_TEXT.Enum(),
-			Text: &mesosproto.Value_Text{
-				Value: proto.String("node3"),
-			},
-		},
+		unavailability(
+			time.Now().Add(-2*time.Hour).UnixNano(),
+			time.Unix(0, 0).Add(1*time.Hour).UnixNano(),
+		),
+		textAttribute("node_name", "node3"),
 	)
 
 	Convey("CPUAvailable", t, func() {
@@ -271,13 +201,13 @@ func TestMatch(t *testing.T) {
 			Convey("Match slave with mulitple attributes", func() {
 				// Build two new offers, both with the same role as offerA.
 				offerC := offer("offer-c", 0.6, 200.0,
-					&mesosproto.Unavailability{},
-					&mesosproto.Attribute{Name: proto.String("role"), Type: mesosproto.Value_TEXT.Enum(), Text: &mesosproto.Value_Text{Value: proto.String("badassmofo")}},
-					&mesosproto.Attribute{Name: proto.String("node_name"), Type: mesosproto.Value_TEXT.Enum(), Text: &mesosproto.Value_Text{Value: proto.String("node3")}},
+					unavailability(),
+					textAttribute("role", "badassmofo"),
+					textAttribute("node_name", "node3"),
 				)
 				offerD := offer("offer-d", 0.6, 200.0,
-					&mesosproto.Unavailability{},
-					&mesosproto.Attribute{Name: proto.String("role"), Type: mesosproto.Value_TEXT.Enum(), Text: &mesosproto.Value_Text{Value: proto.String("badassmofo")}},
+					unavailability(),
+					textAttribute("role", "badassmofo"),
 				)
 
 				task := eremetic.Task{

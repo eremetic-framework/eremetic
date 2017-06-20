@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/eremetic-framework/eremetic"
-	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	"github.com/mesos/mesos-go/api/v0/mesosutil"
 	. "github.com/smartystreets/goconvey/convey"
@@ -31,28 +30,18 @@ func TestTask(t *testing.T) {
 			Name:     "Eremetic task 17",
 		}
 
-		portres := "ports"
-		offer := mesosproto.Offer{
-			FrameworkId: &mesosproto.FrameworkID{
-				Value: proto.String("framework-id"),
-			},
-			SlaveId: &mesosproto.SlaveID{
-				Value: proto.String("agent-id"),
-			},
-			Hostname: proto.String("hostname"),
-			Resources: []*mesosproto.Resource{&mesosproto.Resource{
-				Name: &portres,
-				Type: mesosproto.Value_RANGES.Enum(),
-				Ranges: &mesosproto.Value_Ranges{
-					Range: []*mesosproto.Value_Range{
-						mesosutil.NewValueRange(31000, 31010),
-					},
+		offer := offer("offer-1", 1.0, 500.0,
+			&mesosproto.Unavailability{},
+			mesosutil.NewRangesResource(
+				"ports",
+				[]*mesosproto.Value_Range{
+					mesosutil.NewValueRange(31000, 31010),
 				},
-			}},
-		}
+			),
+		)
 
 		Convey("No volume or environment specified", func() {
-			net, taskInfo := createTaskInfo(eremeticTask, &offer)
+			net, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.GetName(), ShouldEqual, eremeticTask.Name)
@@ -67,7 +56,7 @@ func TestTask(t *testing.T) {
 		Convey("Given no Command", func() {
 			eremeticTask.Command = ""
 
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.Command.GetValue(), ShouldBeEmpty)
 			So(taskInfo.Command.GetShell(), ShouldBeFalse)
@@ -85,7 +74,7 @@ func TestTask(t *testing.T) {
 			eremeticTask.Environment = environment
 			eremeticTask.Volumes = volumes
 
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Container.Volumes[0].GetContainerPath(), ShouldEqual, volumes[0].ContainerPath)
@@ -97,7 +86,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("Given no network", func() {
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Container.Docker.Network.String(), ShouldEqual, "BRIDGE")
@@ -105,7 +94,7 @@ func TestTask(t *testing.T) {
 
 		Convey("Given network", func() {
 			eremeticTask.Network = "HOST"
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Container.Docker.Network.String(), ShouldEqual, "HOST")
@@ -124,7 +113,7 @@ func TestTask(t *testing.T) {
 
 			eremeticTask.Ports = ports
 
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(len(taskInfo.Container.Docker.PortMappings), ShouldEqual, 1)
 			So(taskInfo.Container.Docker.GetPortMappings()[0].GetContainerPort(), ShouldEqual, ports[0].ContainerPort)
@@ -163,7 +152,7 @@ func TestTask(t *testing.T) {
 
 			eremeticTask.Ports = ports
 
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(len(taskInfo.Container.Docker.PortMappings), ShouldEqual, 1)
 			So(taskInfo.Container.Docker.GetPortMappings()[0].GetContainerPort(), ShouldEqual, 31000)
@@ -196,7 +185,7 @@ func TestTask(t *testing.T) {
 				Extract: true,
 			}}
 			eremeticTask.FetchURIs = URI
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
@@ -213,7 +202,7 @@ func TestTask(t *testing.T) {
 				Cache:   true,
 			}}
 			eremeticTask.FetchURIs = URI
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
@@ -228,7 +217,7 @@ func TestTask(t *testing.T) {
 				URI: "http://foobar.local/cats.jpeg",
 			}}
 			eremeticTask.FetchURIs = URI
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
@@ -244,7 +233,7 @@ func TestTask(t *testing.T) {
 				Executable: true,
 			}}
 			eremeticTask.FetchURIs = URI
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Command.Uris, ShouldHaveLength, 1)
@@ -256,7 +245,7 @@ func TestTask(t *testing.T) {
 
 		Convey("Force pull of docker image", func() {
 			eremeticTask.ForcePullImage = true
-			_, taskInfo := createTaskInfo(eremeticTask, &offer)
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Container.Docker.GetForcePullImage(), ShouldBeTrue)
