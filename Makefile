@@ -20,6 +20,9 @@ PACKAGES=$(shell go list ./... | grep -v /vendor/)
 
 all: test
 
+glide:
+	curl https://glide.sh/get | sh
+
 deps:
 	glide install
 
@@ -36,7 +39,7 @@ test-server: ${TOOLS}
 
 # Run tests cleanly in a docker container.
 test-docker:
-	$(DOCKER_GOLANG_RUN_CMD) "make test"
+	$(DOCKER_GOLANG_RUN_CMD) "make glide test"
 
 vet:
 	go vet ${PACKAGES}

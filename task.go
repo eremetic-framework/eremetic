@@ -78,37 +78,38 @@ type URI struct {
 	Cache      bool   `json:"cache"`
 }
 
-// Task defines the properties of a scheduled task.
+// Task represents the internal structure of a Task objert
 type Task struct {
-	TaskCPUs          float64           `json:"task_cpus"`
-	TaskMem           float64           `json:"task_mem"`
-	Command           string            `json:"command"`
-	Args              []string          `json:"args"`
-	User              string            `json:"user"`
-	Environment       map[string]string `json:"env"`
-	MaskedEnvironment map[string]string `json:"masked_env"`
-	Image             string            `json:"image"`
-	Volumes           []Volume          `json:"volumes"`
-	Ports             []Port            `json:"ports"`
-	Status            []Status          `json:"status"`
-	ID                string            `json:"id"`
-	Name              string            `json:"name"`
-	Network           string            `json:"network"`
-	DNS               string            `json:"dns"`
-	FrameworkID       string            `json:"framework_id"`
-	AgentID           string            `json:"slave_id"`
-	AgentConstraints  []AgentConstraint `json:"slave_constraints"`
-	Hostname          string            `json:"hostname"`
-	Retry             int               `json:"retry"`
-	CallbackURI       string            `json:"callback_uri"`
-	SandboxPath       string            `json:"sandbox_path"`
-	AgentIP           string            `json:"agent_ip"`
-	AgentPort         int32             `json:"agent_port"`
-	ForcePullImage    bool              `json:"force_pull_image"`
-	FetchURIs         []URI             `json:"fetch"`
+	TaskCPUs          float64
+	TaskMem           float64
+	Command           string
+	Args              []string
+	User              string
+	Environment       map[string]string
+	MaskedEnvironment map[string]string
+	Image             string
+	Volumes           []Volume
+	Ports             []Port
+	Status            []Status
+	ID                string
+	Name              string
+	Network           string
+	DNS               string
+	FrameworkID       string
+	AgentID           string
+	AgentConstraints  []AgentConstraint
+	Hostname          string
+	Retry             int
+	CallbackURI       string
+	SandboxPath       string
+	AgentIP           string
+	AgentPort         int32
+	ForcePullImage    bool
+	FetchURIs         []URI
 }
 
-func isArchive(url string) bool {
+// IsArchive is used to determine whether a url is an archive or not
+func IsArchive(url string) bool {
 	var archiveSfx = []string{".tgz", ".tar.gz", ".tbz2", ".tar.bz2", ".txz", ".tar.xz", ".zip"}
 	for _, s := range archiveSfx {
 		if strings.HasSuffix(url, s) {
@@ -123,7 +124,7 @@ func mergeURIs(request Request) []URI {
 	for _, v := range request.URIs {
 		URIs = append(URIs, URI{
 			URI:        v,
-			Extract:    isArchive(v),
+			Extract:    IsArchive(v),
 			Cache:      false,
 			Executable: false,
 		})
@@ -139,24 +140,24 @@ func mergeURIs(request Request) []URI {
 	return URIs
 }
 
-// Request represents the structure of a job request
+// Request is the internal structure of a Request
 type Request struct {
-	TaskCPUs          float64           `json:"task_cpus"`
-	TaskMem           float64           `json:"task_mem"`
-	DockerImage       string            `json:"docker_image"`
-	Command           string            `json:"command"`
-	Args              []string          `json:"args"`
-	Volumes           []Volume          `json:"volumes"`
-	Ports             []Port            `json:"ports"`
-	Network           string            `json:"network"`
-	DNS               string            `json:"dns"`
-	Environment       map[string]string `json:"env"`
-	MaskedEnvironment map[string]string `json:"masked_env"`
-	AgentConstraints  []AgentConstraint `json:"slave_constraints"`
-	CallbackURI       string            `json:"callback_uri"`
-	URIs              []string          `json:"uris"`
-	Fetch             []URI             `json:"fetch"`
-	ForcePullImage    bool              `json:"force_pull_image"`
+	TaskCPUs          float64
+	TaskMem           float64
+	DockerImage       string
+	Command           string
+	Args              []string
+	Volumes           []Volume
+	Ports             []Port
+	Network           string
+	DNS               string
+	Environment       map[string]string
+	MaskedEnvironment map[string]string
+	AgentConstraints  []AgentConstraint
+	CallbackURI       string
+	URIs              []string
+	Fetch             []URI
+	ForcePullImage    bool
 }
 
 // NewTask returns a new instance of a Task.
@@ -213,10 +214,12 @@ func (task *Task) IsTerminated() bool {
 	return IsTerminal(st)
 }
 
+// IsWaiting returns whether a task is waiting
 func (task *Task) IsWaiting() bool {
 	return task.CurrentStatus() == TaskQueued
 }
 
+// IsTerminating returns whether a task is in the process of terminating
 func (task *Task) IsTerminating() bool {
 	return task.CurrentStatus() == TaskTerminating
 }

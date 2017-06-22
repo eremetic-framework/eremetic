@@ -9,7 +9,7 @@ basePath: /
 produces:
   - application/json
 paths:
-  /task:
+  /api/v1/task:
     get:
       summary: List running tasks
       description: |
@@ -41,7 +41,7 @@ paths:
             type: string
         default:
           description: Unexpected error
-  /task/{taskId}:
+  /api/v1/task/{taskId}:
     get:
       summary: Get status of task
       description: |
@@ -71,6 +71,21 @@ definitions:
       host_path:
         type: string
         description: Path on host to mount
+  URI:
+    type: object
+    properties:
+      uri:
+        type: string
+        description: URI to fetch
+      extract:
+        type: boolean
+        description: True if the file should be extracted after being fetched
+      executable:
+        type: boolean
+        description: True if the file should be flagged as executable
+      cache:
+        type: boolean
+        description: True if the file should be cached
   Tasks:
     type: array
     items:
@@ -78,10 +93,10 @@ definitions:
   Task:
     type: object
     required:
-      - docker_image
+      - image
       - command
-      - task_cpu
-      - task_mem
+      - cpu
+      - mem
     properties:
       id:
         type: string
@@ -91,7 +106,7 @@ definitions:
         type: string
         readOnly: true
         description: Name of task
-      docker_image:
+      image:
         type: string
         description: Full tag or hash of container to run
       command:
@@ -104,29 +119,30 @@ definitions:
         type: string
         description: DNS to be used by the container
       args:
-        type: array 
+        type: array
+        items:
+          type: string
         description: arguements to pass to the docker container entrypoint
-      task_cpu:
+      cpu:
         type: number
         description: Fractions of a CPU to request
-      task_mem:
+      mem:
         type: number
         description: memory to use (MiB)
       volumes:
         type: array
         items:
           $ref: '#/definitions/Volume'
+      fetch:
+        type: array
+        items:
+          $ref: '#/definitions/URI'
       env:
         type: object
         description: Environment variables to set
       masked_env:
         type: object
         description: Environment variables to set but that are masked in any GET request.
-      uris:
-        type: array
-        items:
-          type: string
-          description: URI of resource to download
       callback_uri:
         type: string
         description: URL to post a callback to
@@ -134,7 +150,7 @@ definitions:
         type: string
         readOnly: true
         description: Framework ID used when launching task
-      slave_id:
+      agent_id:
         type: string
         readOnly: true
         description: Id of slave where task is running

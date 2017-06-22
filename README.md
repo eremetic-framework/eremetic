@@ -16,8 +16,8 @@ Send a cURL to the eremetic framework with how much cpu and memory you need, wha
 ```bash
 curl -H "Content-Type: application/json" \
      -X POST \
-     -d '{"task_mem":22.0, "task_cpus":1.0, "docker_image": "a_docker_container", "command": "rails"}' \
-     http://eremetic_server:8080/task
+     -d '{"mem":22.0, "cpu":1.0, "image": "busybox", "command": "echo $(date)"}' \
+     http://eremetic_server:8080/api/v1/task
 ```
 
 These basic fields are required but you can also specify volumes, ports, environment
@@ -29,15 +29,15 @@ JSON format:
 ```javascript
 {
   // Float64, fractions of a CPU to request
-  "task_cpus":      1.0,
+  "cpu":      1.0,
   // Float64, memory to use (MiB)
-  "task_mem":       22.0,
+  "mem":       22.0,
   // String, full tag or hash of container to run
-  "docker_image":   "busybox",
+  "image":   "busybox",
   // Boolean, if set to true, docker image will be pulled before each task launch.
   "force_pull_image": false,
   // String, command to run in the docker container
-  "command": "echo date",
+  "command": "echo $(date)",
   // Array of Strings, arguements to pass to the docker container entrypoint
   "args": ["+%s"],
   // Array of Objects, volumes to mount in the container
@@ -68,13 +68,8 @@ JSON format:
   "masked_env": {
     "KEY": "value"
   },
-  // URIs of resource to download
-  "uris": [
-    "http://server.local/resource"
-  ],
-  // URIs and attributes of resource to download
-  // Please note that `uris` auto-extract archive files based on their extension
-  // with `fetch`, you need to explicitly define `"extract"` to unarchive files.
+  // URIs and attributes of resource to download. You need to explicitly define 
+  // `"extract"` to unarchive files.
   "fetch": [
     {
       "uri" : "http://server.local/another_resource",
@@ -83,10 +78,10 @@ JSON format:
       "cache": false
     }
   ],
-  // Constraints for which slave the task can run on (beyond cpu/memory).
+  // Constraints for which agent the task can run on (beyond cpu/memory).
   // Matching is strict and only attributes are currently supported. If
   // multiple constraints exist, they are evaluated using AND (ie: all or none).
-  "slave_constraints": [
+  "agent_constraints": [
       {
           "attribute_name": "aws-region",
           "attribute_value": "us-west-2"
@@ -103,7 +98,7 @@ Most of this meta-data will not remain after a full restart of Eremetic.
 
 ### Clarification of the Masked Env field
 The purpose of the field is to provide a way to pass along environment variables that you don't want to have exposed in a subsequent GET call.
-It is not intended to provide full security, as someone with access to either the machine running Eremetic or the Mesos Slave that the task is being run on will still be able to view these values.
+It is not intended to provide full security, as someone with access to either the machine running Eremetic or the Mesos Agent that the task is being run on will still be able to view these values.
 These values are not encrypted, but simply masked when retrieved back via the API.
 
 For security purposes, ensure TLS (https) is being used for the Eremetic communication and that access to any machines is properly restricted.

@@ -24,7 +24,7 @@ func TestRoutes(t *testing.T) {
 	})
 
 	Convey("Expected number of routes", t, func() {
-		ExpectedNumberOfRoutes := 10 // Magic numbers FTW
+		ExpectedNumberOfRoutes := 18 // Magic numbers FTW
 
 		So(len(routes), ShouldEqual, ExpectedNumberOfRoutes)
 	})

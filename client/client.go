@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/api"
 )
 
 // Client is used for communicating with an Eremetic server.
@@ -25,7 +26,7 @@ func New(endpoint string, client *http.Client) (*Client, error) {
 }
 
 // AddTask sends a request for a new task to be scheduled.
-func (c *Client) AddTask(r eremetic.Request) error {
+func (c *Client) AddTask(r api.RequestV1) error {
 	var buf bytes.Buffer
 
 	err := json.NewEncoder(&buf).Encode(r)
@@ -33,7 +34,7 @@ func (c *Client) AddTask(r eremetic.Request) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", c.endpoint+"/task", &buf)
+	req, err := http.NewRequest("POST", c.endpoint+"/api/v1/task", &buf)
 	if err != nil {
 		return err
 	}
@@ -48,7 +49,7 @@ func (c *Client) AddTask(r eremetic.Request) error {
 
 // Task returns a task with a given ID.
 func (c *Client) Task(id string) (*eremetic.Task, error) {
-	req, err := http.NewRequest("GET", c.endpoint+"/task/"+id, nil)
+	req, err := http.NewRequest("GET", c.endpoint+"/api/v1/task/"+id, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -58,19 +59,21 @@ func (c *Client) Task(id string) (*eremetic.Task, error) {
 		return nil, err
 	}
 
-	var task eremetic.Task
+	var task api.TaskV1
 
 	err = json.NewDecoder(resp.Body).Decode(&task)
 	if err != nil {
 		return nil, err
 	}
 
-	return &task, nil
+	t := api.TaskFromV1(&task)
+
+	return &t, nil
 }
 
 // Tasks returns all current tasks.
 func (c *Client) Tasks() ([]eremetic.Task, error) {
-	req, err := http.NewRequest("GET", c.endpoint+"/task", nil)
+	req, err := http.NewRequest("GET", c.endpoint+"/api/v1/task", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -80,19 +83,24 @@ func (c *Client) Tasks() ([]eremetic.Task, error) {
 		return nil, err
 	}
 
-	var tasks []eremetic.Task
+	var tasks []api.TaskV1
 
 	err = json.NewDecoder(resp.Body).Decode(&tasks)
 	if err != nil {
 		return nil, err
 	}
 
-	return tasks, nil
+	taskSlice := []eremetic.Task{}
+	for _, t := range tasks {
+		taskSlice = append(taskSlice, api.TaskFromV1(&t))
+	}
+
+	return taskSlice, nil
 }
 
 // Sandbox returns a sandbox resource for a given task.
 func (c *Client) Sandbox(taskID, file string) ([]byte, error) {
-	u := fmt.Sprintf("%s/task/%s/%s", c.endpoint, taskID, file)
+	u := fmt.Sprintf("%s/api/v1/task/%s/%s", c.endpoint, taskID, file)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
@@ -113,7 +121,7 @@ func (c *Client) Sandbox(taskID, file string) ([]byte, error) {
 
 // Version returns the version of the Eremetic server.
 func (c *Client) Version() (string, error) {
-	u := fmt.Sprintf("%s/version", c.endpoint)
+	u := fmt.Sprintf("%s/api/v1/version", c.endpoint)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return "", err
@@ -132,8 +140,9 @@ func (c *Client) Version() (string, error) {
 	return string(b), nil
 }
 
+// Kill a running task
 func (c *Client) Kill(taskID string) error {
-	u := fmt.Sprintf("%s/task/%s/kill", c.endpoint, taskID)
+	u := fmt.Sprintf("%s/api/v1/task/%s/kill", c.endpoint, taskID)
 	req, err := http.NewRequest("POST", u, nil)
 	if err != nil {
 		return err

@@ -16,6 +16,7 @@ import (
 	"github.com/Sirupsen/logrus"
 
 	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/api"
 	"github.com/eremetic-framework/eremetic/config"
 	"github.com/eremetic-framework/eremetic/server/assets"
 	"github.com/eremetic-framework/eremetic/version"
@@ -231,4 +232,30 @@ func authWrap(fn http.Handler, username, password string) http.HandlerFunc {
 
 		fn.ServeHTTP(w, r)
 	}
+}
+
+func getTaskInfoV0(t eremetic.Task, conf *config.Config, id string, w http.ResponseWriter, r *http.Request) {
+	if strings.Contains(r.Header.Get("Accept"), "text/html") {
+		renderHTML(w, r, t, id, conf)
+	} else {
+		task := api.TaskV0FromTask(&t)
+		if reflect.DeepEqual(task, (api.TaskV0{})) {
+			writeJSON(http.StatusNotFound, nil, w)
+			return
+		}
+		writeJSON(http.StatusOK, task, w)
+	}
+}
+
+func getTaskInfoV1(t eremetic.Task, conf *config.Config, id string, w http.ResponseWriter, r *http.Request) {
+	task := api.TaskV1FromTask(&t)
+	if reflect.DeepEqual(task, (api.TaskV1{})) {
+		writeJSON(http.StatusNotFound, nil, w)
+		return
+	}
+	writeJSON(http.StatusOK, task, w)
+}
+
+func deprecated(w http.ResponseWriter) {
+	w.Header().Set("Warning", "299 - 'Deprecated API'")
 }

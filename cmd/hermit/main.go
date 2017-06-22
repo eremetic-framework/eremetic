@@ -13,9 +13,11 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/client"
 	"log"
+
+	"github.com/eremetic-framework/eremetic"
+	"github.com/eremetic-framework/eremetic/api"
+	"github.com/eremetic-framework/eremetic/client"
 )
 
 var defaultEremeticServer = "http://localhost:8000"
@@ -93,12 +95,12 @@ type runCommand struct {
 	Port    uint
 	Network string
 	DNS     string
-	EnvVars VariablesMap
-	URIs    StringSlice
-	Args    StringSlice
+	EnvVars varMap
+	URIs    stringSlice
+	Args    stringSlice
 
-	flags   *flag.FlagSet
-	client  *client.Client
+	flags  *flag.FlagSet
+	client *client.Client
 }
 
 func newRunCommand(c *client.Client) *runCommand {
@@ -108,27 +110,26 @@ func newRunCommand(c *client.Client) *runCommand {
 	}
 }
 
+type stringSlice []string
 
-type StringSlice []string
-
-func (stringSlice *StringSlice) String() string {
+func (stringSlice *stringSlice) String() string {
 	return "String slice"
 }
 
-func (stringSlice *StringSlice) Set(value string) error {
+func (stringSlice *stringSlice) Set(value string) error {
 	*stringSlice = append(*stringSlice, value)
 	return nil
 }
 
-func (env *VariablesMap) String() string {
+func (env *varMap) String() string {
 	return "Environment variables"
 }
 
-type VariablesMap map[string]string
+type varMap map[string]string
 
-func (env *VariablesMap) Set(value string) error {
+func (env *varMap) Set(value string) error {
 	envVar := strings.Split(value, "=")
-	if (len(envVar) == 2) {
+	if len(envVar) == 2 {
 		(*env)[envVar[0]] = envVar[1]
 	} else {
 		log.Printf("Cannot parse the variables.")
@@ -137,7 +138,7 @@ func (env *VariablesMap) Set(value string) error {
 }
 
 func (cmd *runCommand) Parse(args []string) {
-	cmd.EnvVars = make(VariablesMap)
+	cmd.EnvVars = make(varMap)
 	cmd.flags.Float64Var(&cmd.CPU, "cpu", 0.1, "CPU shares to give to the task")
 	cmd.flags.Float64Var(&cmd.Memory, "mem", 128, "Memory in MB to give to the task")
 	cmd.flags.StringVar(&cmd.Image, "image", "busybox", "Image to use")
@@ -154,8 +155,17 @@ func (cmd *runCommand) Run() {
 	args := cmd.flags.Args()
 
 	cmdStr := strings.Join(args, " ")
+	URIs := []eremetic.URI{}
+	for _, u := range cmd.URIs {
+		URIs = append(URIs, eremetic.URI{
+			URI:        u,
+			Extract:    eremetic.IsArchive(u),
+			Cache:      false,
+			Executable: false,
+		})
+	}
 
-	r := eremetic.Request{
+	r := api.RequestV1{
 		Command:     cmdStr,
 		DockerImage: cmd.Image,
 		TaskCPUs:    cmd.CPU,
@@ -169,8 +179,8 @@ func (cmd *runCommand) Run() {
 		Environment: cmd.EnvVars,
 		Network:     cmd.Network,
 		DNS:         cmd.DNS,
-		URIs:     cmd.URIs,
-		Args:     cmd.Args,
+		Fetch:       URIs,
+		Args:        cmd.Args,
 	}
 
 	if err := cmd.client.AddTask(r); err != nil {

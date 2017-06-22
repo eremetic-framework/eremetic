@@ -56,49 +56,10 @@ func NewRouter(scheduler eremetic.Scheduler, conf *config.Config, db eremetic.Ta
 }
 
 func routes(h Handler, conf *config.Config) Routes {
-	return Routes{
-		Route{
-			Name:    "AddTask",
-			Method:  "POST",
-			Pattern: "/task",
-			Handler: h.AddTask(conf),
-		},
-		Route{
-			Name:    "Status",
-			Method:  "GET",
-			Pattern: "/task/{taskId}",
-			Handler: h.GetTaskInfo(conf),
-		},
-		Route{
-			Name:    "STDOUT",
-			Method:  "GET",
-			Pattern: "/task/{taskId}/stdout",
-			Handler: h.GetFromSandbox("stdout"),
-		},
-		Route{
-			Name:    "STDERR",
-			Method:  "GET",
-			Pattern: "/task/{taskId}/stderr",
-			Handler: h.GetFromSandbox("stderr"),
-		},
-		Route{
-			Name:    "Kill",
-			Method:  "POST",
-			Pattern: "/task/{taskId}/kill",
-			Handler: h.KillTask(conf),
-		},
-		Route{
-			Name:    "Delete",
-			Method:  "DELETE",
-			Pattern: "/task/{taskId}",
-			Handler: h.DeleteTask(conf),
-		},
-		Route{
-			Name:    "ListRunningTasks",
-			Method:  "GET",
-			Pattern: "/task",
-			Handler: h.ListRunningTasks(),
-		},
+	v0routes := apiV0Routes(h, conf)
+	v1routes := apiV1Routes(h, conf)
+	apiRoutes := append(v0routes, v1routes...)
+	return append(Routes{
 		Route{
 			Name:    "Index",
 			Method:  "GET",
@@ -106,16 +67,10 @@ func routes(h Handler, conf *config.Config) Routes {
 			Handler: h.IndexHandler(conf),
 		},
 		Route{
-			Name:    "Version",
-			Method:  "GET",
-			Pattern: "/version",
-			Handler: h.Version(conf),
-		},
-		Route{
 			Name:    "Metrics",
 			Method:  "GET",
 			Pattern: "/metrics",
 			Handler: prometheus.Handler(),
 		},
-	}
+	}, apiRoutes...)
 }
