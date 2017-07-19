@@ -31,6 +31,7 @@ type TaskV0 struct {
 	AgentIP           string                     `json:"agent_ip"`
 	AgentPort         int32                      `json:"agent_port"`
 	ForcePullImage    bool                       `json:"force_pull_image"`
+	Privileged        bool                       `json:"privileged"`
 	FetchURIs         []eremetic.URI             `json:"fetch"`
 }
 
@@ -63,6 +64,7 @@ func TaskV0FromTask(task *eremetic.Task) TaskV0 {
 		AgentIP:           task.AgentIP,
 		AgentPort:         task.AgentPort,
 		ForcePullImage:    task.ForcePullImage,
+		Privileged:        task.Privileged,
 		FetchURIs:         task.FetchURIs,
 	}
 }
@@ -96,6 +98,7 @@ func TaskFromV0(task *TaskV0) eremetic.Task {
 		AgentIP:           task.AgentIP,
 		AgentPort:         task.AgentPort,
 		ForcePullImage:    task.ForcePullImage,
+		Privileged:        task.Privileged,
 		FetchURIs:         task.FetchURIs,
 	}
 }
@@ -118,6 +121,7 @@ type RequestV0 struct {
 	URIs              []string                   `json:"uris"`
 	Fetch             []eremetic.URI             `json:"fetch"`
 	ForcePullImage    bool                       `json:"force_pull_image"`
+	Privileged        bool                       `json:"privileged"`
 }
 
 // RequestFromV0 is needed for Go versions < 1.8
@@ -140,5 +144,6 @@ func RequestFromV0(req RequestV0) eremetic.Request {
 		URIs:              req.URIs,
 		Fetch:             req.Fetch,
 		ForcePullImage:    req.ForcePullImage,
+		Privileged:        req.Privileged,
 	}
 }

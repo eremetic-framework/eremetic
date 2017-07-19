@@ -34,8 +34,10 @@ JSON format:
   "mem":       22.0,
   // String, full tag or hash of container to run
   "image":   "busybox",
-  // Boolean, if set to true, docker image will be pulled before each task launch.
+  // Boolean, if set to true, docker image will be pulled before each task launch
   "force_pull_image": false,
+  // Boolean, if set to true, docker will run the container in 'privileged' mode giving it all capabilities
+  "privileged": false,
   // String, command to run in the docker container
   "command": "echo $(date)",
   // Array of Strings, arguements to pass to the docker container entrypoint
@@ -68,7 +70,7 @@ JSON format:
   "masked_env": {
     "KEY": "value"
   },
-  // URIs and attributes of resource to download. You need to explicitly define 
+  // URIs and attributes of resource to download. You need to explicitly define
   // `"extract"` to unarchive files.
   "fetch": [
     {
