@@ -105,6 +105,7 @@ type Task struct {
 	AgentIP           string
 	AgentPort         int32
 	ForcePullImage    bool
+	Privileged        bool
 	FetchURIs         []URI
 }
 
@@ -158,6 +159,7 @@ type Request struct {
 	URIs              []string
 	Fetch             []URI
 	ForcePullImage    bool
+	Privileged        bool
 }
 
 // NewTask returns a new instance of a Task.
@@ -190,6 +192,7 @@ func NewTask(request Request, name string) (Task, error) {
 		Ports:             request.Ports,
 		CallbackURI:       request.CallbackURI,
 		ForcePullImage:    request.ForcePullImage,
+		Privileged:        request.Privileged,
 		FetchURIs:         mergeURIs(request),
 	}
 	return task, nil

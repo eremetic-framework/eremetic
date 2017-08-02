@@ -282,6 +282,15 @@ func TestTask(t *testing.T) {
 			So(task.Command, ShouldBeEmpty)
 		})
 
+		Convey("Given Privileged", func() {
+			request.Privileged = true
+
+			task, err := NewTask(request, "")
+
+			So(err, ShouldBeNil)
+			So(task.Privileged, ShouldBeTrue)
+		})
+
 		Convey("Given Force Pull image", func() {
 			request.ForcePullImage = true
 

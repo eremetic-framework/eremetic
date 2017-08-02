@@ -33,6 +33,7 @@ func createTaskInfo(task eremetic.Task, offer *mesosproto.Offer) (eremetic.Task,
 			Docker: &mesosproto.ContainerInfo_DockerInfo{
 				Image:          proto.String(task.Image),
 				ForcePullImage: proto.Bool(task.ForcePullImage),
+				Privileged:     proto.Bool(task.Privileged),
 				Network:        network,
 				PortMappings:   portMapping,
 				Parameters:     dockerCliParameters,

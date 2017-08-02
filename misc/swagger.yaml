@@ -112,6 +112,12 @@ definitions:
       command:
         type: string
         description: Command to run in the docker container
+      force_pull_image:
+        type: boolean
+        description: Docker image will be pulled before each task launch
+      privileged:
+        type: boolean
+        description: Docker will run the container in 'privileged' mode giving it all capabilities
       network:
         type: string
         description: Network mode to pass to the container

@@ -243,6 +243,14 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.Uris[0].GetCache(), ShouldBeFalse)
 		})
 
+		Convey("Add privileged flag", func() {
+			eremeticTask.Privileged = true
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
+
+			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
+			So(taskInfo.Container.Docker.GetPrivileged(), ShouldBeTrue)
+		})
+
 		Convey("Force pull of docker image", func() {
 			eremeticTask.ForcePullImage = true
 			_, taskInfo := createTaskInfo(eremeticTask, offer)

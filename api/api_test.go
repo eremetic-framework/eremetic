@@ -33,6 +33,7 @@ var task = eremetic.Task{
 	AgentIP:           "task.AgentIP",
 	AgentPort:         1234,
 	ForcePullImage:    true,
+	Privileged:        false,
 	FetchURIs:         []eremetic.URI{},
 }
 

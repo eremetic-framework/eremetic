@@ -9,6 +9,7 @@
       "image": "alde/eremetic",
       "network": "BRIDGE",
       "forcePullImage": true,
+      "privileged": true,
       "portMappings": [
         { "containerPort": 8000, "hostPort": 0 },
         { "containerPort": 0, "hostPort": 0 }
