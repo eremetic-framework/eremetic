@@ -8,8 +8,8 @@ import (
 func offer(id string, cpu float64, mem float64, unavailability *mesos.Unavailability, extra ...interface{}) mesos.Offer {
 	attributes := []mesos.Attribute{}
 	resources := []mesos.Resource{
-		NewScalarResource("cpus", cpu),
-		NewScalarResource("mem", mem),
+		*mesos.BuildResource().Name("cpus").Scalar(cpu).Resource,
+		*mesos.BuildResource().Name("mem").Scalar(mem).Resource,
 	}
 	for _, r := range extra {
 		switch r.(type) {

@@ -8,32 +8,6 @@ import (
 	"github.com/eremetic-framework/eremetic"
 )
 
-// Look at the stuff in
-// vendor/github.com/mesos/mesos-go/api/v1/lib/builders.go
-
-func NewScalarResource(name string, val float64) mesos.Resource {
-	return mesos.Resource{
-		Name:   name,
-		Type:   mesos.SCALAR.Enum(),
-		Scalar: &mesos.Value_Scalar{Value: val},
-	}
-}
-
-func NewValueRange(begin, end uint64) mesos.Value_Range {
-	return mesos.Value_Range{
-		Begin: begin,
-		End:   end,
-	}
-}
-
-func NewRangesResource(name string, ranges []mesos.Value_Range) mesos.Resource {
-	return mesos.Resource{
-		Name:   name,
-		Type:   mesos.RANGES.Enum(),
-		Ranges: &mesos.Value_Ranges{Range: ranges},
-	}
-}
-
 func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mesos.TaskInfo) {
 	task.FrameworkID = offer.FrameworkID.GetValue()
 	task.AgentID = offer.AgentID.GetValue()
@@ -65,9 +39,9 @@ func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mes
 			Volumes: buildVolumes(task),
 		},
 		Resources: []mesos.Resource{
-			NewScalarResource("cpus", task.TaskCPUs),
-			NewScalarResource("mem", task.TaskMem),
-			NewRangesResource("ports", portResources),
+			*mesos.BuildResource().Name("cpus").Scalar(task.TaskCPUs).Resource,
+			*mesos.BuildResource().Name("mem").Scalar(task.TaskMem).Resource,
+			*mesos.BuildResource().Name("ports").Ranges(portResources).Resource,
 		},
 	}
 	return task, taskInfo
@@ -157,12 +131,12 @@ func buildVolumes(task eremetic.Task) []mesos.Volume {
 	return volumes
 }
 
-func buildPorts(task eremetic.Task, network *mesos.ContainerInfo_DockerInfo_Network, offer *mesos.Offer) ([]mesos.ContainerInfo_DockerInfo_PortMapping, []mesos.Value_Range) {
-	var resources []mesos.Value_Range
+func buildPorts(task eremetic.Task, network *mesos.ContainerInfo_DockerInfo_Network, offer *mesos.Offer) ([]mesos.ContainerInfo_DockerInfo_PortMapping, mesos.Ranges) {
 	var mappings []mesos.ContainerInfo_DockerInfo_PortMapping
+	resources := mesos.BuildRanges()
 
 	if len(task.Ports) == 0 || *network == mesos.ContainerInfo_DockerInfo_HOST {
-		return mappings, resources
+		return mappings, resources.Ranges
 	}
 
 	leftToAssign := len(task.Ports)
@@ -203,12 +177,12 @@ func buildPorts(task eremetic.Task, network *mesos.ContainerInfo_DockerInfo_Netw
 			}
 
 			if start != end {
-				resources = append(resources, NewValueRange(start, end))
+				resources = resources.Span(start, end)
 			}
 		}
 	}
 
-	return mappings, resources
+	return mappings, resources.Ranges
 }
 
 func buildURIs(task eremetic.Task) []mesos.CommandInfo_URI {

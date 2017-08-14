@@ -31,12 +31,7 @@ func TestTask(t *testing.T) {
 
 		offer := offer("offer-1", 1.0, 500.0,
 			&mesos.Unavailability{},
-			NewRangesResource(
-				"ports",
-				[]mesos.Value_Range{
-					NewValueRange(31000, 31010),
-				},
-			),
+			*mesos.BuildResource().Name("ports").Ranges(mesos.BuildRanges().Span(31000, 31010).Ranges).Resource,
 		)
 
 		Convey("No volume or environment specified", func() {
@@ -128,9 +123,10 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Container.Docker.GetPortMappings()[0].GetContainerPort(), ShouldEqual, ports[0].ContainerPort)
 			So(taskInfo.GetResources()[2].GetName(), ShouldEqual, "ports")
 
-			expectedRange := NewValueRange(31000, 31001)
-			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetBegin(), ShouldEqual, expectedRange.GetBegin())
-			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetEnd(), ShouldEqual, expectedRange.GetEnd())
+			portranges := taskInfo.GetResources()[2].GetRanges().GetRange()
+			So(portranges, ShouldHaveLength, 1)
+			So(portranges[0].GetBegin(), ShouldEqual, 31000)
+			So(portranges[0].GetEnd(), ShouldEqual, 31001)
 
 			vars := taskInfo.GetCommand().GetEnvironment().GetVariables()
 
@@ -167,9 +163,10 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Container.Docker.GetPortMappings()[0].GetContainerPort(), ShouldEqual, 31000)
 			So(taskInfo.GetResources()[2].GetName(), ShouldEqual, "ports")
 
-			expected_range := NewValueRange(31000, 31001)
-			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetBegin(), ShouldEqual, expected_range.GetBegin())
-			So(taskInfo.GetResources()[2].GetRanges().GetRange()[0].GetEnd(), ShouldEqual, expected_range.GetEnd())
+			portranges := taskInfo.GetResources()[2].GetRanges().GetRange()
+			So(portranges, ShouldHaveLength, 1)
+			So(portranges[0].GetBegin(), ShouldEqual, 31000)
+			So(portranges[0].GetEnd(), ShouldEqual, 31001)
 
 			vars := taskInfo.GetCommand().GetEnvironment().GetVariables()
 
