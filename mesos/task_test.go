@@ -86,9 +86,7 @@ func TestTask(t *testing.T) {
 		})
 
 		Convey("Given volumes from containers", func() {
-			volumesFromContainers := []string{"container_name1", "container_name2"}
-
-			eremeticTask.VolumesFromContainers = volumesFromContainers
+			eremeticTask.VolumesFrom = []string{"container_name1", "container_name2"}
 			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
 			So(taskInfo.Container.Docker.GetParameters()[0].GetKey(), ShouldEqual, "volumes-from")

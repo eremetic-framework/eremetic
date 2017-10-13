@@ -124,7 +124,7 @@
   background-color: #0199c8;
 }
 .volumes .field input,
-.volumes_from_container .field input,
+.volumes_from .field input,
 .env .field input,
 .uri .field input,
 .ports .field input,

@@ -139,6 +139,11 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Volume'
+      volumes_from:
+        type: array
+        items:
+          type: string
+        description: container names to get volumes from
       fetch:
         type: array
         items:
