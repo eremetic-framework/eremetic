@@ -228,6 +228,30 @@ $(document).ready(function() {
     $cont.data('count', index);
   }
 
+  function addVolumesFromContainers(e) {
+    var   $cont = $('#volumes_from_containers')
+        , index = $cont.data('count') + 1
+        , $input
+        ;
+
+    e.preventDefault();
+
+    $input = $(
+      '<div class="field ui action input volumes_from_container">' +
+        '<div class="field">' +
+          '<input name="volumes_from_containers[]" placeholder="Container name"/>' +
+        '</div>' +
+        '&nbsp;<button class="ui icon button">' +
+          '<i class="minus red icon"></i>' +
+        '</button>' +
+      '</div>'
+    );
+
+    $cont.append($input);
+    $cont.data('count', index);
+
+  }
+
   function removeInput(e) {
     e.preventDefault();
 
@@ -237,6 +261,7 @@ $(document).ready(function() {
   $('#new_task').on('submit', submitHandler);
   $('#new_task #submit').on('click', submitHandler);
   $('#new_task #volumes .plus').on('click', addVolumes);
+  $('#new_task #volumes_from_containers .plus').on('click', addVolumesFromContainers);
   $('#new_task #ports .plus').on('click', addPorts);
   $('#new_task #env .plus').on('click', addEnvironments);
   $('#new_task #uris .plus').on('click', addURIs);

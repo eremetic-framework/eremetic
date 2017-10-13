@@ -80,33 +80,34 @@ type URI struct {
 
 // Task represents the internal structure of a Task objert
 type Task struct {
-	TaskCPUs          float64
-	TaskMem           float64
-	Command           string
-	Args              []string
-	User              string
-	Environment       map[string]string
-	MaskedEnvironment map[string]string
-	Image             string
-	Volumes           []Volume
-	Ports             []Port
-	Status            []Status
-	ID                string
-	Name              string
-	Network           string
-	DNS               string
-	FrameworkID       string
-	AgentID           string
-	AgentConstraints  []AgentConstraint
-	Hostname          string
-	Retry             int
-	CallbackURI       string
-	SandboxPath       string
-	AgentIP           string
-	AgentPort         int32
-	ForcePullImage    bool
-	Privileged        bool
-	FetchURIs         []URI
+	TaskCPUs              float64
+	TaskMem               float64
+	Command               string
+	Args                  []string
+	User                  string
+	Environment           map[string]string
+	MaskedEnvironment     map[string]string
+	Image                 string
+	Volumes               []Volume
+	VolumesFromContainers []string
+	Ports                 []Port
+	Status                []Status
+	ID                    string
+	Name                  string
+	Network               string
+	DNS                   string
+	FrameworkID           string
+	AgentID               string
+	AgentConstraints      []AgentConstraint
+	Hostname              string
+	Retry                 int
+	CallbackURI           string
+	SandboxPath           string
+	AgentIP               string
+	AgentPort             int32
+	ForcePullImage        bool
+	Privileged            bool
+	FetchURIs             []URI
 }
 
 // IsArchive is used to determine whether a url is an archive or not
@@ -143,23 +144,24 @@ func mergeURIs(request Request) []URI {
 
 // Request is the internal structure of a Request
 type Request struct {
-	TaskCPUs          float64
-	TaskMem           float64
-	DockerImage       string
-	Command           string
-	Args              []string
-	Volumes           []Volume
-	Ports             []Port
-	Network           string
-	DNS               string
-	Environment       map[string]string
-	MaskedEnvironment map[string]string
-	AgentConstraints  []AgentConstraint
-	CallbackURI       string
-	URIs              []string
-	Fetch             []URI
-	ForcePullImage    bool
-	Privileged        bool
+	TaskCPUs              float64
+	TaskMem               float64
+	DockerImage           string
+	Command               string
+	Args                  []string
+	Volumes               []Volume
+	VolumesFromContainers []string
+	Ports                 []Port
+	Network               string
+	DNS                   string
+	Environment           map[string]string
+	MaskedEnvironment     map[string]string
+	AgentConstraints      []AgentConstraint
+	CallbackURI           string
+	URIs                  []string
+	Fetch                 []URI
+	ForcePullImage        bool
+	Privileged            bool
 }
 
 // NewTask returns a new instance of a Task.
@@ -174,26 +176,27 @@ func NewTask(request Request, name string) (Task, error) {
 	}
 
 	task := Task{
-		ID:                taskID,
-		TaskCPUs:          request.TaskCPUs,
-		TaskMem:           request.TaskMem,
-		Name:              name,
-		Network:           request.Network,
-		DNS:               request.DNS,
-		Status:            status,
-		Command:           request.Command,
-		Args:              request.Args,
-		User:              "root",
-		Environment:       request.Environment,
-		MaskedEnvironment: request.MaskedEnvironment,
-		AgentConstraints:  request.AgentConstraints,
-		Image:             request.DockerImage,
-		Volumes:           request.Volumes,
-		Ports:             request.Ports,
-		CallbackURI:       request.CallbackURI,
-		ForcePullImage:    request.ForcePullImage,
-		Privileged:        request.Privileged,
-		FetchURIs:         mergeURIs(request),
+		ID:                    taskID,
+		TaskCPUs:              request.TaskCPUs,
+		TaskMem:               request.TaskMem,
+		Name:                  name,
+		Network:               request.Network,
+		DNS:                   request.DNS,
+		Status:                status,
+		Command:               request.Command,
+		Args:                  request.Args,
+		User:                  "root",
+		Environment:           request.Environment,
+		MaskedEnvironment:     request.MaskedEnvironment,
+		AgentConstraints:      request.AgentConstraints,
+		Image:                 request.DockerImage,
+		Volumes:               request.Volumes,
+		VolumesFromContainers: request.VolumesFromContainers,
+		Ports:          request.Ports,
+		CallbackURI:    request.CallbackURI,
+		ForcePullImage: request.ForcePullImage,
+		Privileged:     request.Privileged,
+		FetchURIs:      mergeURIs(request),
 	}
 	return task, nil
 }
