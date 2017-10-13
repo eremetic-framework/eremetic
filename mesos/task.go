@@ -62,6 +62,17 @@ func buildDockerCliParameters(task eremetic.Task) []*mesosproto.Parameter {
 			Value: proto.String(v),
 		})
 	}
+	if len(task.VolumesFrom) > 0 {
+		for _, containerName := range task.VolumesFrom {
+			if containerName == "" {
+				continue
+			}
+			parameters = append(parameters, &mesosproto.Parameter{
+				Key:   proto.String("volumes-from"),
+				Value: proto.String(containerName),
+			})
+		}
+	}
 	return parameters
 }
 

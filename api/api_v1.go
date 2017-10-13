@@ -15,6 +15,7 @@ type TaskV1 struct {
 	MaskedEnvironment map[string]string          `json:"masked_env"`
 	Image             string                     `json:"image"`
 	Volumes           []eremetic.Volume          `json:"volumes"`
+	VolumesFrom       []string                   `json:"volumes_from"`
 	Ports             []eremetic.Port            `json:"ports"`
 	Status            []eremetic.Status          `json:"status"`
 	ID                string                     `json:"id"`
@@ -48,6 +49,7 @@ func TaskV1FromTask(task *eremetic.Task) TaskV1 {
 		MaskedEnvironment: task.MaskedEnvironment,
 		Image:             task.Image,
 		Volumes:           task.Volumes,
+		VolumesFrom:       task.VolumesFrom,
 		Ports:             task.Ports,
 		Status:            task.Status,
 		ID:                task.ID,
@@ -82,6 +84,7 @@ func TaskFromV1(task *TaskV1) eremetic.Task {
 		MaskedEnvironment: task.MaskedEnvironment,
 		Image:             task.Image,
 		Volumes:           task.Volumes,
+		VolumesFrom:       task.VolumesFrom,
 		Ports:             task.Ports,
 		Status:            task.Status,
 		ID:                task.ID,
@@ -111,6 +114,7 @@ type RequestV1 struct {
 	Command           string                     `json:"command"`
 	Args              []string                   `json:"args"`
 	Volumes           []eremetic.Volume          `json:"volumes"`
+	VolumesFrom       []string                   `json:"volumes_from"`
 	Ports             []eremetic.Port            `json:"ports"`
 	Network           string                     `json:"network"`
 	DNS               string                     `json:"dns"`
@@ -133,6 +137,7 @@ func RequestFromV1(req RequestV1) eremetic.Request {
 		Command:           req.Command,
 		Args:              req.Args,
 		Volumes:           req.Volumes,
+		VolumesFrom:       req.VolumesFrom,
 		Ports:             req.Ports,
 		Network:           req.Network,
 		DNS:               req.DNS,

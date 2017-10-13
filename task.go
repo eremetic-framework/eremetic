@@ -89,6 +89,7 @@ type Task struct {
 	MaskedEnvironment map[string]string
 	Image             string
 	Volumes           []Volume
+	VolumesFrom       []string
 	Ports             []Port
 	Status            []Status
 	ID                string
@@ -149,6 +150,7 @@ type Request struct {
 	Command           string
 	Args              []string
 	Volumes           []Volume
+	VolumesFrom       []string
 	Ports             []Port
 	Network           string
 	DNS               string
@@ -189,6 +191,7 @@ func NewTask(request Request, name string) (Task, error) {
 		AgentConstraints:  request.AgentConstraints,
 		Image:             request.DockerImage,
 		Volumes:           request.Volumes,
+		VolumesFrom:       request.VolumesFrom,
 		Ports:             request.Ports,
 		CallbackURI:       request.CallbackURI,
 		ForcePullImage:    request.ForcePullImage,

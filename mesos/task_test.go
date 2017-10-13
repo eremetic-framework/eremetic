@@ -85,6 +85,16 @@ func TestTask(t *testing.T) {
 			So(taskInfo.Command.Environment.Variables[1].GetValue(), ShouldEqual, eremeticTask.ID)
 		})
 
+		Convey("Given volumes from containers", func() {
+			eremeticTask.VolumesFrom = []string{"container_name1", "container_name2"}
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
+
+			So(taskInfo.Container.Docker.GetParameters()[0].GetKey(), ShouldEqual, "volumes-from")
+			So(taskInfo.Container.Docker.GetParameters()[0].GetValue(), ShouldEqual, "container_name1")
+			So(taskInfo.Container.Docker.GetParameters()[1].GetKey(), ShouldEqual, "volumes-from")
+			So(taskInfo.Container.Docker.GetParameters()[1].GetValue(), ShouldEqual, "container_name2")
+		})
+
 		Convey("Given no network", func() {
 			_, taskInfo := createTaskInfo(eremeticTask, offer)
 
