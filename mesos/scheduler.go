@@ -169,12 +169,11 @@ loop:
 				break loop
 			}
 
+			t, task := createTaskInfo(t, offer)
 			logrus.WithFields(logrus.Fields{
-				"task_id":  tid,
+				"task_id":  task.TaskId.GetValue(),
 				"offer_id": offer.Id.GetValue(),
 			}).Debug("Preparing to launch task")
-
-			t, task := createTaskInfo(t, offer)
 			t.UpdateStatus(eremetic.Status{
 				Status: eremetic.TaskStaging,
 				Time:   time.Now().Unix(),
@@ -183,7 +182,7 @@ loop:
 			_, err := driver.LaunchTasks([]*mesosproto.OfferID{offer.Id}, []*mesosproto.TaskInfo{task}, defaultFilter)
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
-					"task_id":  tid,
+					"task_id":  task.TaskId.GetValue(),
 					"offer_id": offer.Id.GetValue(),
 				}).WithError(err).Warn("Failed to launch task")
 				t.UpdateStatus(eremetic.Status{
