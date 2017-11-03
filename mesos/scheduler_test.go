@@ -162,6 +162,7 @@ func TestScheduler(t *testing.T) {
 					So(driver.LaunchTasksFnInvoked, ShouldBeFalse)
 				})
 			})
+
 			Convey("When a task is able to launch", func() {
 				offers := []*mesosproto.Offer{
 					offer("1234", 1.0, 128, &mesosproto.Unavailability{}),
@@ -187,6 +188,41 @@ func TestScheduler(t *testing.T) {
 					So(task.Status, ShouldHaveLength, 2)
 					So(task.Status[0].Status, ShouldEqual, eremetic.TaskQueued)
 					So(task.Status[1].Status, ShouldEqual, eremetic.TaskStaging)
+				})
+				Convey("The offer should not be declined", func() {
+					So(driver.DeclineOfferFnInvoked, ShouldBeFalse)
+				})
+				Convey("The tasks should be launched", func() {
+					So(driver.LaunchTasksFnInvoked, ShouldBeTrue)
+				})
+			})
+
+			Convey("When a task can be launched but fails", func() {
+				offers := []*mesosproto.Offer{
+					offer("1234", 1.0, 128, &mesosproto.Unavailability{}),
+				}
+				driver.LaunchTasksFn = func(_ []*mesosproto.OfferID, _ []*mesosproto.TaskInfo, _ *mesosproto.Filters) (mesosproto.Status, error) {
+					return mesosproto.Status_DRIVER_RUNNING, errors.New("Nope")
+				}
+
+				taskID, err := s.ScheduleTask(eremetic.Request{
+					TaskCPUs:    0.5,
+					TaskMem:     22.0,
+					DockerImage: "busybox",
+					Command:     "echo hello",
+				})
+				So(err, ShouldBeNil)
+
+				s.ResourceOffers(driver, offers)
+
+				task, err := db.ReadTask(taskID)
+				So(err, ShouldBeNil)
+
+				Convey("The task should contain the status history", func() {
+					So(task.Status, ShouldHaveLength, 3)
+					So(task.Status[0].Status, ShouldEqual, eremetic.TaskQueued)
+					So(task.Status[1].Status, ShouldEqual, eremetic.TaskStaging)
+					So(task.Status[2].Status, ShouldEqual, eremetic.TaskError)
 				})
 				Convey("The offer should not be declined", func() {
 					So(driver.DeclineOfferFnInvoked, ShouldBeFalse)

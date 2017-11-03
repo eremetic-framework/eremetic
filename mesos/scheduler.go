@@ -180,8 +180,19 @@ loop:
 				Time:   time.Now().Unix(),
 			})
 			s.database.PutTask(&t)
-			driver.LaunchTasks([]*mesosproto.OfferID{offer.Id}, []*mesosproto.TaskInfo{task}, defaultFilter)
-			metrics.TasksLaunched.Inc()
+			_, err := driver.LaunchTasks([]*mesosproto.OfferID{offer.Id}, []*mesosproto.TaskInfo{task}, defaultFilter)
+			if err != nil {
+				logrus.WithFields(logrus.Fields{
+					"task_id":  tid,
+					"offer_id": offer.Id.GetValue(),
+				}).WithError(err).Warn("Failed to launch task")
+				t.UpdateStatus(eremetic.Status{
+					Status: eremetic.TaskError,
+					Time:   time.Now().Unix(),
+				})
+			} else {
+				metrics.TasksLaunched.Inc()
+			}
 			metrics.QueueSize.Dec()
 
 			continue
