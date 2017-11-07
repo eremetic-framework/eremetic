@@ -104,7 +104,6 @@ definitions:
         description: ID of task
       name:
         type: string
-        readOnly: true
         description: Name of task
       image:
         type: string

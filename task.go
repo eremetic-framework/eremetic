@@ -152,6 +152,7 @@ type Request struct {
 	Volumes           []Volume
 	VolumesFrom       []string
 	Ports             []Port
+	Name		  string
 	Network           string
 	DNS               string
 	Environment       map[string]string
@@ -165,7 +166,7 @@ type Request struct {
 }
 
 // NewTask returns a new instance of a Task.
-func NewTask(request Request, name string) (Task, error) {
+func NewTask(request Request) (Task, error) {
 	taskID := fmt.Sprintf("eremetic-task.%s", uuid.New())
 
 	status := []Status{
@@ -179,7 +180,7 @@ func NewTask(request Request, name string) (Task, error) {
 		ID:                taskID,
 		TaskCPUs:          request.TaskCPUs,
 		TaskMem:           request.TaskMem,
-		Name:              name,
+		Name:              request.Name,
 		Network:           request.Network,
 		DNS:               request.DNS,
 		Status:            status,

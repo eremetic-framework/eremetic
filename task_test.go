@@ -149,7 +149,7 @@ func TestTask(t *testing.T) {
 		}
 
 		Convey("No volume or environment specified", func() {
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task, ShouldNotBeNil)
@@ -173,7 +173,7 @@ func TestTask(t *testing.T) {
 			request.Volumes = volumes
 			request.Environment = environment
 
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.Environment, ShouldContainKey, "foo")
@@ -187,7 +187,7 @@ func TestTask(t *testing.T) {
 			maskedEnv["foo"] = "bar"
 
 			request.MaskedEnvironment = maskedEnv
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.MaskedEnvironment, ShouldContainKey, "foo")
@@ -198,7 +198,7 @@ func TestTask(t *testing.T) {
 			network := "HOST"
 
 			request.Network = network
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.Network, ShouldEqual, "HOST")
@@ -208,7 +208,7 @@ func TestTask(t *testing.T) {
 			dns := "172.17.0.1"
 
 			request.DNS = dns
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.DNS, ShouldEqual, "172.17.0.1")
@@ -217,7 +217,7 @@ func TestTask(t *testing.T) {
 		Convey("Given URI (via uris) to download", func() {
 			request.URIs = []string{"http://foobar.local/kitten.jpg"}
 
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.FetchURIs, ShouldHaveLength, 1)
@@ -230,7 +230,7 @@ func TestTask(t *testing.T) {
 		Convey("Given URI (via uris) to download and extract", func() {
 			request.URIs = []string{"http://foobar.local/kittens.tar.gz"}
 
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.FetchURIs, ShouldHaveLength, 1)
@@ -246,7 +246,7 @@ func TestTask(t *testing.T) {
 				Extract: true,
 			}}
 
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.FetchURIs, ShouldHaveLength, 1)
@@ -263,7 +263,7 @@ func TestTask(t *testing.T) {
 				Cache:      true,
 			}}
 
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.FetchURIs, ShouldHaveLength, 1)
@@ -276,7 +276,7 @@ func TestTask(t *testing.T) {
 		Convey("Given no Command", func() {
 			request.Command = ""
 
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.Command, ShouldBeEmpty)
@@ -285,7 +285,7 @@ func TestTask(t *testing.T) {
 		Convey("Given Privileged", func() {
 			request.Privileged = true
 
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.Privileged, ShouldBeTrue)
@@ -294,15 +294,24 @@ func TestTask(t *testing.T) {
 		Convey("Given Force Pull image", func() {
 			request.ForcePullImage = true
 
-			task, err := NewTask(request, "")
+			task, err := NewTask(request)
 
 			So(err, ShouldBeNil)
 			So(task.ForcePullImage, ShouldBeTrue)
 		})
 
+		Convey("Given a Name", func() {
+			request.Name = "foobar"
+
+			task, err := NewTask(request)
+
+			So(err, ShouldBeNil)
+			So(task.Name, ShouldEqual, "foobar")
+		})
+
 		Convey("New task from empty request", func() {
 			req := Request{}
-			task, err := NewTask(req, "")
+			task, err := NewTask(req)
 
 			So(err, ShouldBeNil)
 			So(task, ShouldNotBeNil)

@@ -338,7 +338,11 @@ func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
 		"ports":             request.Ports,
 	}).Debug("Adding task to queue")
 
-	task, err := eremetic.NewTask(request, fmt.Sprintf("Eremetic task %s", nextID(s)))
+	if request.Name == "" {
+		request.Name = fmt.Sprintf("Eremetic task %s", nextID(s))
+	}
+
+	task, err := eremetic.NewTask(request)
 	if err != nil {
 		return "", err
 	}
