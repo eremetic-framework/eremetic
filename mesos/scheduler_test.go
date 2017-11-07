@@ -547,6 +547,48 @@ func TestScheduler(t *testing.T) {
 		})
 	})
 
+	Convey("Schedule task with name from request", t, func() {
+		Convey("Given a scheduler with no scheduled tasks", func() {
+			scheduler := &Scheduler{
+				tasks:    make(chan string, 100),
+				database: db,
+			}
+
+			Convey("When scheduling a task with no name", func() {
+				request := eremetic.Request{
+					TaskCPUs:    0.5,
+					TaskMem:     22.0,
+					DockerImage: "busybox",
+					Command:     "echo hello",
+				}
+
+				taskID, _ := scheduler.ScheduleTask(request)
+				Convey("The task should have a name", func() {
+					task, err := db.ReadTask(taskID)
+					So(err, ShouldBeNil)
+					So(task.Name, ShouldNotBeEmpty)
+				})
+			})
+
+			Convey("When scheduling a task with a name from request", func() {
+				request := eremetic.Request{
+					Name:        "foobar",
+					TaskCPUs:    0.5,
+					TaskMem:     22.0,
+					DockerImage: "busybox",
+					Command:     "echo hello",
+				}
+
+				taskID, _ := scheduler.ScheduleTask(request)
+				Convey("The task should have the same name as in request", func() {
+					task, err := db.ReadTask(taskID)
+					So(err, ShouldBeNil)
+					So(task.Name, ShouldEqual, "foobar")
+				})
+			})
+		})
+	})
+
 	Convey("KillTask", t, func() {
 		driver := mock.NewMesosScheduler()
 		id := "eremetic-task.9999"

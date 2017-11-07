@@ -116,6 +116,7 @@ type RequestV1 struct {
 	Volumes           []eremetic.Volume          `json:"volumes"`
 	VolumesFrom       []string                   `json:"volumes_from"`
 	Ports             []eremetic.Port            `json:"ports"`
+	Name              string		     `json:"name"`
 	Network           string                     `json:"network"`
 	DNS               string                     `json:"dns"`
 	Environment       map[string]string          `json:"env"`
@@ -139,6 +140,7 @@ func RequestFromV1(req RequestV1) eremetic.Request {
 		Volumes:           req.Volumes,
 		VolumesFrom:       req.VolumesFrom,
 		Ports:             req.Ports,
+		Name:              req.Name,
 		Network:           req.Network,
 		DNS:               req.DNS,
 		Environment:       req.Environment,

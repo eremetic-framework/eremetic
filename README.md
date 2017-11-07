@@ -51,6 +51,8 @@ JSON format:
   ],
   // Array of Strings, container names to get volumes from
   "volumes_from": ["+%s"],
+  //String, name of the task. If empty, Eremetic assigns a random task name   
+  "name" : "Task Name",
   //String, network mode to pass to the container.
   "network" : "BRIDGE",
   //String, DNS address to be used by the container.
