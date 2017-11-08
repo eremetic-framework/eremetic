@@ -3,7 +3,7 @@ package mock
 import (
 	"errors"
 
-	"github.com/eremetic-framework/eremetic"
+	"github.com/cybricio/eremetic"
 )
 
 // Scheduler mocks the eremetic scheduler.

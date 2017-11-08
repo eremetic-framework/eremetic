@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/eremetic-framework/eremetic"
+	"github.com/cybricio/eremetic"
 )
 
 // TaskV1 defines the API V1 json-structure for the properties of a scheduled task.
@@ -116,7 +116,7 @@ type RequestV1 struct {
 	Volumes           []eremetic.Volume          `json:"volumes"`
 	VolumesFrom       []string                   `json:"volumes_from"`
 	Ports             []eremetic.Port            `json:"ports"`
-	Name              string		     `json:"name"`
+	Name              string                     `json:"name"`
 	Network           string                     `json:"network"`
 	DNS               string                     `json:"dns"`
 	Environment       map[string]string          `json:"env"`

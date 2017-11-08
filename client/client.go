@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/api"
+	"github.com/cybricio/eremetic"
+	"github.com/cybricio/eremetic/api"
 )
 
 // Client is used for communicating with an Eremetic server.

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/eremetic-framework/eremetic"
+	"github.com/cybricio/eremetic"
 )
 
 var task = eremetic.Task{

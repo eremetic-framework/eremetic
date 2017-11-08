@@ -6,7 +6,7 @@ import (
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/eremetic-framework/eremetic"
+	"github.com/cybricio/eremetic"
 	"time"
 )
 
