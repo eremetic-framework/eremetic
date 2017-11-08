@@ -18,11 +18,11 @@ import (
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/api"
-	"github.com/eremetic-framework/eremetic/config"
-	"github.com/eremetic-framework/eremetic/mock"
-	"github.com/eremetic-framework/eremetic/version"
+	"github.com/cybricio/eremetic"
+	"github.com/cybricio/eremetic/api"
+	"github.com/cybricio/eremetic/config"
+	"github.com/cybricio/eremetic/mock"
+	"github.com/cybricio/eremetic/version"
 )
 
 func TestHandlingV1(t *testing.T) {

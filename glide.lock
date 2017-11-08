@@ -1,12 +1,12 @@
-hash: dac76020cdc6cff763dbf9ade0dddbf94ed3e132b61a292a62fbdd1ff386c18b
-updated: 2017-06-18T15:06:21.53177475+02:00
+hash: 32292893d76facdc2d109ce6c42274075cf3f0dfa2deb5bee706328751ab585c
+updated: 2017-11-07T17:04:16.166672642-07:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
   subpackages:
   - quantile
 - name: github.com/boltdb/bolt
-  version: 583e8937c61f1af6513608ccc75c97b6abdf4ff9
+  version: 2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8
 - name: github.com/braintree/manners
   version: 0b5e6b2c2843f4c83c2a40f96980b09cf4af733c
 - name: github.com/davecgh/go-spew
@@ -86,7 +86,7 @@ imports:
   subpackages:
   - zk
 - name: github.com/Sirupsen/logrus
-  version: 202f25545ea4cf9b191ff7f846df5d87c9382c2b
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
 - name: github.com/stretchr/objx
   version: cbeaeb16a013161a98496fad62933b1d21786672
 - name: github.com/stretchr/testify
@@ -94,6 +94,10 @@ imports:
   subpackages:
   - assert
   - mock
+- name: golang.org/x/crypto
+  version: 687d4b818545e443c8ba223cbef20b1721afd4db
+  subpackages:
+  - ssh/terminal
 - name: golang.org/x/net
   version: 973f3f3bbd50e92b13faa6c53ec16f49b45e851c
   subpackages:
@@ -102,9 +106,14 @@ imports:
   version: fb4cac33e3196ff7f507ab9b2d2a44b0142f5b5a
   subpackages:
   - unix
+  - windows
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports:
+- name: github.com/eremetic-framework/eremetic
+  version: ba0bd5e21ed7356c17e4249d477495b5df94019e
+  subpackages:
+  - config
 - name: github.com/gopherjs/gopherjs
   version: dc374d32704510cb387457180ca9d5193978b555
   subpackages:
@@ -117,7 +126,7 @@ testImports:
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey
-  version: d4c757aa9afd1e2fc1832aaab209b5794eb336e1
+  version: 9e8dc3f972df6c8fcc0375ef492c24d0bb204857
   subpackages:
   - convey
   - convey/gotest

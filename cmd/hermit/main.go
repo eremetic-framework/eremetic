@@ -15,9 +15,9 @@ import (
 
 	"log"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/api"
-	"github.com/eremetic-framework/eremetic/client"
+	"github.com/cybricio/eremetic"
+	"github.com/cybricio/eremetic/api"
+	"github.com/cybricio/eremetic/client"
 )
 
 var defaultEremeticServer = "http://localhost:8000"

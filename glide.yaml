@@ -1,4 +1,4 @@
-package: github.com/eremetic-framework/eremetic
+package: github.com/cybricio/eremetic
 import:
 - package: github.com/Sirupsen/logrus
   version: ~1.0.0

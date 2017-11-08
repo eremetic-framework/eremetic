@@ -1,8 +1,8 @@
 # <img src="server/static/images/eremiteLOGO_02.png" width="400px" alt="Eremetic">
 
-[![Build Status][travis-image]](https://travis-ci.org/eremetic-framework/eremetic)
-[![Coverage Status][coveralls-image]](https://coveralls.io/r/eremetic-framework/eremetic?branch=master)
-[![Go Report][goreport-image]](https://goreportcard.com/report/github.com/eremetic-framework/eremetic)
+[![Build Status][travis-image]](https://travis-ci.org/cybricio/eremetic)
+[![Coverage Status][coveralls-image]](https://coveralls.io/r/cybricio/eremetic?branch=master)
+[![Go Report][goreport-image]](https://goreportcard.com/report/github.com/cybricio/eremetic)
 
 ## Purpose
 Eremetic is a Mesos Framework to run one-shot tasks. The vision is to provide a
@@ -152,7 +152,7 @@ The file should contain the Principal to authenticate and the secret separated b
 ## Building
 
 ### Environment
-Clone the repository into `$GOPATH/src/github.com/eremetic-framework/eremetic`.
+Clone the repository into `$GOPATH/src/github.com/cybricio/eremetic`.
 This is needed because of internal package dependencies
 
 ### Install dependencies
@@ -215,6 +215,6 @@ Thanks to Sebastian Norde for the awesome logo!
 ## Licensing
 Apache-2
 
-[travis-image]: https://img.shields.io/travis/eremetic-framework/eremetic.svg?style=flat
-[coveralls-image]: https://img.shields.io/coveralls/eremetic-framework/eremetic.svg?style=flat
-[goreport-image]: https://goreportcard.com/badge/github.com/eremetic-framework/eremetic
+[travis-image]: https://img.shields.io/travis/cybricio/eremetic.svg?style=flat
+[coveralls-image]: https://img.shields.io/coveralls/cybricio/eremetic.svg?style=flat
+[goreport-image]: https://goreportcard.com/badge/github.com/cybricio/eremetic

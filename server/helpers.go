@@ -15,11 +15,11 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/api"
-	"github.com/eremetic-framework/eremetic/config"
-	"github.com/eremetic-framework/eremetic/server/assets"
-	"github.com/eremetic-framework/eremetic/version"
+	"github.com/cybricio/eremetic"
+	"github.com/cybricio/eremetic/api"
+	"github.com/cybricio/eremetic/config"
+	"github.com/cybricio/eremetic/server/assets"
+	"github.com/cybricio/eremetic/version"
 )
 
 // getFile handles the actual fetching of file from the agent.
