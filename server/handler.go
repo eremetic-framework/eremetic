@@ -13,6 +13,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 
 	"github.com/eremetic-framework/eremetic"
 	"github.com/eremetic-framework/eremetic/api"
@@ -140,10 +141,17 @@ func (h Handler) GetTaskInfo(conf *config.Config, apiVersion string) http.Handle
 }
 
 // ListRunningTasks returns information about running tasks in the database.
-func (h Handler) ListRunningTasks(apiVersion string) http.HandlerFunc {
+func (h Handler) ListTasks(apiVersion string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		filter := &eremetic.TaskFilter{
+			State: eremetic.DefaultTaskFilterState,
+		}
+		if err := schema.NewDecoder().Decode(filter, r.URL.Query()); err != nil {
+			handleError(err, w, "Unable to parse query params")
+			return
+		}
 		logrus.Debug("Fetching all tasks")
-		tasks, err := h.database.ListNonTerminalTasks()
+		tasks, err := h.database.ListTasks(filter)
 		if err != nil {
 			handleError(err, w, "Unable to fetch running tasks from the database")
 			return

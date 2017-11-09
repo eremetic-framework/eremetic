@@ -43,18 +43,9 @@ func TestHandling(t *testing.T) {
 	Convey("Routes", t, func() {
 
 		id := "eremetic-task.1234"
-
 		maskedEnv := make(map[string]string)
 		maskedEnv["foo"] = "bar"
-		task := eremetic.Task{
-			TaskCPUs:          0.2,
-			TaskMem:           0.5,
-			Command:           "test",
-			Image:             "test",
-			Status:            status,
-			ID:                id,
-			MaskedEnvironment: maskedEnv,
-		}
+		task := generateTask(id, status, maskedEnv)
 
 		wr := httptest.NewRecorder()
 		m := mux.NewRouter()
@@ -363,6 +354,83 @@ func TestHandling(t *testing.T) {
 				So(body, ShouldContainSubstring, "/service/eremetic")
 			})
 		})
+		Convey("GetTasks", func() {
+			m.HandleFunc("/task", h.ListTasks(api.V0))
+			r.URL, _ = url.Parse("/task")
+			Convey("JSON request", func() {
+				Convey("Found 1 task", func() {
+					db.PutTask(&task)
+					m.ServeHTTP(wr, r)
+
+					retrievedTasks := unmarshalTasks(wr.Body)
+					So(len(retrievedTasks), ShouldEqual, 1)
+				})
+
+				Convey("Found 2 tasks", func() {
+					id = "eremetic-task.4567"
+					task = generateTask(id, status, maskedEnv)
+					task.Name = "foobar"
+					db.PutTask(&task)
+					m.ServeHTTP(wr, r)
+
+					retrievedTasks := unmarshalTasks(wr.Body)
+					So(len(retrievedTasks), ShouldEqual, 2)
+				})
+
+				Convey("Found 1 task by name", func() {
+					r.URL, _ = url.Parse("/task?name=foobar")
+					db.PutTask(&task)
+					m.ServeHTTP(wr, r)
+
+					retrievedTasks := unmarshalTasks(wr.Body)
+					So(len(retrievedTasks), ShouldEqual, 1)
+				})
+
+				Convey("Found 0 terminated tasks", func() {
+					r.URL, _ = url.Parse("/task?state=terminated")
+					m.ServeHTTP(wr, r)
+
+					retrievedTasks := unmarshalTasks(wr.Body)
+					So(len(retrievedTasks), ShouldEqual, 0)
+				})
+
+				Convey("Found 1 terminated task", func() {
+					status := []eremetic.Status{
+						eremetic.Status{
+							Status: eremetic.TaskFinished,
+							Time:   time.Now().Unix(),
+						},
+					}
+					task = generateTask(id, status, maskedEnv)
+					task.Name = "foobar"
+
+					db.PutTask(&task)
+					m.ServeHTTP(wr, r)
+
+					retrievedTasks := unmarshalTasks(wr.Body)
+					So(len(retrievedTasks), ShouldEqual, 1)
+				})
+			})
+		})
 
 	})
+}
+
+func generateTask(id string, status []eremetic.Status, maskedEnv map[string]string) eremetic.Task {
+	return eremetic.Task{
+		TaskCPUs:          0.2,
+		TaskMem:           0.5,
+		Command:           "test",
+		Image:             "test",
+		Status:            status,
+		ID:                id,
+		MaskedEnvironment: maskedEnv,
+	}
+}
+
+func unmarshalTasks(responseBody *bytes.Buffer) []api.TaskV0 {
+	var retrievedTasks []api.TaskV0
+	body, _ := ioutil.ReadAll(io.LimitReader(responseBody, 1048576))
+	json.Unmarshal(body, &retrievedTasks)
+	return retrievedTasks
 }

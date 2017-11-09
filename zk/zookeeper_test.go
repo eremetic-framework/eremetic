@@ -51,6 +51,7 @@ func TestZKDatabase(t *testing.T) {
 		ID:                "1234",
 		MaskedEnvironment: maskedEnv,
 		Status:            status,
+		Name:              "foobar",
 	}
 
 	taskBytes, err := eremetic.Encode(task)
@@ -280,15 +281,15 @@ func TestZKDatabase(t *testing.T) {
 		})
 	})
 
-	Convey("ListNonTerminalTasks", t, func() {
-		Convey("Success", func() {
+	Convey("ListTasks", t, func() {
+		Convey("Success with no filter", func() {
 			setup()
 			defer teardown()
 
 			object.On("Children", mock.AnythingOfType("string")).Return([]string{"1234"}, nil, nil)
 			object.On("Get", mock.AnythingOfType("string")).Return(taskBytes, &zk.Stat{}, nil)
 
-			list, err := db.ListNonTerminalTasks()
+			list, err := db.ListTasks(&eremetic.TaskFilter{})
 
 			So(err, ShouldBeNil)
 			So(list, ShouldHaveLength, 1)
@@ -299,6 +300,47 @@ func TestZKDatabase(t *testing.T) {
 			So(object.AssertCalled(t, "Children", "/testdb"), ShouldBeTrue)
 		})
 
+		Convey("Success with filter", func() {
+			setup()
+			defer teardown()
+
+			object.On("Children", mock.AnythingOfType("string")).Return([]string{"1234"}, nil, nil)
+			object.On("Get", mock.AnythingOfType("string")).Return(taskBytes, &zk.Stat{}, nil)
+
+			Convey("Found with name filter", func() {
+				list, err := db.ListTasks(&eremetic.TaskFilter{
+					Name: "foobar",
+				})
+				So(err, ShouldBeNil)
+				So(list, ShouldHaveLength, 1)
+
+			})
+			Convey("Found with terminated filter", func() {
+				list, err := db.ListTasks(&eremetic.TaskFilter{
+					State: eremetic.DefaultTaskFilterState,
+				})
+				So(err, ShouldBeNil)
+				So(list, ShouldHaveLength, 1)
+
+			})
+			Convey("Not found with name filter", func() {
+				list, err := db.ListTasks(&eremetic.TaskFilter{
+					Name: "non-existent",
+				})
+				So(err, ShouldBeNil)
+				So(list, ShouldHaveLength, 0)
+
+			})
+			Convey("Not found with terminated filter", func() {
+				list, err := db.ListTasks(&eremetic.TaskFilter{
+					State: eremetic.TerminatedState,
+				})
+				So(err, ShouldBeNil)
+				So(list, ShouldHaveLength, 0)
+
+			})
+		})
+
 		Convey("Error", func() {
 			setup()
 			defer teardown()
@@ -306,7 +348,9 @@ func TestZKDatabase(t *testing.T) {
 			object.On("Children", mock.AnythingOfType("string")).Return([]string{"1234"}, nil, nil)
 			object.On("Get", mock.AnythingOfType("string")).Return([]byte{}, &zk.Stat{}, errors.New("Unable to Read"))
 
-			list, _ := db.ListNonTerminalTasks()
+			list, _ := db.ListTasks(&eremetic.TaskFilter{
+				State: eremetic.DefaultTaskFilterState,
+			})
 			So(list, ShouldBeEmpty)
 			So(list, ShouldNotBeNil)
 			So(object.AssertCalled(t, "Get", "/testdb/1234"), ShouldBeTrue)

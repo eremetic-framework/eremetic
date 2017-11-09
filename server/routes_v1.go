@@ -47,7 +47,7 @@ func apiV1Routes(h Handler, conf *config.Config) Routes {
 			Name:    "ListRunningTasks",
 			Method:  "GET",
 			Pattern: "/api/v1/task",
-			Handler: h.ListRunningTasks(api.V1),
+			Handler: h.ListTasks(api.V1),
 		},
 		Route{
 			Name:    "Version",

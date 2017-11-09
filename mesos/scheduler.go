@@ -377,7 +377,7 @@ func (s *Scheduler) Kill(taskId string) error {
 		return fmt.Errorf("You can not kill that which is already dead.")
 	}
 
-	waiting := task.IsWaiting()
+	waiting := task.IsEnqueued()
 
 	logrus.Debugf("Marking task for killing.")
 	task.UpdateStatus(eremetic.Status{

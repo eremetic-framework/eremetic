@@ -337,10 +337,16 @@ func TestTask(t *testing.T) {
 			TaskLost,
 		}
 
-		nonTerminalStates := []TaskState{
-			TaskRunning,
+		activeStates := []TaskState{
 			TaskStaging,
 			TaskStarting,
+			TaskRunning,
+			TaskError,
+			TaskTerminating,
+		}
+
+		enqueuedStates := []TaskState{
+			TaskQueued,
 		}
 
 		Convey("IsTerminal", func() {
@@ -351,12 +357,168 @@ func TestTask(t *testing.T) {
 				})
 			}
 
-			for _, state := range nonTerminalStates {
+			for _, state := range activeStates {
+				test := fmt.Sprintf("Should be false for %s", state)
+				Convey(test, func() {
+					So(IsTerminal(state), ShouldBeFalse)
+				})
+			}
+
+			for _, state := range enqueuedStates {
 				test := fmt.Sprintf("Should be false for %s", state)
 				Convey(test, func() {
 					So(IsTerminal(state), ShouldBeFalse)
 				})
 			}
 		})
+
+		Convey("IsActive", func() {
+			for _, state := range activeStates {
+				test := fmt.Sprintf("Should be true for %s", state)
+				Convey(test, func() {
+					So(IsActive(state), ShouldBeTrue)
+				})
+			}
+
+			for _, state := range terminalStates {
+				test := fmt.Sprintf("Should be false for %s", state)
+				Convey(test, func() {
+					So(IsActive(state), ShouldBeFalse)
+				})
+			}
+
+			for _, state := range enqueuedStates {
+				test := fmt.Sprintf("Should be false for %s", state)
+				Convey(test, func() {
+					So(IsActive(state), ShouldBeFalse)
+				})
+			}
+		})
+
+		Convey("IsEnqueued", func() {
+			for _, state := range enqueuedStates {
+				test := fmt.Sprintf("Should be true for %s", state)
+				Convey(test, func() {
+					So(IsEnqueued(state), ShouldBeTrue)
+				})
+			}
+
+			for _, state := range terminalStates {
+				test := fmt.Sprintf("Should be false for %s", state)
+				Convey(test, func() {
+					So(IsEnqueued(state), ShouldBeFalse)
+				})
+			}
+
+			for _, state := range activeStates {
+				test := fmt.Sprintf("Should be false for %s", state)
+				Convey(test, func() {
+					So(IsEnqueued(state), ShouldBeFalse)
+				})
+			}
+		})
+	})
+
+	Convey("task states", t, func() {
+		task := Task{
+			Name:   "foobar",
+			Status: []Status{},
+		}
+
+		Convey("Task should not be in queued state", func() {
+			So(task.IsEnqueued(), ShouldBeFalse)
+		})
+		Convey("Task should not be in active state", func() {
+			So(task.IsActive(), ShouldBeFalse)
+		})
+		Convey("Task should be in terminated state", func() {
+			So(task.IsTerminated(), ShouldBeTrue)
+		})
+
+		task.UpdateStatus(Status{0, "TASK_QUEUED"})
+		Convey("TASK_QUEUED should be in queued state", func() {
+			So(task.IsEnqueued(), ShouldBeTrue)
+		})
+
+		task.UpdateStatus(Status{0, "TASK_STAGING"})
+		Convey("TASK_STAGING should be in active state", func() {
+			So(task.IsActive(), ShouldBeTrue)
+		})
+
+		task.UpdateStatus(Status{0, "TASK_RUNNING"})
+		Convey("TASK_RUNNING should be in active state", func() {
+			So(task.IsActive(), ShouldBeTrue)
+		})
+
+		task.UpdateStatus(Status{0, "TASK_TERMINATING"})
+		Convey("TASK_TERMINATING should be in terminating state", func() {
+			So(task.IsTerminating(), ShouldBeTrue)
+		})
+
+		task.UpdateStatus(Status{0, "TASK_FAILED"})
+		Convey("TASK_FAILED should be in terminated state", func() {
+			So(task.IsTerminated(), ShouldBeTrue)
+		})
+
+		task.UpdateStatus(Status{0, "TASK_FINISHED"})
+		Convey("TASK_FINISHED should be in terminated state", func() {
+			So(task.IsTerminated(), ShouldBeTrue)
+		})
+	})
+
+	Convey("task filter match", t, func() {
+
+		task := Task{
+			Name: "foobar",
+			Status: []Status{
+				Status{0, "TASK_STAGING"},
+				Status{1, "TASK_RUNNING"},
+				Status{2, "TASK_FINISHED"},
+			},
+		}
+
+		Convey("Is Terminated", func() {
+			taskFilter := TaskFilter{
+				State: TerminatedState,
+			}
+			So(taskFilter.Match(&task), ShouldBeTrue)
+		})
+
+		Convey("Is Not Terminated", func() {
+			task.Status = []Status{
+				Status{0, "TASK_STAGING"},
+			}
+			taskFilter := TaskFilter{
+				State: DefaultTaskFilterState,
+			}
+			So(taskFilter.Match(&task), ShouldBeTrue)
+		})
+
+		Convey("State doesn't match", func() {
+			task.Status = []Status{
+				Status{0, "TASK_STAGING"},
+			}
+			taskFilter := TaskFilter{
+				State: "inventedState",
+			}
+			So(taskFilter.Match(&task), ShouldBeFalse)
+		})
+
+		Convey("Match Name", func() {
+			taskFilter := TaskFilter{
+				State: TerminatedState,
+				Name:  "foobar",
+			}
+			So(taskFilter.Match(&task), ShouldBeTrue)
+		})
+
+		Convey("Doesn't Match Name", func() {
+			taskFilter := TaskFilter{
+				State: TerminatedState,
+				Name:  "inventedName",
+			}
+			So(taskFilter.Match(&task), ShouldBeFalse)
+		})
+
 	})
 }

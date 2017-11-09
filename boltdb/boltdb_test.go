@@ -195,11 +195,74 @@ func TestBoltDatabase(t *testing.T) {
 			},
 		})
 
-		tasks, err := db.ListNonTerminalTasks()
+		tasks, err := db.ListTasks(&eremetic.TaskFilter{
+			State: eremetic.DefaultTaskFilterState,
+		})
 		So(err, ShouldBeNil)
 		So(tasks, ShouldHaveLength, 1)
 		task := tasks[0]
 		So(task.ID, ShouldEqual, "2345")
+	})
+
+	Convey("ListTasks", t, func() {
+		setup()
+		defer teardown()
+		defer db.Close()
+
+		db.Clean()
+
+		// A terminated task
+		db.PutTask(&eremetic.Task{
+			ID: "1234",
+			Status: []eremetic.Status{
+				eremetic.Status{
+					Status: eremetic.TaskStaging,
+					Time:   time.Now().Unix(),
+				},
+				eremetic.Status{
+					Status: eremetic.TaskRunning,
+					Time:   time.Now().Unix(),
+				},
+				eremetic.Status{
+					Status: eremetic.TaskFinished,
+					Time:   time.Now().Unix(),
+				},
+			},
+		})
+
+		// A running task
+		db.PutTask(&eremetic.Task{
+			ID: "2345",
+			Status: []eremetic.Status{
+				eremetic.Status{
+					Status: eremetic.TaskStaging,
+					Time:   time.Now().Unix(),
+				},
+				eremetic.Status{
+					Status: eremetic.TaskRunning,
+					Time:   time.Now().Unix(),
+				},
+			},
+		})
+		Convey("List default non terminated tasks", func() {
+			tasks, err := db.ListTasks(&eremetic.TaskFilter{
+				State: eremetic.DefaultTaskFilterState,
+			})
+			So(err, ShouldBeNil)
+			So(tasks, ShouldHaveLength, 1)
+			task := tasks[0]
+			So(task.ID, ShouldEqual, "2345")
+		})
+
+		Convey("List terminated tasks", func() {
+			tasks, err := db.ListTasks(&eremetic.TaskFilter{
+				State: eremetic.TerminatedState,
+			})
+			So(err, ShouldBeNil)
+			So(tasks, ShouldHaveLength, 1)
+			task := tasks[0]
+			So(task.ID, ShouldEqual, "1234")
+		})
 	})
 
 	Convey("DeleteTask", t, func() {
@@ -246,7 +309,9 @@ func TestBoltDatabase(t *testing.T) {
 				},
 			},
 		})
-		tasks, err := db.ListNonTerminalTasks()
+		tasks, err := db.ListTasks(&eremetic.TaskFilter{
+			State: eremetic.DefaultTaskFilterState,
+		})
 		So(err, ShouldBeNil)
 		So(tasks, ShouldBeEmpty)
 		So(tasks, ShouldNotBeNil)

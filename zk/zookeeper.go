@@ -167,8 +167,8 @@ func (z *TaskDB) DeleteTask(id string) error {
 	return err
 }
 
-// ListNonTerminalTasks returns all non-terminal tasks.
-func (z *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
+// ListTasks returns all tasks.
+func (z *TaskDB) ListTasks(filter *eremetic.TaskFilter) ([]*eremetic.Task, error) {
 	tasks := []*eremetic.Task{}
 	paths, _, _ := z.conn.Children(z.path)
 	for _, p := range paths {
@@ -177,11 +177,10 @@ func (z *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 			logrus.WithError(err).Error("Unable to read task from database, skipping")
 			continue
 		}
-		if !t.IsTerminated() {
-			eremetic.ApplyMask(&t)
+		eremetic.ApplyMask(&t)
+		if filter.Match(&t) {
 			tasks = append(tasks, &t)
 		}
 	}
-
 	return tasks, nil
 }

@@ -30,7 +30,7 @@ type TaskDB interface {
 	ReadTask(id string) (Task, error)
 	DeleteTask(id string) error
 	ReadUnmaskedTask(id string) (Task, error)
-	ListNonTerminalTasks() ([]*Task, error)
+	ListTasks(filter *TaskFilter) ([]*Task, error)
 }
 
 // DefaultTaskDB is a in-memory implementation of TaskDB.
@@ -97,13 +97,13 @@ func (db *DefaultTaskDB) ReadUnmaskedTask(id string) (Task, error) {
 	return Task{}, errors.New("unknown task")
 }
 
-// ListNonTerminalTasks returns all non-terminal tasks.
-func (db *DefaultTaskDB) ListNonTerminalTasks() ([]*Task, error) {
+// ListTasks returns all tasks based on the filter.
+func (db *DefaultTaskDB) ListTasks(filter *TaskFilter) ([]*Task, error) {
 	db.mtx.RLock()
 	defer db.mtx.RUnlock()
 	res := []*Task{}
 	for _, t := range db.tasks {
-		if !t.IsTerminated() {
+		if filter.Match(t) {
 			res = append(res, t)
 		}
 	}
