@@ -61,7 +61,6 @@ func TestScheduler(t *testing.T) {
 				s = NewScheduler(&Settings{MaxQueueSize: queueSize}, db)
 
 				Convey("The settings should have default values", func() {
-					So(s.tasksCreated, ShouldEqual, 0)
 					So(cap(s.tasks), ShouldEqual, queueSize)
 				})
 			})

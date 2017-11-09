@@ -40,10 +40,9 @@ type Settings struct {
 type Scheduler struct {
 	settings *Settings
 
-	frameworkID  string
-	tasksCreated int
-	initialised  bool
-	driver       mesossched.SchedulerDriver
+	frameworkID string
+	initialised bool
+	driver      mesossched.SchedulerDriver
 
 	// task to start
 	tasks chan string
@@ -400,15 +399,12 @@ func (s *Scheduler) Stop() {
 	close(s.shutdown)
 }
 
-func nextID(s *Scheduler) string {
+func nextID(_ *Scheduler) string {
 	letters := []rune("bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ123456789")
 	rand.Seed(time.Now().UnixNano())
 	b := make([]rune, 8)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
-
-	s.tasksCreated++
-
 	return string(b)
 }
