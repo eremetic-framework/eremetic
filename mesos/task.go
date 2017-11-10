@@ -21,6 +21,14 @@ func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mes
 	portMapping, portResources := buildPorts(task, network, offer)
 	env := buildEnvironment(task, portMapping)
 
+	resources := []mesos.Resource{
+		*mesos.BuildResource().Name("cpus").Scalar(task.TaskCPUs).Resource,
+		*mesos.BuildResource().Name("mem").Scalar(task.TaskMem).Resource,
+	}
+	if len(portResources) > 0 {
+		resources = append(resources, *mesos.BuildResource().Name("ports").Ranges(portResources).Resource)
+	}
+
 	taskInfo := &mesos.TaskInfo{
 		TaskID:  mesos.TaskID{Value: task.ID},
 		AgentID: offer.AgentID,
@@ -38,11 +46,7 @@ func createTaskInfo(task eremetic.Task, offer *mesos.Offer) (eremetic.Task, *mes
 			},
 			Volumes: buildVolumes(task),
 		},
-		Resources: []mesos.Resource{
-			*mesos.BuildResource().Name("cpus").Scalar(task.TaskCPUs).Resource,
-			*mesos.BuildResource().Name("mem").Scalar(task.TaskMem).Resource,
-			*mesos.BuildResource().Name("ports").Ranges(portResources).Resource,
-		},
+		Resources: resources,
 	}
 	return task, taskInfo
 }
