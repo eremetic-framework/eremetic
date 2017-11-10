@@ -27,6 +27,7 @@ import:
   - api/v0/mesosproto
   - api/v0/mesosutil
   - api/v0/scheduler
+  - api/v1/lib/backoff
 - package: github.com/pborman/uuid
   version: ~1.0.0
 - package: github.com/prometheus/client_golang
@@ -44,8 +45,3 @@ import:
   subpackages:
   - context
 - package: gopkg.in/yaml.v2
-testImport:
-- package: github.com/smartystreets/goconvey
-  version: ~1.6.2
-  subpackages:
-  - convey

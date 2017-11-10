@@ -4,9 +4,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/golang/protobuf/proto"
-	"github.com/mesos/mesos-go/api/v0/mesosproto"
-	mesossched "github.com/mesos/mesos-go/api/v0/scheduler"
+	"github.com/mesos/mesos-go/api/v1/lib/scheduler/calls"
 
 	"github.com/eremetic-framework/eremetic"
 )
@@ -24,7 +22,8 @@ func (r *reconciler) Cancel() {
 	close(r.cancel)
 }
 
-func reconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB) *reconciler {
+func (s *Scheduler) reconcileTasks() *reconciler {
+	frameworkOpt := calls.Framework(s.frameworkID)
 	cancel := make(chan struct{})
 	done := make(chan struct{})
 
@@ -34,7 +33,7 @@ func reconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB)
 			delay = 1
 		)
 
-		tasks, err := database.ListNonTerminalTasks()
+		tasks, err := s.database.ListNonTerminalTasks()
 		if err != nil {
 			logrus.WithError(err).Error("Failed to list non-terminal tasks")
 			close(done)
@@ -54,7 +53,7 @@ func reconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB)
 				// Filter tasks that has received a status update
 				ntasks := []*eremetic.Task{}
 				for _, t := range tasks {
-					nt, err := database.ReadTask(t.ID)
+					nt, err := s.database.ReadTask(t.ID)
 					if err != nil {
 						logrus.WithField("task_id", t.ID).Warn("Task not found in database")
 						continue
@@ -67,16 +66,15 @@ func reconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB)
 
 				// Send reconciliation request
 				if len(tasks) > 0 {
-					var statuses []*mesosproto.TaskStatus
+					taskmap := make(map[string]string)
 					for _, t := range tasks {
-						statuses = append(statuses, &mesosproto.TaskStatus{
-							State:   mesosproto.TaskState_TASK_STAGING.Enum(),
-							TaskId:  &mesosproto.TaskID{Value: proto.String(t.ID)},
-							SlaveId: &mesosproto.SlaveID{Value: proto.String(t.AgentID)},
-						})
+						taskmap[t.ID] = t.AgentID
 					}
 					logrus.WithField("reconciliation_request_count", c).Debug("Sending reconciliation request")
-					driver.ReconcileTasks(statuses)
+					reconcile := calls.Reconcile(calls.ReconcileTasks(taskmap)).With(frameworkOpt)
+					if err := calls.CallNoData(s.caller, reconcile); err != nil {
+						logrus.WithError(err).Warn("Failed to send reconciliation request")
+					}
 				}
 
 				if delay < maxReconciliationDelay {

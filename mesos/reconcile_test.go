@@ -4,7 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mesos/mesos-go/api/v0/mesosproto"
+	"github.com/mesos/mesos-go/api/v1/lib"
+	"github.com/mesos/mesos-go/api/v1/lib/scheduler"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/eremetic-framework/eremetic"
@@ -13,27 +14,35 @@ import (
 
 func TestReconcile(t *testing.T) {
 	db := eremetic.NewDefaultTaskDB()
-
 	maxReconciliationDelay = 1
 
 	Convey("ReconcileTasks", t, func() {
 		Convey("Finishes when there are no tasks", func() {
-			driver := mock.NewMesosScheduler()
-			r := reconcileTasks(driver, db)
+			caller := mock.NewCaller()
+			s := &Scheduler{
+				database: db,
+				caller:   caller,
+			}
+
+			r := s.reconcileTasks()
 
 			select {
 			case <-r.done:
 			}
 
-			So(driver.ReconcileTasksFnInvoked, ShouldBeFalse)
+			So(caller.CallFnInvoked, ShouldBeFalse)
 		})
 
 		Convey("Sends reconcile request", func() {
-			driver := mock.NewMesosScheduler()
-			driver.ReconcileTasksFn = func(ts []*mesosproto.TaskStatus) (mesosproto.Status, error) {
+			caller := mock.NewCaller()
+			s := &Scheduler{
+				database: db,
+				caller:   caller,
+			}
+			caller.CallFn = func(call *scheduler.Call) (mesos.Response, error) {
 				t, err := db.ReadTask("1234")
 				if err != nil {
-					return mesosproto.Status_DRIVER_RUNNING, err
+					return nil, err
 				}
 				t.UpdateStatus(eremetic.Status{
 					Status: eremetic.TaskRunning,
@@ -41,7 +50,7 @@ func TestReconcile(t *testing.T) {
 				})
 				db.PutTask(&t)
 
-				return mesosproto.Status_DRIVER_RUNNING, nil
+				return nil, nil
 			}
 
 			db.PutTask(&eremetic.Task{
@@ -54,17 +63,22 @@ func TestReconcile(t *testing.T) {
 				},
 			})
 
-			r := reconcileTasks(driver, db)
+			r := s.reconcileTasks()
 
 			select {
 			case <-r.done:
 			}
 
-			So(driver.ReconcileTasksFnInvoked, ShouldBeTrue)
+			So(caller.CallFnInvoked, ShouldBeTrue)
+			So(caller.Calls[0].GetType(), ShouldEqual, scheduler.Call_RECONCILE)
 		})
 
 		Convey("Cancel reconciliation", func() {
-			driver := mock.NewMesosScheduler()
+			caller := mock.NewCaller()
+			s := &Scheduler{
+				database: db,
+				caller:   caller,
+			}
 
 			db.PutTask(&eremetic.Task{
 				ID: "1234",
@@ -76,14 +90,14 @@ func TestReconcile(t *testing.T) {
 				},
 			})
 
-			r := reconcileTasks(driver, db)
+			r := s.reconcileTasks()
 			r.Cancel()
 
 			select {
 			case <-r.done:
 			}
 
-			So(driver.ReconcileTasksFnInvoked, ShouldBeFalse)
+			So(caller.CallFnInvoked, ShouldBeFalse)
 		})
 	})
 }

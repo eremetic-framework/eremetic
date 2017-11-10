@@ -1,16 +1,13 @@
 package mesos
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/golang/protobuf/proto"
-	"github.com/mesos/mesos-go/api/v0/mesosproto"
-	mesossched "github.com/mesos/mesos-go/api/v0/scheduler"
+	"github.com/mesos/mesos-go/api/v1/lib"
+	"github.com/mesos/mesos-go/api/v1/lib/scheduler/calls"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/eremetic-framework/eremetic"
@@ -18,8 +15,7 @@ import (
 )
 
 var (
-	defaultFilter = &mesosproto.Filters{RefuseSeconds: proto.Float64(10)}
-	maxRetries    = 5
+	maxRetries = 5
 )
 
 // Settings holds configuration values for the scheduler
@@ -42,7 +38,8 @@ type Scheduler struct {
 
 	frameworkID string
 	initialised bool
-	driver      mesossched.SchedulerDriver
+	random      *rand.Rand
+	caller      calls.Caller
 
 	// task to start
 	tasks chan string
@@ -65,79 +62,55 @@ func NewScheduler(settings *Settings, db eremetic.TaskDB) *Scheduler {
 		shutdown:    make(chan struct{}),
 		tasks:       make(chan string, settings.MaxQueueSize),
 		database:    db,
+		random:      rand.New(rand.NewSource(time.Now().Unix())),
 		frameworkID: settings.FrameworkID,
 	}
 }
 
 // Run the eremetic scheduler
 func (s *Scheduler) Run() {
+	s.caller = createCaller(s.settings)
 	driver, err := createDriver(s, s.settings)
-	s.driver = driver
-
 	if err != nil {
 		logrus.WithError(err).Error("Unable to create scheduler driver")
 	}
-
-	go func() {
-		<-s.shutdown
-		driver.Stop(false)
-	}()
-
-	if status, err := driver.Run(); err != nil {
-		logrus.WithError(err).WithField("status", status.String()).Error("Framework stopped")
+	if err := driver.Run(s.shutdown); err != nil {
+		logrus.WithError(err).Error("Framework stopped")
 	}
-
 	logrus.Info("Exiting...")
 }
 
 // Reconcile reconciles the currently scheduled tasks.
-func (s *Scheduler) Reconcile(driver mesossched.SchedulerDriver) {
+func (s *Scheduler) Reconcile() {
 	if s.reconcile != nil {
 		s.reconcile.Cancel()
 	}
-	s.reconcile = reconcileTasks(driver, s.database)
+	s.reconcile = s.reconcileTasks()
 }
 
-// Registered is called when the Scheduler is Registered
-func (s *Scheduler) Registered(driver mesossched.SchedulerDriver, frameworkID *mesosproto.FrameworkID, masterInfo *mesosproto.MasterInfo) {
+// Subscribed is called whne the Scheduler is Subscribed
+func (s *Scheduler) Subscribed(frameworkID *mesos.FrameworkID) {
 	logrus.WithFields(logrus.Fields{
 		"framework_id": frameworkID.GetValue(),
-		"master_id":    masterInfo.GetId(),
-		"master":       masterInfo.GetHostname(),
-	}).Debug("Framework registered with master.")
-
+	}).Debug("Framework subscribed to master.")
 	s.frameworkID = frameworkID.GetValue()
 	if !s.initialised {
-		driver.ReconcileTasks([]*mesosproto.TaskStatus{})
-		s.initialised = true
+		frameworkOpt := calls.Framework(s.frameworkID)
+		reconcile := calls.Reconcile().With(frameworkOpt)
+		if err := calls.CallNoData(s.caller, reconcile); err != nil {
+			logrus.WithError(err).Warn("Failed to send reconciliation request")
+		}
 	} else {
-		s.Reconcile(driver)
+		s.Reconcile()
 	}
-}
-
-// Reregistered is called when the Scheduler is Reregistered
-func (s *Scheduler) Reregistered(driver mesossched.SchedulerDriver, masterInfo *mesosproto.MasterInfo) {
-	logrus.WithFields(logrus.Fields{
-		"master_id": masterInfo.GetId(),
-		"master":    masterInfo.GetHostname(),
-	}).Debug("Framework re-registered with master.")
-	if !s.initialised {
-		driver.ReconcileTasks([]*mesosproto.TaskStatus{})
-		s.initialised = true
-	} else {
-		s.Reconcile(driver)
-	}
-}
-
-// Disconnected is called when the Scheduler is Disconnected
-func (s *Scheduler) Disconnected(mesossched.SchedulerDriver) {
-	logrus.Debugf("Framework disconnected with master")
 }
 
 // ResourceOffers handles the Resource Offers
-func (s *Scheduler) ResourceOffers(driver mesossched.SchedulerDriver, offers []*mesosproto.Offer) {
+func (s *Scheduler) ResourceOffers(offers []mesos.Offer) {
+	refuseOpt := calls.RefuseSecondsWithJitter(s.random, 10)
+	frameworkOpt := calls.Framework(s.frameworkID)
 	logrus.WithField("offers", len(offers)).Debug("Received offers")
-	var offer *mesosproto.Offer
+	var offer *mesos.Offer
 
 loop:
 	for len(offers) > 0 {
@@ -170,19 +143,20 @@ loop:
 
 			t, task := createTaskInfo(t, offer)
 			logrus.WithFields(logrus.Fields{
-				"task_id":  task.TaskId.GetValue(),
-				"offer_id": offer.Id.GetValue(),
+				"task_id":  task.TaskID.GetValue(),
+				"offer_id": offer.ID.GetValue(),
 			}).Debug("Preparing to launch task")
 			t.UpdateStatus(eremetic.Status{
 				Status: eremetic.TaskStaging,
 				Time:   time.Now().Unix(),
 			})
-			s.database.PutTask(&t)
-			_, err := driver.LaunchTasks([]*mesosproto.OfferID{offer.Id}, []*mesosproto.TaskInfo{task}, defaultFilter)
-			if err != nil {
+			accept := calls.Accept(
+				calls.OfferOperations{calls.OpLaunch(*task)}.WithOffers(offer.ID),
+			).With(refuseOpt).With(frameworkOpt)
+			if err := calls.CallNoData(s.caller, accept); err != nil {
 				logrus.WithFields(logrus.Fields{
-					"task_id":  task.TaskId.GetValue(),
-					"offer_id": offer.Id.GetValue(),
+					"task_id":  task.TaskID.GetValue(),
+					"offer_id": offer.ID.GetValue(),
 				}).WithError(err).Warn("Failed to launch task")
 				t.UpdateStatus(eremetic.Status{
 					Status: eremetic.TaskError,
@@ -192,7 +166,7 @@ loop:
 				metrics.TasksLaunched.Inc()
 			}
 			metrics.QueueSize.Dec()
-
+			s.database.PutTask(&t)
 			continue
 		default:
 			break loop
@@ -201,13 +175,18 @@ loop:
 
 	logrus.Debug("No tasks to launch. Declining offers.")
 	for _, offer := range offers {
-		driver.DeclineOffer(offer.Id, defaultFilter)
+		accept := calls.Accept(
+			calls.OfferOperations{calls.OpLaunch()}.WithOffers(offer.ID),
+		).With(refuseOpt).With(frameworkOpt)
+		if err := calls.CallNoData(s.caller, accept); err != nil {
+			logrus.WithField("offer_id", offer.ID).WithError(err).Info("Failed to decline offer")
+		}
 	}
 }
 
 // StatusUpdate takes care of updating the status
-func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *mesosproto.TaskStatus) {
-	id := status.TaskId.GetValue()
+func (s *Scheduler) StatusUpdate(status mesos.TaskStatus) {
+	id := status.TaskID.GetValue()
 	newState := eremetic.TaskState(status.State.String())
 
 	logrus.WithFields(logrus.Fields{
@@ -223,7 +202,7 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 	if task.ID == "" {
 		task = eremetic.Task{
 			ID:      id,
-			AgentID: status.SlaveId.GetValue(),
+			AgentID: status.AgentID.GetValue(),
 		}
 	}
 
@@ -291,52 +270,6 @@ func (s *Scheduler) StatusUpdate(driver mesossched.SchedulerDriver, status *meso
 	s.database.PutTask(&task)
 }
 
-// FrameworkMessage is invoked when an executor sends a message.
-func (s *Scheduler) FrameworkMessage(
-	driver mesossched.SchedulerDriver,
-	executorID *mesosproto.ExecutorID,
-	slaveID *mesosproto.SlaveID,
-	message string) {
-
-	logrus.Debug("Getting a framework message")
-	switch executorID.GetValue() {
-	case "eremetic-executor":
-		var result interface{}
-		err := json.Unmarshal([]byte(message), &result)
-		if err != nil {
-			logrus.WithError(err).Error("Unable to unmarshal result")
-			return
-		}
-		logrus.Debug(message)
-
-	default:
-		logrus.WithField("executor_id", executorID.GetValue()).Debug("Received a message from an unknown executor.")
-	}
-}
-
-// OfferRescinded is invoked when an offer is no longer valid.
-func (s *Scheduler) OfferRescinded(_ mesossched.SchedulerDriver, offerID *mesosproto.OfferID) {
-	logrus.WithField("offer_id", offerID).Debug("Offer Rescinded")
-}
-
-// SlaveLost is invoked when a slave has been determined unreachable.
-func (s *Scheduler) SlaveLost(_ mesossched.SchedulerDriver, slaveID *mesosproto.SlaveID) {
-	logrus.WithField("slave_id", slaveID).Debug("Slave lost")
-}
-
-// ExecutorLost is invoked when an executor has exited/terminated.
-func (s *Scheduler) ExecutorLost(_ mesossched.SchedulerDriver, executorID *mesosproto.ExecutorID, agentID *mesosproto.SlaveID, status int) {
-	logrus.WithFields(logrus.Fields{
-		"agent_id":    agentID,
-		"executor_id": executorID,
-	}).Debug("Executor on agent was lost")
-}
-
-// Error is invoked when there is an unrecoverable error in the scheduler or scheduler driver.
-func (s *Scheduler) Error(_ mesossched.SchedulerDriver, err string) {
-	logrus.WithError(errors.New(err)).Debug("Received an error")
-}
-
 // ScheduleTask tries to register a new task in the database to be scheduled.
 // If the queue is full the task will be dropped.
 func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
@@ -390,7 +323,13 @@ func (s *Scheduler) Kill(taskId string) error {
 		return nil
 	}
 
-	_, err = s.driver.KillTask(&mesosproto.TaskID{Value: proto.String(taskId)})
+	logrus.WithFields(logrus.Fields{
+		"task_id":  task.ID,
+		"agent_id": task.AgentID,
+	}).Debug("sending kill request")
+	frameworkOpt := calls.Framework(s.frameworkID)
+	kill := calls.Kill(task.ID, task.AgentID).With(frameworkOpt)
+	err = calls.CallNoData(s.caller, kill)
 	return err
 }
 

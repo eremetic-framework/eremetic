@@ -1,5 +1,5 @@
-hash: dac76020cdc6cff763dbf9ade0dddbf94ed3e132b61a292a62fbdd1ff386c18b
-updated: 2017-06-18T15:06:21.53177475+02:00
+hash: a3f8de51f5efddecafb0992b0ff199fd103d48c6d453724a0cc1254dfd159446
+updated: 2017-06-21T21:55:32.019005877+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -43,26 +43,45 @@ imports:
   version: f2cd423e881bdfb0658479ca4ef433e30f4906cd
   subpackages:
   - api/v0/auth
+  - api/v0/mesosproto
+  - api/v0/mesosutil
+  - api/v0/scheduler
+  - api/v1/lib/backoff
+  - api/v1/lib
+  - api/v1/lib/encoding
+  - api/v1/lib/extras/scheduler/controller
+  - api/v1/lib/httpcli
+  - api/v1/lib/httpcli/httpsched
+  - api/v1/lib/scheduler
+  - api/v1/lib/scheduler/calls
+  - api/v1/lib/scheduler/events
+  - api/v1/lib/encoding/framing
+  - api/v1/lib/encoding/proto
+  - api/v1/lib/httpcli/apierrors
+  - api/v1/lib/recordio
+  - api/v1/lib/extras/metrics
   - api/v0/auth/callback
   - api/v0/auth/sasl
-  - api/v0/auth/sasl/mech
   - api/v0/auth/sasl/mech/crammd5
   - api/v0/detector
   - api/v0/detector/zoo
-  - api/v0/mesosproto
   - api/v0/mesosproto/scheduler
-  - api/v0/mesosutil
   - api/v0/mesosutil/process
   - api/v0/messenger
   - api/v0/messenger/sessionid
-  - api/v0/scheduler
   - api/v0/upid
+  - api/v0/auth/sasl/mech
 - name: github.com/pborman/uuid
   version: a97ce2ca70fa5a848076093f05e639a89ca34d06
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/pquerna/ffjson
+  version: 0a1032732ea92f86ab22e27b9d55cd182f2f4a1b
+  subpackages:
+  - fflib/v1
+  - fflib/v1/internal
 - name: github.com/prometheus/client_golang
   version: c5b7fccd204277076155f10851dad72b76a49317
   subpackages:
@@ -75,8 +94,8 @@ imports:
   version: 0d0c3d572886e0f2323ed376557f9eb99b97d25b
   subpackages:
   - expfmt
-  - internal/bitbucket.org/ww/goautoneg
   - model
+  - internal/bitbucket.org/ww/goautoneg
 - name: github.com/prometheus/procfs
   version: a3bfc74126ea9e45ee5d5c6f7fc86191b7d488fb
   subpackages:
@@ -92,33 +111,13 @@ imports:
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
-  - assert
   - mock
+  - assert
+  - http
 - name: golang.org/x/net
   version: 973f3f3bbd50e92b13faa6c53ec16f49b45e851c
   subpackages:
   - context
-- name: golang.org/x/sys
-  version: fb4cac33e3196ff7f507ab9b2d2a44b0142f5b5a
-  subpackages:
-  - unix
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
-testImports:
-- name: github.com/gopherjs/gopherjs
-  version: dc374d32704510cb387457180ca9d5193978b555
-  subpackages:
-  - js
-- name: github.com/jtolds/gls
-  version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
-- name: github.com/smartystreets/assertions
-  version: 4ea54c1f28ad3ae597e76607dea3871fa177e263
-  subpackages:
-  - internal/go-render/render
-  - internal/oglematchers
-- name: github.com/smartystreets/goconvey
-  version: d4c757aa9afd1e2fc1832aaab209b5794eb336e1
-  subpackages:
-  - convey
-  - convey/gotest
-  - convey/reporting
+devImports: []
