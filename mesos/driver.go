@@ -136,7 +136,6 @@ func createEventsMux(sched *Scheduler) *events.Mux {
 				return nil
 			},
 			scheduler.Event_UPDATE: func(e *scheduler.Event) error {
-				// FIXME: Should ACK
 				update := e.GetUpdate()
 				status := update.GetStatus()
 				logrus.WithFields(logrus.Fields{
@@ -148,11 +147,12 @@ func createEventsMux(sched *Scheduler) *events.Mux {
 					update.GetStatus(),
 				)
 				if len(status.GetUUID()) > 0 {
+					frameworkOpt := calls.Framework(sched.frameworkID)
 					ack := calls.Acknowledge(
 						status.GetAgentID().GetValue(),
 						status.TaskID.Value,
 						status.GetUUID(),
-					)
+					).With(frameworkOpt)
 					if err := calls.CallNoData(sched.caller, ack); err != nil {
 						logrus.WithError(err).Warn("Failed to ack status update")
 					}
