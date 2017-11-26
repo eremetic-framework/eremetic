@@ -153,6 +153,9 @@ definitions:
       masked_env:
         type: object
         description: Environment variables to set but that are masked in any GET request.
+      labels:
+        type: object
+        description: Labels for the task
       callback_uri:
         type: string
         description: URL to post a callback to

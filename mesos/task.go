@@ -40,6 +40,7 @@ func createTaskInfo(task eremetic.Task, offer *mesosproto.Offer) (eremetic.Task,
 			},
 			Volumes: buildVolumes(task),
 		},
+		Labels: buildLabels(task),
 		Resources: []*mesosproto.Resource{
 			mesosutil.NewScalarResource("cpus", task.TaskCPUs),
 			mesosutil.NewScalarResource("mem", task.TaskMem),
@@ -118,6 +119,23 @@ func buildEnvironment(task eremetic.Task, portMappings []*mesosproto.ContainerIn
 	return &mesosproto.Environment{
 		Variables: environment,
 	}
+}
+
+func buildLabels(task eremetic.Task) *mesosproto.Labels {
+	var labels *mesosproto.Labels
+	var labelsSlice []*mesosproto.Label
+	for k, v := range task.Labels {
+		labelsSlice = append(labelsSlice, &mesosproto.Label{
+			Key:   proto.String(k),
+			Value: proto.String(v),
+		})
+	}
+	if len(labelsSlice) > 0 {
+		labels = &mesosproto.Labels{
+			Labels: labelsSlice,
+		}
+	}
+	return labels
 }
 
 func buildVolumes(task eremetic.Task) []*mesosproto.Volume {

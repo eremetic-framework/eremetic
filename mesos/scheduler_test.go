@@ -624,6 +624,54 @@ func TestScheduler(t *testing.T) {
 		})
 	})
 
+
+
+	Convey("Schedule task with labels", t, func() {
+		Convey("Given a scheduler with no scheduled tasks", func() {
+			scheduler := &Scheduler{
+				tasks:    make(chan string, 100),
+				database: db,
+			}
+
+			Convey("When scheduling a task with no labels", func() {
+				request := eremetic.Request{
+					TaskCPUs:    0.5,
+					TaskMem:     22.0,
+					DockerImage: "busybox",
+					Command:     "echo hello",
+				}
+
+				taskID, _ := scheduler.ScheduleTask(request)
+				Convey("The task should have no labels", func() {
+					task, err := db.ReadTask(taskID)
+					So(err, ShouldBeNil)
+					So(task.Labels, ShouldBeNil)
+				})
+			})
+
+			Convey("When scheduling a task with labels from request", func() {
+				request := eremetic.Request{
+					Name:        "foobar",
+					TaskCPUs:    0.5,
+					TaskMem:     22.0,
+					DockerImage: "busybox",
+					Command:     "echo hello",
+					Labels:      map[string]string{"label1": "label_value"},
+				}
+
+				taskID, _ := scheduler.ScheduleTask(request)
+				Convey("The task should have same labels as in request", func() {
+					task, err := db.ReadTask(taskID)
+					So(err, ShouldBeNil)
+					So(task.Labels, ShouldNotBeNil)
+					So(task.Labels, ShouldHaveLength, 1)
+					So(task.Labels["label1"], ShouldEqual, "label_value")
+				})
+			})
+		})
+	})
+
+
 	Convey("KillTask", t, func() {
 		driver := mock.NewMesosScheduler()
 		id := "eremetic-task.9999"

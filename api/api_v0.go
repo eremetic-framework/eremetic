@@ -13,6 +13,7 @@ type TaskV0 struct {
 	User              string                     `json:"user"`
 	Environment       map[string]string          `json:"env"`
 	MaskedEnvironment map[string]string          `json:"masked_env"`
+	Labels            map[string]string          `json:"labels"`
 	Image             string                     `json:"image"`
 	Volumes           []eremetic.Volume          `json:"volumes"`
 	Ports             []eremetic.Port            `json:"ports"`
@@ -46,6 +47,7 @@ func TaskV0FromTask(task *eremetic.Task) TaskV0 {
 		User:              task.User,
 		Environment:       task.Environment,
 		MaskedEnvironment: task.MaskedEnvironment,
+		Labels:            task.Labels,
 		Image:             task.Image,
 		Volumes:           task.Volumes,
 		Ports:             task.Ports,
@@ -80,6 +82,7 @@ func TaskFromV0(task *TaskV0) eremetic.Task {
 		User:              task.User,
 		Environment:       task.Environment,
 		MaskedEnvironment: task.MaskedEnvironment,
+		Labels:             task.Labels,
 		Image:             task.Image,
 		Volumes:           task.Volumes,
 		Ports:             task.Ports,
@@ -117,6 +120,7 @@ type RequestV0 struct {
 	DNS               string                     `json:"dns"`
 	Environment       map[string]string          `json:"env"`
 	MaskedEnvironment map[string]string          `json:"masked_env"`
+	Labels            map[string]string          `json:"labels"`
 	AgentConstraints  []eremetic.AgentConstraint `json:"slave_constraints"`
 	CallbackURI       string                     `json:"callback_uri"`
 	URIs              []string                   `json:"uris"`
@@ -141,6 +145,7 @@ func RequestFromV0(req RequestV0) eremetic.Request {
 		DNS:               req.DNS,
 		Environment:       req.Environment,
 		MaskedEnvironment: req.MaskedEnvironment,
+		Labels:            req.Labels,
 		AgentConstraints:  req.AgentConstraints,
 		CallbackURI:       req.CallbackURI,
 		URIs:              req.URIs,

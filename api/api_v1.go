@@ -13,6 +13,7 @@ type TaskV1 struct {
 	User              string                     `json:"user"`
 	Environment       map[string]string          `json:"env"`
 	MaskedEnvironment map[string]string          `json:"masked_env"`
+	Labels            map[string]string          `json:"labels"`
 	Image             string                     `json:"image"`
 	Volumes           []eremetic.Volume          `json:"volumes"`
 	VolumesFrom       []string                   `json:"volumes_from"`
@@ -47,6 +48,7 @@ func TaskV1FromTask(task *eremetic.Task) TaskV1 {
 		User:              task.User,
 		Environment:       task.Environment,
 		MaskedEnvironment: task.MaskedEnvironment,
+		Labels:            task.Labels,
 		Image:             task.Image,
 		Volumes:           task.Volumes,
 		VolumesFrom:       task.VolumesFrom,
@@ -82,6 +84,7 @@ func TaskFromV1(task *TaskV1) eremetic.Task {
 		User:              task.User,
 		Environment:       task.Environment,
 		MaskedEnvironment: task.MaskedEnvironment,
+		Labels:            task.Labels,
 		Image:             task.Image,
 		Volumes:           task.Volumes,
 		VolumesFrom:       task.VolumesFrom,
@@ -116,11 +119,12 @@ type RequestV1 struct {
 	Volumes           []eremetic.Volume          `json:"volumes"`
 	VolumesFrom       []string                   `json:"volumes_from"`
 	Ports             []eremetic.Port            `json:"ports"`
-	Name              string		     `json:"name"`
+	Name              string                     `json:"name"`
 	Network           string                     `json:"network"`
 	DNS               string                     `json:"dns"`
 	Environment       map[string]string          `json:"env"`
 	MaskedEnvironment map[string]string          `json:"masked_env"`
+	Labels            map[string]string          `json:"labels"`
 	AgentConstraints  []eremetic.AgentConstraint `json:"agent_constraints"`
 	CallbackURI       string                     `json:"callback_uri"`
 	Fetch             []eremetic.URI             `json:"fetch"`
@@ -145,6 +149,7 @@ func RequestFromV1(req RequestV1) eremetic.Request {
 		DNS:               req.DNS,
 		Environment:       req.Environment,
 		MaskedEnvironment: req.MaskedEnvironment,
+		Labels:            req.Labels,
 		AgentConstraints:  req.AgentConstraints,
 		CallbackURI:       req.CallbackURI,
 		URIs:              []string{},

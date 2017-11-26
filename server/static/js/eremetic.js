@@ -34,6 +34,13 @@ $(document).ready(function() {
       }, []);
     }
 
+    if (typeof json.labels !== "undefined") {
+        json.labels = json.labels.reduce(function(collector, element) {
+            collector[element.key] = element.value;
+            return collector;
+        }, {});
+    }
+
     if (typeof json.ports !== "undefined") {
       json.ports = json.ports.reduce(function(collector, element) {
         collector.push({ 'container_port': parseInt(element.container_port), 'protocol': element.protocol });
@@ -116,6 +123,17 @@ $(document).ready(function() {
           placeholder: 'Container Volume'
         }
       }
+    } else if (type === 'labels') {
+          input = {
+              one: {
+                  name: 'labels['+number+'][key]',
+                  placeholder: 'key'
+              },
+              two: {
+                  name: 'labels['+number+'][value]',
+                  placeholder: 'value'
+              }
+          }
     } else {
       return $('<div />');
     }
@@ -192,7 +210,19 @@ $(document).ready(function() {
     $cont.data('count', index);
   }
 
-  function addURIs(e) {
+  function addLabels(e) {
+    var   $cont = $('#labels')
+        , index = $cont.data('count') + 1
+        , $input = createInput('labels', index)
+        ;
+
+    e.preventDefault();
+
+    $cont.append($input);
+    $cont.data('count', index);
+  }
+
+    function addURIs(e) {
     var   $cont = $('#uris')
         , index = $cont.data('count') + 1
         , $input
@@ -266,6 +296,7 @@ $(document).ready(function() {
   $('#new_task #env .plus').on('click', addEnvironments);
   $('#new_task #uris .plus').on('click', addURIs);
   $('#new_task #agent_constraints .plus').on('click', addAgentConstraints);
+  $('#new_task #labels .plus').on('click', addLabels);
   $('#new_task #cancel').on('click', function(e) {
     e.preventDefault();
     window.location = window.location;
