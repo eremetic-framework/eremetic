@@ -78,7 +78,7 @@ type URI struct {
 	Cache      bool   `json:"cache"`
 }
 
-// Task represents the internal structure of a Task objert
+// Task represents the internal structure of a Task object
 type Task struct {
 	TaskCPUs          float64
 	TaskMem           float64
@@ -87,6 +87,7 @@ type Task struct {
 	User              string
 	Environment       map[string]string
 	MaskedEnvironment map[string]string
+	Labels            map[string]string
 	Image             string
 	Volumes           []Volume
 	VolumesFrom       []string
@@ -152,11 +153,12 @@ type Request struct {
 	Volumes           []Volume
 	VolumesFrom       []string
 	Ports             []Port
-	Name		  string
+	Name              string
 	Network           string
 	DNS               string
 	Environment       map[string]string
 	MaskedEnvironment map[string]string
+	Labels            map[string]string
 	AgentConstraints  []AgentConstraint
 	CallbackURI       string
 	URIs              []string
@@ -190,6 +192,7 @@ func NewTask(request Request) (Task, error) {
 		Environment:       request.Environment,
 		MaskedEnvironment: request.MaskedEnvironment,
 		AgentConstraints:  request.AgentConstraints,
+		Labels:            request.Labels,
 		Image:             request.DockerImage,
 		Volumes:           request.Volumes,
 		VolumesFrom:       request.VolumesFrom,

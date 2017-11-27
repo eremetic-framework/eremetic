@@ -268,5 +268,21 @@ func TestTask(t *testing.T) {
 			So(taskInfo.TaskId.GetValue(), ShouldEqual, eremeticTask.ID)
 			So(taskInfo.Container.Docker.GetForcePullImage(), ShouldBeTrue)
 		})
+
+		Convey("Given labels", func() {
+			eremeticTask.Labels = map[string]string{"label1": "label_value"}
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
+
+			So(taskInfo.GetLabels().GetLabels(), ShouldNotBeNil)
+			So(taskInfo.GetLabels().GetLabels(), ShouldNotBeEmpty)
+			So(taskInfo.GetLabels().GetLabels()[0].GetKey(), ShouldEqual, "label1")
+			So(taskInfo.GetLabels().GetLabels()[0].GetValue(), ShouldEqual, "label_value")
+		})
+
+		Convey("Given no labels", func() {
+			_, taskInfo := createTaskInfo(eremeticTask, offer)
+
+			So(taskInfo.Labels, ShouldBeNil)
+		})
 	})
 }

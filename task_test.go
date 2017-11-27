@@ -309,6 +309,15 @@ func TestTask(t *testing.T) {
 			So(task.Name, ShouldEqual, "foobar")
 		})
 
+		Convey("Given a Label", func() {
+			request.Labels = map[string]string{"label1": "label_value"}
+
+			task, err := NewTask(request)
+
+			So(err, ShouldBeNil)
+			So(task.Labels["label1"], ShouldEqual, "label_value")
+		})
+
 		Convey("New task from empty request", func() {
 			req := Request{}
 			task, err := NewTask(req)

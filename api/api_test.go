@@ -15,6 +15,7 @@ var task = eremetic.Task{
 	User:              "task.User",
 	Environment:       map[string]string{"key": "value"},
 	MaskedEnvironment: map[string]string{"key2": "masked_value"},
+	Labels:            map[string]string{"label1": "label_value"},
 	Image:             "task.Image",
 	Volumes:           []eremetic.Volume{},
 	Ports:             []eremetic.Port{},

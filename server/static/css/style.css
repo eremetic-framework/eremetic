@@ -126,6 +126,7 @@
 .volumes .field input,
 .volumes_from .field input,
 .env .field input,
+.labels .field input,
 .uri .field input,
 .ports .field input,
 .ports .field select,

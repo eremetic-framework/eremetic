@@ -74,6 +74,10 @@ JSON format:
   "masked_env": {
     "KEY": "value"
   },
+  // Object, labels to be passed to the Mesos task
+  "labels": {
+    "KEY": "value"
+  },  
   // URIs and attributes of resource to download. You need to explicitly define
   // `"extract"` to unarchive files.
   "fetch": [
