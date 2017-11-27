@@ -34,6 +34,7 @@ type TaskDB struct {
 	ReadUnmaskedTaskFn     func(string) (eremetic.Task, error)
 	DeleteTaskFn           func(string) error
 	ListNonTerminalTasksFn func() ([]*eremetic.Task, error)
+	ListTasksFn            func(*eremetic.TaskFilter) ([]*eremetic.Task, error)
 }
 
 // Clean invokes the CleanFn function.
@@ -69,6 +70,11 @@ func (db *TaskDB) DeleteTask(id string) error {
 // ListNonTerminalTasks invokes the ListNonTerminalTasksFn function.
 func (db *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 	return db.ListNonTerminalTasksFn()
+}
+
+// ListTasks invokes the ListTasksFn function.
+func (db *TaskDB) ListTasks(filter *eremetic.TaskFilter) ([]*eremetic.Task, error) {
+	return db.ListTasksFn(filter)
 }
 
 // ErrScheduler mocks the eremetic scheduler.

@@ -141,9 +141,8 @@ func (db *TaskDB) DeleteTask(id string) error {
 	})
 }
 
-// ListNonTerminalTasks returns a list of tasks that are not yet finished in one
-// way or another.
-func (db *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
+// ListTasks returns all tasks.
+func (db *TaskDB) ListTasks(filter *eremetic.TaskFilter) ([]*eremetic.Task, error) {
 	tasks := []*eremetic.Task{}
 
 	err := db.conn.View(func(tx *bolt.Tx) error {
@@ -154,8 +153,8 @@ func (db *TaskDB) ListNonTerminalTasks() ([]*eremetic.Task, error) {
 		b.ForEach(func(_, v []byte) error {
 			var task eremetic.Task
 			json.Unmarshal(v, &task)
-			if !task.IsTerminated() {
-				eremetic.ApplyMask(&task)
+			eremetic.ApplyMask(&task)
+			if filter.Match(&task) {
 				tasks = append(tasks, &task)
 			}
 			return nil

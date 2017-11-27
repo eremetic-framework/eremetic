@@ -44,6 +44,7 @@ import:
   subpackages:
   - context
 - package: gopkg.in/yaml.v2
+- package: github.com/gorilla/schema
 testImport:
 - package: github.com/smartystreets/goconvey
   version: ~1.6.2

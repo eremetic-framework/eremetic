@@ -43,6 +43,28 @@ func (s TaskState) String() string {
 	return string(s)
 }
 
+// IsActive takes a string representation of a state and returns whether it
+// is active or not.
+func IsActive(state TaskState) bool {
+	switch state {
+	case "TASK_STAGING", "TASK_STARTING", "TASK_RUNNING", "TASK_ERROR", "TASK_TERMINATING":
+		return true
+	default:
+		return false
+	}
+}
+
+// IsEnqueued takes a string representation of a state and returns whether it
+// is enqueued or not.
+func IsEnqueued(state TaskState) bool {
+	switch state {
+	case "TASK_QUEUED":
+		return true
+	default:
+		return false
+	}
+}
+
 // Status represents the task status at a given time.
 type Status struct {
 	Time   int64     `json:"time"`
@@ -110,6 +132,20 @@ type Task struct {
 	Privileged        bool
 	FetchURIs         []URI
 }
+
+// TaskFilter represents the query param state
+type TaskFilter struct {
+	Name  string `schema:"name"`
+	State string `schema:"state"`
+}
+
+// Possible states for the TaskFilter. And the default state
+const (
+	DefaultTaskFilterState = "active,queued"
+	TerminatedState        = "terminated"
+	ActiveState            = "active"
+	QueuedState            = "queued"
+)
 
 // IsArchive is used to determine whether a url is an archive or not
 func IsArchive(url string) bool {
@@ -224,9 +260,14 @@ func (task *Task) IsTerminated() bool {
 	return IsTerminal(st)
 }
 
-// IsWaiting returns whether a task is waiting
-func (task *Task) IsWaiting() bool {
-	return task.CurrentStatus() == TaskQueued
+// IsActive returns whether the task is still active.
+func (task *Task) IsActive() bool {
+	return IsActive(task.CurrentStatus())
+}
+
+// IsEnqueued returns whether the task is in queue.
+func (task *Task) IsEnqueued() bool {
+	return IsEnqueued(task.CurrentStatus())
 }
 
 // IsTerminating returns whether a task is in the process of terminating
@@ -259,4 +300,35 @@ func (task *Task) LastUpdated() time.Time {
 // UpdateStatus updates the current task status.
 func (task *Task) UpdateStatus(status Status) {
 	task.Status = append(task.Status, status)
+}
+
+// Match the conditions of TaskFilter with the current task
+func (filter TaskFilter) Match(task *Task) bool {
+	if len(filter.Name) > 0 {
+		if filter.Name != task.Name {
+			return false
+		}
+	}
+	if len(filter.State) > 0 {
+		if !taskHasAnyState(task, filter.State) {
+			return false
+		}
+	}
+	return true
+}
+func taskHasAnyState(task *Task, states string) bool {
+	result := false
+	for _, state := range strings.Split(states, ",") {
+		switch state {
+		case "active":
+			result = result || task.IsActive()
+		case "terminated":
+			result = result || task.IsTerminated()
+		case "queued":
+			result = result || task.IsEnqueued()
+		default:
+			result = result || false
+		}
+	}
+	return result
 }

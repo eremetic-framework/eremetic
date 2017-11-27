@@ -34,7 +34,9 @@ func reconcileTasks(driver mesossched.SchedulerDriver, database eremetic.TaskDB)
 			delay = 1
 		)
 
-		tasks, err := database.ListNonTerminalTasks()
+		tasks, err := database.ListTasks(&eremetic.TaskFilter{
+			State: eremetic.DefaultTaskFilterState,
+		})
 		if err != nil {
 			logrus.WithError(err).Error("Failed to list non-terminal tasks")
 			close(done)

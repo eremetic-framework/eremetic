@@ -195,7 +195,7 @@ func TestServer(t *testing.T) {
 				sched := mock.Scheduler{}
 
 				db := mock.TaskDB{
-					ListNonTerminalTasksFn: func() ([]*eremetic.Task, error) {
+					ListTasksFn: func(filter *eremetic.TaskFilter) ([]*eremetic.Task, error) {
 						return []*eremetic.Task{}, nil
 					},
 				}
