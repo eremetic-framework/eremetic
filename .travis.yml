@@ -17,6 +17,8 @@ before_install:
   - go get github.com/mattn/goveralls
 
 script:
+ - make lint
+ - make vet
  - make eremetic
  - overalls -project=github.com/eremetic-framework/eremetic -covermode=count
  - goveralls -coverprofile=overalls.coverprofile -service travis-ci

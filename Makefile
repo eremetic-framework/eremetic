@@ -45,7 +45,7 @@ vet:
 	go vet ${PACKAGES}
 
 lint:
-	go list ./... | grep -v /vendor/ | grep -v assets | xargs -L1 golint -set_exit_status
+	golint -set_exit_status $(shell go list ./... | grep -v /vendor/ | grep -v assets)
 
 server/assets/assets.go: server/generate.go ${STATIC}
 	go generate github.com/eremetic-framework/eremetic/server
