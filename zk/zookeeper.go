@@ -120,7 +120,7 @@ func (z *TaskDB) PutTask(task *eremetic.Task) error {
 
 	exists, stat, err := z.conn.Exists(path)
 	if err != nil {
-		logrus.WithError(err).Error("Unable to check existance of database.")
+		logrus.WithError(err).Error("Unable to check existence of database.")
 		return err
 	}
 
@@ -160,7 +160,7 @@ func (z *TaskDB) DeleteTask(id string) error {
 	path := fmt.Sprintf("%s/%s", z.path, id)
 	_, stat, err := z.conn.Exists(path)
 	if err != nil {
-		logrus.WithError(err).Error("Unable to check existance of database.")
+		logrus.WithError(err).Error("Unable to check existence of database.")
 		return err
 	}
 	err = z.conn.Delete(path, stat.Version)
