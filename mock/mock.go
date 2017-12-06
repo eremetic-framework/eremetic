@@ -20,6 +20,7 @@ func (s *Scheduler) ScheduleTask(req eremetic.Request) (string, error) {
 	return s.ScheduleTaskFn(req)
 }
 
+// Kill simulates the Kill functionality
 func (s *Scheduler) Kill(id string) error {
 	s.KillInvoked = true
 	return s.KillFn(id)
@@ -62,7 +63,7 @@ func (db *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	return db.ReadUnmaskedTaskFn(id)
 }
 
-// ReadUnmaskedTask invokes the ReadUnmaskedTaskFn function.
+// DeleteTask invokes the DeleteTaskFn function.
 func (db *TaskDB) DeleteTask(id string) error {
 	return db.DeleteTaskFn(id)
 }
@@ -92,6 +93,7 @@ func (s *ErrScheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	return "eremetic-task.mock", nil
 }
 
+// Kill simulates the Kill functionality
 func (s *ErrScheduler) Kill(_id string) error {
 	return nil
 }

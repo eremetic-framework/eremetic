@@ -8,8 +8,9 @@ import (
 	ogle "github.com/jacobsa/oglematchers"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 
-	"github.com/eremetic-framework/eremetic"
 	"time"
+
+	"github.com/eremetic-framework/eremetic"
 )
 
 type resourceMatcher struct {
@@ -86,9 +87,9 @@ func (m *availabilityMatcher) Matches(o interface{}) error {
 
 	if start := offer.Unavailability.GetStart(); start != nil && m.UnixNano() >= *start.Nanoseconds {
 		if duration := offer.Unavailability.GetDuration(); duration == nil {
-			return errors.New("Node is on indefinite period of maintenance.")
+			return errors.New("node is on indefinite period of maintenance")
 		} else if m.UnixNano() <= *start.Nanoseconds+*duration.Nanoseconds {
-			return errors.New("Node is currently in maintenance mode.")
+			return errors.New("node is currently in maintenance mode")
 		}
 	}
 	return nil

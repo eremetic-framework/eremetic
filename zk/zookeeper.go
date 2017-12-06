@@ -156,6 +156,7 @@ func (z *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 
 }
 
+// DeleteTask deletes a task with the matching ID from zookeeper
 func (z *TaskDB) DeleteTask(id string) error {
 	path := fmt.Sprintf("%s/%s", z.path, id)
 	_, stat, err := z.conn.Exists(path)
