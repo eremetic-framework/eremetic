@@ -74,11 +74,7 @@ func (db *TaskDB) Close() {
 // Clean is used to delete the tasks bucket
 func (db *TaskDB) Clean() error {
 	return db.conn.Update(func(tx *bolt.Tx) error {
-		if err := tx.DeleteBucket([]byte("tasks")); err != nil {
-			return err
-		}
-
-		return nil
+		return tx.DeleteBucket([]byte("tasks"))
 	})
 }
 
