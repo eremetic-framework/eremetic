@@ -83,7 +83,7 @@ func TestZKDatabase(t *testing.T) {
 				So(connector.AssertCalled(t, "Connect", "localhost:1234"), ShouldBeTrue)
 			})
 
-			Convey("Unable to verify existance", func() {
+			Convey("Unable to verify existence", func() {
 				setup()
 				defer teardown()
 				connector.On("Connect", mock.AnythingOfType("string")).Return(object, nil)

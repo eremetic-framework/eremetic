@@ -60,116 +60,139 @@ func NewMesosScheduler() *MesosScheduler {
 	return &MesosScheduler{}
 }
 
+// Abort mocks the abort functionality
 func (m *MesosScheduler) Abort() (stat mesosproto.Status, err error) {
 	m.AbortFnInvoked = true
 	return m.AbortFn()
 }
 
+// AcceptOffers mocks the AcceptOffers functionality
 func (m *MesosScheduler) AcceptOffers(offerIds []*mesosproto.OfferID, operations []*mesosproto.Offer_Operation, filters *mesosproto.Filters) (mesosproto.Status, error) {
 	m.AcceptOffersFnInvoked = true
 	return m.AcceptOffersFn(offerIds, operations, filters)
 }
 
+// DeclineOffer mocks the DeclineOffer functionality
 func (m *MesosScheduler) DeclineOffer(offerID *mesosproto.OfferID, filters *mesosproto.Filters) (mesosproto.Status, error) {
 	m.DeclineOfferFnInvoked = true
 	return m.DeclineOfferFn(offerID, filters)
 }
 
+// Join mocks the Join functionality
 func (m *MesosScheduler) Join() (mesosproto.Status, error) {
 	m.JoinFnInvoked = true
 	return m.JoinFn()
 }
 
+// KillTask mocks the KillTask functionality
 func (m *MesosScheduler) KillTask(id *mesosproto.TaskID) (mesosproto.Status, error) {
 	m.KillTaskFnInvoked = true
 	return m.KillTaskFn(id)
 }
 
+// ReconcileTasks mocks the ReconcileTasks functionality
 func (m *MesosScheduler) ReconcileTasks(ts []*mesosproto.TaskStatus) (mesosproto.Status, error) {
 	m.ReconcileTasksFnInvoked = true
 	return m.ReconcileTasksFn(ts)
 }
 
+// RequestResources mocks the RequestResources functionality
 func (m *MesosScheduler) RequestResources(r []*mesosproto.Request) (mesosproto.Status, error) {
 	m.RequestResourcesFnInvoked = true
 	return m.RequestResourcesFn(r)
 }
 
+// ReviveOffers mocks the ReviveOffers functionality
 func (m *MesosScheduler) ReviveOffers() (mesosproto.Status, error) {
 	m.ReviveOffersFnInvoked = true
 	return m.ReviveOffersFn()
 }
 
+// Run mocks the Run functionality
 func (m *MesosScheduler) Run() (mesosproto.Status, error) {
 	m.RunFnInvoked = true
 	return m.RunFn()
 }
 
+// Start mocks the Start functionality
 func (m *MesosScheduler) Start() (mesosproto.Status, error) {
 	m.StartFnInvoked = true
 	return m.StartFn()
 }
 
+// Stop mocks the Stop functionality
 func (m *MesosScheduler) Stop(b bool) (mesosproto.Status, error) {
 	m.StopFnInvoked = true
 	return m.StopFn(b)
 }
 
+// SendFrameworkMessage mocks the SendFrameworkMessage functionality
 func (m *MesosScheduler) SendFrameworkMessage(eID *mesosproto.ExecutorID, sID *mesosproto.SlaveID, s string) (mesosproto.Status, error) {
 	m.SendFrameworkMessageFnInvoked = true
 	return m.SendFrameworkMessageFn(eID, sID, s)
 }
 
+// LaunchTasks mocks the LaunchTasks functionality
 func (m *MesosScheduler) LaunchTasks(o []*mesosproto.OfferID, t []*mesosproto.TaskInfo, f *mesosproto.Filters) (mesosproto.Status, error) {
 	m.LaunchTasksFnInvoked = true
 	return m.LaunchTasksFn(o, t, f)
 }
 
+// Registered mocks the Registered functionality
 func (m *MesosScheduler) Registered(s scheduler.SchedulerDriver, f *mesosproto.FrameworkID, minfo *mesosproto.MasterInfo) {
 	m.RegisteredFnInvoked = true
 	m.RegisteredFn(s, f, minfo)
 }
 
+// Reregistered mocks the Reregistered functionality
 func (m *MesosScheduler) Reregistered(s scheduler.SchedulerDriver, info *mesosproto.MasterInfo) {
 	m.ReregisteredFnInvoked = true
 	m.ReregisteredFn(s, info)
 }
 
+// Disconnected mocks the Disconnected functionality
 func (m *MesosScheduler) Disconnected(s scheduler.SchedulerDriver) {
 	m.DisconnectedFnInvoked = true
 	m.DisconnectedFn(s)
 }
 
+// ResourceOffers mocks the ResourceOffers functionality
 func (m *MesosScheduler) ResourceOffers(s scheduler.SchedulerDriver, o []*mesosproto.Offer) {
 	m.ResourceOffersFnInvoked = true
 	m.ResourceOffersFn(s, o)
 }
 
+// OfferRescinded mocks the OfferRescinded functionality
 func (m *MesosScheduler) OfferRescinded(s scheduler.SchedulerDriver, o *mesosproto.OfferID) {
 	m.OfferRescindedFnInvoked = true
 	m.OfferRescindedFn(s, o)
 }
 
+// StatusUpdate mocks the StatusUpdate functionality
 func (m *MesosScheduler) StatusUpdate(s scheduler.SchedulerDriver, ts *mesosproto.TaskStatus) {
 	m.StatusUpdateFnInvoked = true
 	m.StatusUpdateFn(s, ts)
 }
 
+// FrameworkMessage mocks the FrameworkMessage functionality
 func (m *MesosScheduler) FrameworkMessage(sd scheduler.SchedulerDriver, eID *mesosproto.ExecutorID, sID *mesosproto.SlaveID, s string) {
 	m.FrameworkMessageFnInvoked = true
 	m.FrameworkMessageFn(sd, eID, sID, s)
 }
 
+// SlaveLost mocks the SlaveLost functionality
 func (m *MesosScheduler) SlaveLost(s scheduler.SchedulerDriver, sID *mesosproto.SlaveID) {
 	m.SlaveLostFnInvoked = true
 	m.SlaveLostFn(s, sID)
 }
 
+// ExecutorLost mocks the ExecutorLost functionality
 func (m *MesosScheduler) ExecutorLost(sd scheduler.SchedulerDriver, eID *mesosproto.ExecutorID, sID *mesosproto.SlaveID, i int) {
 	m.ExecutorLostFnInvoked = true
 	m.ExecutorLostFn(sd, eID, sID, i)
 }
 
+// Error mocks the Error functionality
 func (m *MesosScheduler) Error(d scheduler.SchedulerDriver, msg string) {
 	m.ErrorFnInvoked = true
 	m.ErrorFn(d, msg)

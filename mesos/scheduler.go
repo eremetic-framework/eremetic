@@ -367,14 +367,15 @@ func (s *Scheduler) ScheduleTask(request eremetic.Request) (string, error) {
 	}
 }
 
-func (s *Scheduler) Kill(taskId string) error {
-	task, err := s.database.ReadTask(taskId)
+// Kill will signal mesos that a task should be killed as soon as possible.
+func (s *Scheduler) Kill(tastID string) error {
+	task, err := s.database.ReadTask(tastID)
 	if err != nil {
 		return err
 	}
 
 	if task.IsTerminated() {
-		return fmt.Errorf("You can not kill that which is already dead.")
+		return fmt.Errorf("you can not kill that which is already dead")
 	}
 
 	waiting := task.IsEnqueued()
@@ -390,7 +391,7 @@ func (s *Scheduler) Kill(taskId string) error {
 		return nil
 	}
 
-	_, err = s.driver.KillTask(&mesosproto.TaskID{Value: proto.String(taskId)})
+	_, err = s.driver.KillTask(&mesosproto.TaskID{Value: proto.String(tastID)})
 	return err
 }
 

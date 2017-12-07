@@ -116,5 +116,5 @@ func NewDB(driver string, location string) (eremetic.TaskDB, error) {
 	case "zk":
 		return zk.NewTaskDB(location)
 	}
-	return nil, errors.New("Invalid driver.")
+	return nil, errors.New("invalid driver")
 }

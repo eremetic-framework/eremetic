@@ -131,6 +131,7 @@ func (db *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	return task, err
 }
 
+// DeleteTask deletes a task matching the given id.
 func (db *TaskDB) DeleteTask(id string) error {
 	return db.conn.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("tasks"))

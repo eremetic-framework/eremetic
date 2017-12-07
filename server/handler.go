@@ -140,7 +140,7 @@ func (h Handler) GetTaskInfo(conf *config.Config, apiVersion string) http.Handle
 	}
 }
 
-// ListRunningTasks returns information about running tasks in the database.
+// ListTasks returns information about running tasks in the database.
 func (h Handler) ListTasks(apiVersion string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		filter := &eremetic.TaskFilter{

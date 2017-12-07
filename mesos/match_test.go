@@ -2,12 +2,12 @@ package mesos
 
 import (
 	"testing"
+	"time"
 
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/eremetic-framework/eremetic"
-	"time"
 )
 
 func TestMatch(t *testing.T) {
@@ -71,19 +71,19 @@ func TestMatch(t *testing.T) {
 	})
 
 	Convey("Maintenance node", t, func() {
-		Convey("Does not match (Defined maintenence window)", func() {
+		Convey("Does not match (Defined maintenance window)", func() {
 			m := availabilityMatch(time.Now())
 			err := m.Matches(offerC)
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("Does not match (Undefined maintenence window)", func() {
+		Convey("Does not match (Undefined maintenance window)", func() {
 			m := availabilityMatch(time.Now())
 			err := m.Matches(offerD)
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("Does match (Maintenence window in past)", func() {
+		Convey("Does match (maintenance window in past)", func() {
 			m := availabilityMatch(time.Now())
 			err := m.Matches(offerE)
 			So(err, ShouldBeNil)
@@ -198,7 +198,7 @@ func TestMatch(t *testing.T) {
 				So(others, ShouldHaveLength, 2)
 			})
 
-			Convey("Match slave with mulitple attributes", func() {
+			Convey("Match slave with multiple attributes", func() {
 				// Build two new offers, both with the same role as offerA.
 				offerC := offer("offer-c", 0.6, 200.0,
 					unavailability(),
