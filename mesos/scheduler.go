@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	mesossched "github.com/mesos/mesos-go/api/v0/scheduler"

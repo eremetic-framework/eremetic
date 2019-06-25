@@ -162,7 +162,7 @@ This is needed because of internal package dependencies
 ### Install dependencies
 First you need to install dependencies. Parts of the eremetic code is auto-generated (assets and templates for the HTML view are compiled). In order for go generate to work, `go-bindata` and `go-bindata-assetfs` needs to be manually installed.
 
-    go get github.com/jteeuwen/go-bindata/...
+    curl https://bin.equinox.io/a/75VeNN6mcnk/github-com-kevinburke-go-bindata-go-bindata-linux-amd64.tar.gz | tar xvf - -C /usr/local/bin
     go get github.com/elazarl/go-bindata-assetfs/...
 
 All other dependencies are vendored, so it is recommended to run eremetic with Go >= 1.6 or with GO15VENDOREXPERIMENT=1

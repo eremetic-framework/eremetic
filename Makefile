@@ -14,22 +14,18 @@ STATIC=$(shell find server/static server/templates)
 TESTFLAGS="-v"
 
 DOCKER_GO_SRC_PATH=/go/src/github.com/eremetic-framework/eremetic
-DOCKER_GOLANG_RUN_CMD=docker run --rm -v "$(PWD)":$(DOCKER_GO_SRC_PATH) -w $(DOCKER_GO_SRC_PATH) golang:1.6 bash -c
+DOCKER_GOLANG_RUN_CMD=docker run --rm -v "$(PWD)":/opt/eremetic -w /opt/eremetic golang:1.12 bash -c
 
 PACKAGES=$(shell go list ./... | grep -v /vendor/)
 
 all: test
 
-glide:
-	curl https://glide.sh/get | sh
+deps: ${TOOLS}
 
-deps:
-	glide install
-
-${TOOLS}: deps
-	go get github.com/jteeuwen/go-bindata/...
-	go get github.com/elazarl/go-bindata-assetfs/...
-	go get github.com/smartystreets/goconvey
+${TOOLS}:
+    curl https://bin.equinox.io/a/75VeNN6mcnk/github-com-kevinburke-go-bindata-go-bindata-linux-amd64.tar.gz | tar xfz - -C $GOPATH/bin/
+	go get -u github.com/elazarl/go-bindata-assetfs/...
+	go get -u github.com/smartystreets/goconvey
 
 test: eremetic
 	go test ${TESTFLAGS} ${PACKAGES}
@@ -39,7 +35,7 @@ test-server: ${TOOLS}
 
 # Run tests cleanly in a docker container.
 test-docker:
-	$(DOCKER_GOLANG_RUN_CMD) "make glide test"
+	$(DOCKER_GOLANG_RUN_CMD) "make test"
 
 vet:
 	go vet ${PACKAGES}

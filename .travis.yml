@@ -1,21 +1,23 @@
 language: go
 
 go:
- - 1.6
- - 1.7
- - 1.8
+ - 1.12
 
 env:
- - PUBLISH_VERSION=1.6 GO15VENDOREXPERIMENT=1
+ - PUBLISH_VERSION=1.12 GO111MODULE=on
+
+install: true
 
 services:
  - docker
 
 before_install:
-  - curl https://glide.sh/get | sh
-  - go get github.com/golang/lint/golint
-  - go get github.com/go-playground/overalls
-  - go get github.com/mattn/goveralls
+  - go get -u golang.org/x/lint/golint
+  - go get -u github.com/go-playground/overalls
+  - go get -u github.com/mattn/goveralls
+  - curl https://bin.equinox.io/a/75VeNN6mcnk/github-com-kevinburke-go-bindata-go-bindata-linux-amd64.tar.gz | tar xfz - -C $GOPATH/bin/
+  - go get -u github.com/elazarl/go-bindata-assetfs/...
+  - go get -u github.com/smartystreets/goconvey
 
 script:
  - make lint
