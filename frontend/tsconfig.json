@@ -1,0 +1,9 @@
+{
+  "extends": "@spotify/tsconfig/tsconfig.service.json",
+  "include": ["pages"],
+  "compilerOptions": {
+    "jsx": "react",
+    "noEmit": true,
+    "declaration": false
+  }
+}

@@ -10,3 +10,8 @@ server/assets/assets.go
 vendor/*
 *.orig
 .idea
+docker/ui
+.minimesos
+minimesosFile
+frontend/node_modules
+frontend/build/

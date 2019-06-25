@@ -22,8 +22,24 @@ all: test
 
 deps: ${TOOLS}
 
+clean:
+	rm -rf docker/ui docker/eremetic
+	rm -rf frontend/build
+	mkdir -p docker/ui
+
+ui:
+	cd frontend; yarn ; NODE_ENV=production yarn build
+
+docker/ui: clean ui
+	cp -r frontend/next.config.js docker/ui/next.config.js
+	cp -r frontend/package.json docker/ui/package.json
+	cp -r frontend/build/ docker/ui/build/
+	cp -r frontend/src/ docker/ui/src/
+	cp -r frontend/node_modules/ docker/ui/node_modules/
+
+
 ${TOOLS}:
-    curl https://bin.equinox.io/a/75VeNN6mcnk/github-com-kevinburke-go-bindata-go-bindata-linux-amd64.tar.gz | tar xfz - -C $GOPATH/bin/
+	curl https://bin.equinox.io/a/75VeNN6mcnk/github-com-kevinburke-go-bindata-go-bindata-linux-amd64.tar.gz | tar xfz - -C $GOPATH/bin/
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 	go get -u github.com/smartystreets/goconvey
 
@@ -50,7 +66,7 @@ eremetic: ${TOOLS} server/assets/assets.go
 eremetic: ${SRC}
 	go build -ldflags "${LDFLAGS}" -o $@ github.com/eremetic-framework/eremetic/cmd/eremetic
 
-docker/eremetic: ${TOOLS} server/assets/assets.go
+docker/eremetic: ${TOOLS} server/assets/assets.go docker/ui
 docker/eremetic: ${SRC}
 	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@ github.com/eremetic-framework/eremetic/cmd/eremetic
 
