@@ -3,7 +3,7 @@ package mesos
 import (
 	"encoding/json"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 type mounts struct {

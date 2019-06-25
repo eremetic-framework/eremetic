@@ -9,3 +9,4 @@ server/assets/assets.go
 *\.sw[op]
 vendor/*
 *.orig
+.idea

@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/auth"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
