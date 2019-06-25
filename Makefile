@@ -7,8 +7,8 @@ DOCKERNAME?=alde/eremetic
 DOCKERTAG?=${DOCKERNAME}:${VERSION}
 LDFLAGS=-X ${REPO}/version.Version=${VERSION} -X ${REPO}/version.BuildDate=${DATE}
 TOOLS=${GOPATH}/bin/go-bindata \
-      ${GOPATH}/bin/go-bindata-assetfs \
-      ${GOPATH}/bin/goconvey
+	${GOPATH}/bin/go-bindata-assetfs \
+	${GOPATH}/bin/goconvey
 SRC=$(shell find . -name '*.go')
 STATIC=$(shell find server/static server/templates)
 TESTFLAGS="-v"
