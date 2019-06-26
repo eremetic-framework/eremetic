@@ -7,7 +7,7 @@ import (
 
 	"github.com/kardianos/osext"
 	"github.com/kelseyhightower/envconfig"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // The Config struct holds the Eremetic Configuration
@@ -44,6 +44,9 @@ func DefaultConfig() *Config {
 	return &Config{
 		LogLevel:  "debug",
 		LogFormat: "text",
+
+		Address: "0.0.0.0",
+		Port:    7654,
 
 		DatabaseDriver: "boltdb",
 		DatabasePath:   "db/eremetic.db",
@@ -92,5 +95,5 @@ func ReadConfigFile(conf *Config, path string) {
 // ReadEnvironment takes environment variables and overrides any values from
 // DefaultConfig and the Config file.
 func ReadEnvironment(conf *Config) {
-	envconfig.Process("", conf)
+	envconfig.Process("EREMETIC", conf)
 }
