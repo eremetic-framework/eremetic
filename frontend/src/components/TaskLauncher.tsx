@@ -2,16 +2,22 @@ import React, { FormEvent, SyntheticEvent } from 'react';
 
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
 import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 
-import { VolumeItem, VolumeFrom } from './DynamicFormEntry';
+import { VolumeItem, VolumeFrom, URI, AgentConstraint, Port, EnvironmentVariable } from './DynamicFormEntry';
 
 class TaskLauncher extends React.Component {
   state = {
     validated: false,
     volumes: {},
-    volumes_from: [],
+    volumes_from: {},
+    uris: {},
+    agent_constraints: {},
+    ports: {},
+    envs: {},
+    masked_envs: {},
   };
 
   handleSubmit(event: SyntheticEvent) {
@@ -22,49 +28,67 @@ class TaskLauncher extends React.Component {
     }
   }
 
-  removeVolume(id: string) {
-    let { volumes } = this.state;
-    delete volumes[id];
-    this.setState({ volumes: volumes });
-  }
-
-  addVolume() {
-    let { volumes } = this.state;
-    const key = (Math.random() + 1).toString(36).substring(7);
-    volumes[key] = <VolumeItem key={key} removeFunc={() => this.removeVolume(key)} />;
-    this.setState({ volumes: volumes });
-  }
-
-  removeContainerVolume(id: string) {
-    let { volumes_from } = this.state;
-    delete volumes_from[id];
-    this.setState({ volumes_from: volumes_from });
-  }
-
-  addContainerVolume() {
-    let { volumes_from } = this.state;
-    const key = (Math.random() + 1).toString(36).substring(7);
-    volumes_from[key] = <VolumeFrom key={key} removeFunc={() => this.removeContainerVolume(key)} />;
-    this.setState({ volumes_from: volumes_from });
-  }
-
-  labels(arr, columns, width) {
-    if (Object.keys(arr).length === 0) {
-      return null;
+  componentForType(type: string) {
+    switch (type) {
+      case 'volumes':
+        return VolumeItem;
+      case 'volumes_from':
+        return VolumeFrom;
+      case 'uris':
+        return URI;
+      case 'agent_constraints':
+        return AgentConstraint;
+      case 'ports':
+        return Port;
+      case 'envs':
+        return EnvironmentVariable;
+      case 'masked_envs':
+        return EnvironmentVariable;
+      default:
+        console.error('unsupported type');
+        return null;
     }
+  }
+
+  remove(type: string, key: string) {
+    let store = this.state[type];
+    delete store[key];
+    this.setState({ [type]: store });
+  }
+
+  add(type: string) {
+    let store = this.state[type];
+    let C = this.componentForType(type);
+    const key = (Math.random() + 1).toString(36).substring(7);
+    store[key] = <C key={key} id={key} removeFunc={() => this.remove(type, key)} />;
+    this.setState({ [type]: store });
+  }
+
+  dynamicItem({ label, collector }) {
+    const store = this.state[collector];
+
     return (
-      <Form.Row>
-        {columns.map((label: string, idx: number) => (
-          <Form.Group key={idx} as={Col} md={width}>
+      <Form.Group as={Col} md="4">
+        <Row>
+          <Col sm={9}>
             <Form.Label>{label}</Form.Label>
-          </Form.Group>
-        ))}
-      </Form.Row>
+          </Col>
+          <Col sm={2}>
+            <Button
+              size="sm"
+              style={{ backgroundColor: '#0099C8', border: 'none' }}
+              onClick={() => this.add(collector)}>
+              Add
+            </Button>
+          </Col>
+        </Row>
+        {Object.keys(store).map((value: string) => store[value])}
+      </Form.Group>
     );
   }
 
   render() {
-    const { validated, volumes, volumes_from } = this.state;
+    const { validated } = this.state;
     return (
       <Container
         style={{
@@ -79,58 +103,51 @@ class TaskLauncher extends React.Component {
           <Form.Row>
             <Form.Group as={Col} md="4">
               <Form.Label>Docker Image</Form.Label>
-              <Form.Control required type="text" placeholder="alpine:3.10" />
+              <Form.Control required type="text" placeholder="alpine:3.10" name="docker_image" />
             </Form.Group>
             <Form.Group as={Col} md="4">
               <Form.Label>Command</Form.Label>
-              <Form.Control required type="text" placeholder="echo $(date)" />
+              <Form.Control required type="text" placeholder="echo $(date)" name="command" />
             </Form.Group>
           </Form.Row>
 
           <Form.Row>
             <Form.Group as={Col} md="4">
               <Form.Label>CPU</Form.Label>
-              <Form.Control type="number" required min="0.0" defaultValue="1.0" step="0.1" />
+              <Form.Control type="number" required min="0.0" defaultValue="1.0" step="0.1" name="cpu" />
             </Form.Group>
             <Form.Group as={Col} md="4">
               <Form.Label>Memory (MiB)</Form.Label>
-              <Form.Control type="number" required min="0.0" defaultValue="100" step="1" />
+              <Form.Control type="number" required min="0.0" defaultValue="100" step="1" name="memory" />
             </Form.Group>
           </Form.Row>
 
           <Form.Row>
             <Form.Group as={Col} md="8">
               <Form.Label>Callback URL (optional)</Form.Label>
-              <Form.Control type="text" placeholder="http://localhost/callback" />
+              <Form.Control type="text" placeholder="http://localhost/callback" name="callback_url" />
             </Form.Group>
           </Form.Row>
 
           <Form.Row>
-            <Form.Group as={Col} md="4">
-              <Form.Label>
-                Volumes <Button onClick={() => this.addVolume()}>Add</Button>
-              </Form.Label>
-              {this.labels(volumes, ['Host', 'Container'], 5)}
-              {Object.keys(volumes).map((value: string) => volumes[value])}
-            </Form.Group>
-
-            <Form.Group as={Col} md="4">
-              <Form.Label>
-                Volumes from Container <Button onClick={() => this.addContainerVolume()}>Add</Button>
-              </Form.Label>
-              {/* {Object.keys(volumes_from).length > 0 && (
-                                <Form.Row>
-                                    <Form.Group as={Col} md="12">
-                                        <Form.Label>Container</Form.Label>
-                                    </Form.Group>
-                                </Form.Row>
-                            )} */}
-              {this.labels(volumes_from, ['Container ID'], 12)}
-              {Object.keys(volumes_from).map((value: string) => volumes_from[value])}
-            </Form.Group>
+            {this.dynamicItem({ label: 'Volumes', collector: 'volumes' })}
+            {this.dynamicItem({ label: 'Volumes from Container', collector: 'volumes_from' })}
+          </Form.Row>
+          <Form.Row>
+            {this.dynamicItem({ label: 'Environment Variables', collector: 'envs' })}
+            {this.dynamicItem({ label: 'Masked Environment Variables', collector: 'masked_envs' })}
           </Form.Row>
 
-          <Button type="submit">Submit form</Button>
+          <Form.Row>
+            {this.dynamicItem({ label: 'URIs', collector: 'uris' })}
+            {this.dynamicItem({ label: 'Agent Constraints', collector: 'agent_constraints' })}
+          </Form.Row>
+
+          <Form.Row>{this.dynamicItem({ label: 'Ports', collector: 'ports' })}</Form.Row>
+
+          <Button style={{ backgroundColor: '#0099C8', border: 'none' }} type="submit">
+            Submit form
+          </Button>
         </Form>
       </Container>
     );

@@ -4,9 +4,9 @@
   "description": "my long description",
   "license": "UNLICENSED",
   "scripts": {
-    "dev": "nodemon src/start.ts --ignore build/",
+    "dev": "nodemon src/start.js --ignore build/",
     "build": "next build src",
-    "start": "NODE_ENV=production node src/start.ts",
+    "start": "NODE_ENV=production node src/start.js",
     "lint": "web-scripts lint --ignore-path=.gitignore",
     "fix": "web-scripts fix",
     "test": "jest",

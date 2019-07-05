@@ -34,7 +34,7 @@ class HeaderBar extends React.Component {
                         font: 11px menlo;
                     }`}
         </style>
-        <Navbar style={{ backgroundColor: '#d3d3ee', borderBottom: '5px solid black' }} variant="dark">
+        <Navbar style={{ backgroundColor: '#d3d3ee', borderBottom: '5px solid black' }}>
           <Navbar.Brand href="/tasks">
             <img alt="eremetic_logo" src="/static/eremetic_logo.png" height="60" />
           </Navbar.Brand>
@@ -45,13 +45,13 @@ class HeaderBar extends React.Component {
                 color: 'black',
                 fontWeight: 'bold',
               }}>
-              Launch Task
+              <Button style={{ backgroundColor: '#0099C8', border: 'none' }}>Launch Task</Button>
             </Nav.Link>
-            <Form inline>
-              <FormControl type="text" placeholder="View Task" />
-              <Button variant="dark">View</Button>
-            </Form>
           </Nav>
+          <Form inline>
+            <FormControl style={{ width: '40em' }} type="text" placeholder="Task ID" />
+            <Button style={{ backgroundColor: '#0099C8', border: 'none' }}>View</Button>
+          </Form>
         </Navbar>
       </React.Fragment>
     );
