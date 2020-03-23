@@ -1,12 +1,20 @@
 import React, { FormEvent, SyntheticEvent } from 'react';
-
+import { Formik } from 'formik';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 
-import { VolumeItem, VolumeFrom, URI, AgentConstraint, Port, EnvironmentVariable } from './DynamicFormEntry';
+import {
+  VolumeItem,
+  VolumeFrom,
+  URI,
+  AgentConstraint,
+  Port,
+  EnvironmentVariable,
+  DynamicItem,
+} from './DynamicFormEntry';
 
 class TaskLauncher extends React.Component {
   state = {
@@ -64,31 +72,7 @@ class TaskLauncher extends React.Component {
     this.setState({ [type]: store });
   }
 
-  dynamicItem({ label, collector }) {
-    const store = this.state[collector];
-
-    return (
-      <Form.Group as={Col} md="4">
-        <Row>
-          <Col sm={9}>
-            <Form.Label>{label}</Form.Label>
-          </Col>
-          <Col sm={2}>
-            <Button
-              size="sm"
-              style={{ backgroundColor: '#0099C8', border: 'none' }}
-              onClick={() => this.add(collector)}>
-              Add
-            </Button>
-          </Col>
-        </Row>
-        {Object.keys(store).map((value: string) => store[value])}
-      </Form.Group>
-    );
-  }
-
   render() {
-    const { validated } = this.state;
     return (
       <Container
         style={{
@@ -99,56 +83,169 @@ class TaskLauncher extends React.Component {
           backgroundColor: '#ffffff',
           fontWeight: 'bold',
         }}>
-        <Form noValidate validated={validated} onSubmit={(e: FormEvent) => this.handleSubmit(e)}>
-          <Form.Row>
-            <Form.Group as={Col} md="4">
-              <Form.Label>Docker Image</Form.Label>
-              <Form.Control required type="text" placeholder="alpine:3.10" name="docker_image" />
-            </Form.Group>
-            <Form.Group as={Col} md="4">
-              <Form.Label>Command</Form.Label>
-              <Form.Control required type="text" placeholder="echo $(date)" name="command" />
-            </Form.Group>
-          </Form.Row>
+        <Formik
+          onSubmit={values => {
+            console.log(values);
+          }}
+          initialValues={{
+            docker_image: '',
+            command: '',
+            cpu: 1.0,
+            memory: 100,
+            callback_url: '',
+            volume: {},
+            env: {},
+            container_id: {},
+            uri: {},
+            constraints: {},
+            port: {},
+          }}>
+          {({ handleSubmit, handleChange, values, touched, errors }) => (
+            <Form noValidate onSubmit={handleSubmit}>
+              <Form.Row>
+                <Form.Group as={Col} md="4">
+                  <Form.Label>Docker Image</Form.Label>
+                  <Form.Control
+                    required
+                    type="text"
+                    placeholder="alpine:3.10"
+                    name="docker_image"
+                    onChange={handleChange}
+                    value={values['docker_image']}
+                    isValid={touched['docker_image'] && !errors['docker_image']}
+                  />
+                  <Form.Control.Feedback type="invalid">{errors['docker_image']}</Form.Control.Feedback>
+                </Form.Group>
+                <Form.Group as={Col} md="4">
+                  <Form.Label>Command</Form.Label>
+                  <Form.Control
+                    required
+                    type="text"
+                    placeholder="echo $(date)"
+                    name="command"
+                    onChange={handleChange}
+                    value={values.command}
+                    isValid={touched.command && !errors.command}
+                  />
+                </Form.Group>
+              </Form.Row>
 
-          <Form.Row>
-            <Form.Group as={Col} md="4">
-              <Form.Label>CPU</Form.Label>
-              <Form.Control type="number" required min="0.0" defaultValue="1.0" step="0.1" name="cpu" />
-            </Form.Group>
-            <Form.Group as={Col} md="4">
-              <Form.Label>Memory (MiB)</Form.Label>
-              <Form.Control type="number" required min="0.0" defaultValue="100" step="1" name="memory" />
-            </Form.Group>
-          </Form.Row>
+              <Form.Row>
+                <Form.Group as={Col} md="4">
+                  <Form.Label>CPU</Form.Label>
+                  <Form.Control
+                    type="number"
+                    required
+                    min="0.0"
+                    step="0.1"
+                    name="cpu"
+                    onChange={handleChange}
+                    value={values.cpu}
+                    isValid={touched.cpu && !errors.cpu}
+                  />
+                </Form.Group>
+                <Form.Group as={Col} md="4">
+                  <Form.Label>Memory (MiB)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    required
+                    min="0.0"
+                    step="1"
+                    name="memory"
+                    onChange={handleChange}
+                    value={values.memory}
+                    isValid={touched.memory && !errors.memory}
+                  />
+                </Form.Group>
+              </Form.Row>
 
-          <Form.Row>
-            <Form.Group as={Col} md="8">
-              <Form.Label>Callback URL (optional)</Form.Label>
-              <Form.Control type="text" placeholder="http://localhost/callback" name="callback_url" />
-            </Form.Group>
-          </Form.Row>
+              <Form.Row>
+                <Form.Group as={Col} md="8">
+                  <Form.Label>Callback URL (optional)</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="http://localhost/callback"
+                    name="callback_url"
+                    onChange={handleChange}
+                    value={values.callback_url}
+                    isValid={touched.callback_url && !errors.callback_url}
+                  />
+                </Form.Group>
+              </Form.Row>
 
-          <Form.Row>
-            {this.dynamicItem({ label: 'Volumes', collector: 'volumes' })}
-            {this.dynamicItem({ label: 'Volumes from Container', collector: 'volumes_from' })}
-          </Form.Row>
-          <Form.Row>
-            {this.dynamicItem({ label: 'Environment Variables', collector: 'envs' })}
-            {this.dynamicItem({ label: 'Masked Environment Variables', collector: 'masked_envs' })}
-          </Form.Row>
+              <Form.Row>
+                <DynamicItem
+                  label="Volumes"
+                  type={'volumes'}
+                  formOnChange={handleChange}
+                  formValues={values}
+                  formTouched={touched}
+                  formErrors={errors}
+                />
+                <DynamicItem
+                  label="Volumes from Container"
+                  type={'volumes_from'}
+                  formOnChange={handleChange}
+                  formValues={values}
+                  formTouched={touched}
+                  formErrors={errors}
+                />
+              </Form.Row>
+              <Form.Row>
+                <DynamicItem
+                  label="Environment Variables"
+                  type={'envs'}
+                  formOnChange={handleChange}
+                  formValues={values}
+                  formTouched={touched}
+                  formErrors={errors}
+                />
+                <DynamicItem
+                  label="Masked Environment Variables"
+                  type={'masked_envs'}
+                  formOnChange={handleChange}
+                  formValues={values}
+                  formTouched={touched}
+                  formErrors={errors}
+                />
+              </Form.Row>
 
-          <Form.Row>
-            {this.dynamicItem({ label: 'URIs', collector: 'uris' })}
-            {this.dynamicItem({ label: 'Agent Constraints', collector: 'agent_constraints' })}
-          </Form.Row>
+              <Form.Row>
+                <DynamicItem
+                  label="URIs"
+                  type={'uris'}
+                  formOnChange={handleChange}
+                  formValues={values}
+                  formTouched={touched}
+                  formErrors={errors}
+                />
+                <DynamicItem
+                  label="Agent Constraints"
+                  type={'agent_constraints'}
+                  formOnChange={handleChange}
+                  formValues={values}
+                  formTouched={touched}
+                  formErrors={errors}
+                />
+              </Form.Row>
 
-          <Form.Row>{this.dynamicItem({ label: 'Ports', collector: 'ports' })}</Form.Row>
+              <Form.Row>
+                <DynamicItem
+                  label="Ports"
+                  type={'ports'}
+                  formOnChange={handleChange}
+                  formValues={values}
+                  formTouched={touched}
+                  formErrors={errors}
+                />
+              </Form.Row>
 
-          <Button style={{ backgroundColor: '#0099C8', border: 'none' }} type="submit">
-            Submit form
-          </Button>
-        </Form>
+              <Button style={{ backgroundColor: '#0099C8', border: 'none' }} type="submit">
+                Submit form
+              </Button>
+            </Form>
+          )}
+        </Formik>
       </Container>
     );
   }
