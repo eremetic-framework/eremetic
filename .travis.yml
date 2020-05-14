@@ -1,10 +1,10 @@
 language: go
 
 go:
- - 1.12
+ - 1.13
 
 env:
- - PUBLISH_VERSION=1.12 GO111MODULE=on
+ - PUBLISH_VERSION=1.13 GO111MODULE=on
 
 install: true
 
