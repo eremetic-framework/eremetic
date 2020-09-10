@@ -7,11 +7,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	mesossched "github.com/mesos/mesos-go/api/v0/scheduler"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/eremetic-framework/eremetic"
 	"github.com/eremetic-framework/eremetic/metrics"
@@ -147,7 +147,17 @@ loop:
 			break loop
 		case tid := <-s.tasks:
 			logrus.WithField("task_id", tid).Debug("Trying to find offer to launch task with")
-			t, _ := s.database.ReadUnmaskedTask(tid)
+			t, err := s.database.ReadUnmaskedTask(tid)
+
+			if err == nil {
+				logrus.WithFields(logrus.Fields{
+					"task_id_after_unmask": t.ID,
+					"task_id_original":     tid,
+				}).WithError(err).Error("Unable to ReadUnmaskedTask")
+				metrics.TasksDelayed.Inc()
+				go func() { s.tasks <- tid }()
+				break loop
+			}
 
 			if t.IsTerminating() {
 				logrus.Debug("Dropping terminating task.")

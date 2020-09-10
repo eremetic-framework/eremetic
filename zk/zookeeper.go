@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/samuel/go-zookeeper/zk"
+	"github.com/sirupsen/logrus"
 
 	"github.com/eremetic-framework/eremetic"
 )
@@ -150,7 +150,13 @@ func (z *TaskDB) ReadUnmaskedTask(id string) (eremetic.Task, error) {
 	path := fmt.Sprintf("%s/%s", z.path, id)
 
 	bytes, _, err := z.conn.Get(path)
-	json.Unmarshal(bytes, &task)
+	if err != nil {
+		logrus.WithError(err).Debug("Unable to Get from zk.")
+	}
+	uError := json.Unmarshal(bytes, &task)
+	if uError != nil {
+		logrus.WithError(uError).Debug(fmt.Sprintf("Unable to Unmarshal %s.", string(bytes)))
+	}
 
 	return task, err
 
