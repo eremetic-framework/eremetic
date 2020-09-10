@@ -149,14 +149,16 @@ loop:
 			logrus.WithField("task_id", tid).Debug("Trying to find offer to launch task with")
 			t, err := s.database.ReadUnmaskedTask(tid)
 
-			if err == nil {
-				logrus.WithFields(logrus.Fields{
-					"task_id_after_unmask": t.ID,
-					"task_id_original":     tid,
-				}).WithError(err).Error("Unable to ReadUnmaskedTask")
-				metrics.TasksDelayed.Inc()
-				go func() { s.tasks <- tid }()
-				break loop
+			if err != nil {
+				if t.ID == "" {
+					logrus.WithFields(logrus.Fields{
+						"task_id_after_ReadUnmaskedTask": t.ID,
+						"task_id_original":               tid,
+					}).WithError(err).Error("Unable to ReadUnmaskedTask")
+					metrics.TasksDelayed.Inc()
+					go func() { s.tasks <- tid }()
+					break loop
+				}
 			}
 
 			if t.IsTerminating() {
@@ -183,12 +185,21 @@ loop:
 				"task_id":  task.TaskId.GetValue(),
 				"offer_id": offer.Id.GetValue(),
 			}).Debug("Preparing to launch task")
+			if task.TaskId.GetValue() == "" {
+				logrus.WithFields(logrus.Fields{
+					"task_id_after_createTaskInfo": task.TaskId.GetValue(),
+					"task_id_original":             tid,
+				}).Error("createTaskInfo failed to create proper TaskId")
+				metrics.TasksDelayed.Inc()
+				go func() { s.tasks <- tid }()
+				break loop
+			}
 			t.UpdateStatus(eremetic.Status{
 				Status: eremetic.TaskStaging,
 				Time:   time.Now().Unix(),
 			})
 			s.database.PutTask(&t)
-			_, err := driver.LaunchTasks([]*mesosproto.OfferID{offer.Id}, []*mesosproto.TaskInfo{task}, defaultFilter)
+			_, err = driver.LaunchTasks([]*mesosproto.OfferID{offer.Id}, []*mesosproto.TaskInfo{task}, defaultFilter)
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
 					"task_id":  task.TaskId.GetValue(),
