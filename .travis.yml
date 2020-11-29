@@ -16,6 +16,7 @@ before_install:
   - go get -u github.com/go-playground/overalls
   - go get -u github.com/mattn/goveralls
   - curl https://bin.equinox.io/a/75VeNN6mcnk/github-com-kevinburke-go-bindata-go-bindata-linux-amd64.tar.gz | tar xfz - -C $GOPATH/bin/
+  - go get github.com/go-bindata/go-bindata/...
   - go get -u github.com/elazarl/go-bindata-assetfs/...
   - go get -u github.com/smartystreets/goconvey
 
