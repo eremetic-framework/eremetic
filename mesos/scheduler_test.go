@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
+	"github.com/sirupsen/logrus"
 
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -159,6 +159,51 @@ func TestScheduler(t *testing.T) {
 				})
 				Convey("No tasks should be launched", func() {
 					So(driver.LaunchTasksFnInvoked, ShouldBeFalse)
+				})
+			})
+			Convey("When a task unable to launch due to zk error and error at ReadUnmaskedTask", func() {
+				db.DeleteTask(id)
+				s.tasks <- id
+				offers := []*mesosproto.Offer{
+					offer("1234", 1.0, 128, &mesosproto.Unavailability{}),
+				}
+				driver.DeclineOfferFn = func(_ *mesosproto.OfferID, _ *mesosproto.Filters) (mesosproto.Status, error) {
+					return mesosproto.Status_DRIVER_RUNNING, nil
+				}
+
+				s.ResourceOffers(driver, offers)
+
+				Convey("The offer should be declined", func() {
+					So(driver.DeclineOfferFnInvoked, ShouldBeTrue)
+				})
+				Convey("The tasks should not be launched", func() {
+					So(driver.LaunchTasksFnInvoked, ShouldBeFalse)
+				})
+				Convey("The tasks should be sent back to channel", func() {
+					So(<-s.tasks, ShouldNotBeEmpty)
+				})
+			})
+			Convey("When a task unable to launch due to zk error and error at createTaskInfo", func() {
+				db.DeleteTask(id)
+				db.PutTask(&eremetic.Task{ID: ""})
+				s.tasks <- id
+				offers := []*mesosproto.Offer{
+					offer("1234", 1.0, 128, &mesosproto.Unavailability{}),
+				}
+				driver.DeclineOfferFn = func(_ *mesosproto.OfferID, _ *mesosproto.Filters) (mesosproto.Status, error) {
+					return mesosproto.Status_DRIVER_RUNNING, nil
+				}
+
+				s.ResourceOffers(driver, offers)
+
+				Convey("The offer should be declined", func() {
+					So(driver.DeclineOfferFnInvoked, ShouldBeTrue)
+				})
+				Convey("The tasks should not be launched", func() {
+					So(driver.LaunchTasksFnInvoked, ShouldBeFalse)
+				})
+				Convey("The tasks should be sent back to channel", func() {
+					So(<-s.tasks, ShouldNotBeEmpty)
 				})
 			})
 
@@ -624,8 +669,6 @@ func TestScheduler(t *testing.T) {
 		})
 	})
 
-
-
 	Convey("Schedule task with labels", t, func() {
 		Convey("Given a scheduler with no scheduled tasks", func() {
 			scheduler := &Scheduler{
@@ -671,7 +714,6 @@ func TestScheduler(t *testing.T) {
 		})
 	})
 
-
 	Convey("KillTask", t, func() {
 		driver := mock.NewMesosScheduler()
 		id := "eremetic-task.9999"
@@ -686,7 +728,7 @@ func TestScheduler(t *testing.T) {
 			db.PutTask(&eremetic.Task{
 				ID: id,
 				Status: []eremetic.Status{
-					eremetic.Status{
+					{
 						Time:   123456,
 						Status: eremetic.TaskRunning,
 					},
@@ -711,7 +753,7 @@ func TestScheduler(t *testing.T) {
 			db.PutTask(&eremetic.Task{
 				ID: id,
 				Status: []eremetic.Status{
-					eremetic.Status{
+					{
 						Time:   123456,
 						Status: eremetic.TaskQueued,
 					},
@@ -737,7 +779,7 @@ func TestScheduler(t *testing.T) {
 			db.PutTask(&eremetic.Task{
 				ID: id,
 				Status: []eremetic.Status{
-					eremetic.Status{
+					{
 						Time:   123456,
 						Status: eremetic.TaskLost,
 					},
