@@ -186,9 +186,9 @@ func TestScheduler(t *testing.T) {
 			Convey("When a task unable to launch due to zk error and error at createTaskInfo", func() {
 				db.DeleteTask(id)
 				db.PutTask(&eremetic.Task{ID: ""})
-				s.tasks <- id
+				s.tasks <- ""
 				offers := []*mesosproto.Offer{
-					offer("1234", 1.0, 128, &mesosproto.Unavailability{}),
+					offer("123444", 1.0, 128, &mesosproto.Unavailability{}),
 				}
 				driver.DeclineOfferFn = func(_ *mesosproto.OfferID, _ *mesosproto.Filters) (mesosproto.Status, error) {
 					return mesosproto.Status_DRIVER_RUNNING, nil
@@ -203,7 +203,7 @@ func TestScheduler(t *testing.T) {
 					So(driver.LaunchTasksFnInvoked, ShouldBeFalse)
 				})
 				Convey("The tasks should be sent back to channel", func() {
-					So(<-s.tasks, ShouldNotBeEmpty)
+					So(len(s.tasks), ShouldNotBeEmpty)
 				})
 			})
 

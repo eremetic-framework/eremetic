@@ -138,6 +138,7 @@ func (s *Scheduler) Disconnected(mesossched.SchedulerDriver) {
 func (s *Scheduler) ResourceOffers(driver mesossched.SchedulerDriver, offers []*mesosproto.Offer) {
 	logrus.WithField("offers", len(offers)).Debug("Received offers")
 	var offer *mesosproto.Offer
+	var offers_updated []*mesosproto.Offer
 
 loop:
 	for len(offers) > 0 {
@@ -171,7 +172,7 @@ loop:
 
 				continue
 			}
-			offer, offers = matchOffer(t, offers)
+			offer, offers_updated = matchOffer(t, offers)
 
 			if offer == nil {
 				logrus.WithField("task_id", tid).Warn("Unable to find a matching offer")
@@ -213,6 +214,7 @@ loop:
 				metrics.TasksLaunched.Inc()
 			}
 			metrics.QueueSize.Dec()
+			offers = offers_updated
 
 			continue
 		default:
