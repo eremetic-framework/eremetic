@@ -1,5 +1,25 @@
 ## Changelog
 
+### v0.30.0 / 2020-12-07
+- [#222](https://github.com/eremetic-framework/eremetic/pull/222) Random stuck (@ja8zyjits)
+- [#218](https://github.com/eremetic-framework/eremetic/pull/218) added ca-certificates in Dockerfile (@sachinpk46)
+- [#219](https://github.com/eremetic-framework/eremetic/pull/219) Bump go version used to 1.13 (@keis)
+- [#216](https://github.com/eremetic-framework/eremetic/pull/216) remove deprecated -e flag from docker login (@alde)
+
+### v0.29.0 / 2019-06-25
+- [#213](https://github.com/eremetic-framework/eremetic/pull/213) Update to go 1.12 with modules (@alde)
+- [#199](https://github.com/eremetic-framework/eremetic/pull/199) run go vet and golint in travis (@alde)
+- [#198](https://github.com/eremetic-framework/eremetic/pull/198) Fix reportcard issues (@alde)
+- [#193](https://github.com/eremetic-framework/eremetic/pull/193) Add support to filter tasks by name and list terminated tasks (@zmalik)
+- [#196](https://github.com/eremetic-framework/eremetic/pull/196) Add support for labels (@zmalik)
+- [#195](https://github.com/eremetic-framework/eremetic/pull/195) Drop support for golang 1.5 (@keis)
+- [#192](https://github.com/eremetic-framework/eremetic/pull/192) Remove unused tasksCreated counter (@keis)
+- [#189](https://github.com/eremetic-framework/eremetic/pull/189) Check launch tasks (@keis)
+- [#190](https://github.com/eremetic-framework/eremetic/pull/190) Allow user specified task names (@zmalik)
+- [#186](https://github.com/eremetic-framework/eremetic/pull/186) Add docker 'volumes-from' option support (#186) (@waynz0r)
+- [#183](https://github.com/eremetic-framework/eremetic/pull/183) Add a 'privileged' flag to allow running privileged containers in eremetic. (@cybricio)
+- [#182](https://github.com/eremetic-framework/eremetic/pull/182) Update changelog (@alde)
+
 ### v0.28.0 / 2017-06-23
 - [#178](https://github.com/eremetic-framework/eremetic/pull/178) Add /api/v1/ routes (@alde)
 - [#180](https://github.com/eremetic-framework/eremetic/pull/180) Test data builders (@keis)
