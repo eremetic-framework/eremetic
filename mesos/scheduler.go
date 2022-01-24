@@ -13,8 +13,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/metrics"
+	"github.com/rockerbox/eremetic"
+	"github.com/rockerbox/eremetic/metrics"
 )
 
 var (
@@ -131,7 +131,18 @@ func (s *Scheduler) Reregistered(driver mesossched.SchedulerDriver, masterInfo *
 
 // Disconnected is called when the Scheduler is Disconnected
 func (s *Scheduler) Disconnected(mesossched.SchedulerDriver) {
-	logrus.Debugf("Framework disconnected with master")
+	logrus.Debugf("Framework disconnected with master, attempting to connect a new driver")
+	driver, err := createDriver(s, s.settings)
+	s.driver = driver
+
+	if err != nil {
+		logrus.WithError(err).Error("Unable to create scheduler driver")
+	}
+
+	go func() {
+		<-s.shutdown
+		driver.Stop(false)
+	}()
 }
 
 // ResourceOffers handles the Resource Offers
