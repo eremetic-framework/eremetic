@@ -24,7 +24,7 @@ script:
  - make lint
  - make vet
  - make eremetic
- - overalls -project=github.com/eremetic-framework/eremetic -covermode=count
+ - overalls -project=github.com/rockerbox/eremetic -covermode=count
  - goveralls -coverprofile=overalls.coverprofile -service travis-ci
 
 after_success:

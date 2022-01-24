@@ -15,11 +15,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/api"
-	"github.com/eremetic-framework/eremetic/config"
-	"github.com/eremetic-framework/eremetic/server/assets"
-	"github.com/eremetic-framework/eremetic/version"
+	"github.com/rockerbox/eremetic"
+	"github.com/rockerbox/eremetic/api"
+	"github.com/rockerbox/eremetic/config"
+	"github.com/rockerbox/eremetic/server/assets"
+	"github.com/rockerbox/eremetic/version"
 )
 
 type errorDocument struct {

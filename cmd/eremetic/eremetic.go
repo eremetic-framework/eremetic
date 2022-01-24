@@ -10,14 +10,14 @@ import (
 	"github.com/braintree/manners"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/boltdb"
-	"github.com/eremetic-framework/eremetic/config"
-	"github.com/eremetic-framework/eremetic/mesos"
-	"github.com/eremetic-framework/eremetic/metrics"
-	"github.com/eremetic-framework/eremetic/server"
-	"github.com/eremetic-framework/eremetic/version"
-	"github.com/eremetic-framework/eremetic/zk"
+	"github.com/rockerbox/eremetic"
+	"github.com/rockerbox/eremetic/boltdb"
+	"github.com/rockerbox/eremetic/config"
+	"github.com/rockerbox/eremetic/mesos"
+	"github.com/rockerbox/eremetic/metrics"
+	"github.com/rockerbox/eremetic/server"
+	"github.com/rockerbox/eremetic/version"
+	"github.com/rockerbox/eremetic/zk"
 )
 
 func setup() *config.Config {

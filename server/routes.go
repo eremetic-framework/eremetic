@@ -6,8 +6,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/config"
+	"github.com/rockerbox/eremetic"
+	"github.com/rockerbox/eremetic/config"
 )
 
 // Route enforces the structure of a route

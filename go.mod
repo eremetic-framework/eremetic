@@ -1,4 +1,4 @@
-module github.com/eremetic-framework/eremetic
+module github.com/rockerbox/eremetic
 
 go 1.12
 

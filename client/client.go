@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/api"
+	"github.com/rockerbox/eremetic"
+	"github.com/rockerbox/eremetic/api"
 )
 
 // Client is used for communicating with an Eremetic server.

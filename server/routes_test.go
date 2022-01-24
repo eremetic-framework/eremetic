@@ -5,8 +5,8 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/config"
+	"github.com/rockerbox/eremetic"
+	"github.com/rockerbox/eremetic/config"
 )
 
 func TestRoutes(t *testing.T) {

@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/eremetic-framework/eremetic"
+	"github.com/rockerbox/eremetic"
 )
 
 // TaskV0 defines the deprecated json-structure for the properties of a scheduled task.

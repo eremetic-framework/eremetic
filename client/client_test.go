@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/eremetic-framework/eremetic/api"
-	"github.com/eremetic-framework/eremetic/version"
+	"github.com/rockerbox/eremetic/api"
+	"github.com/rockerbox/eremetic/version"
 )
 
 func TestClient_AddTask(t *testing.T) {

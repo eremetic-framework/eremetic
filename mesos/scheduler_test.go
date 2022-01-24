@@ -16,8 +16,8 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/eremetic-framework/eremetic"
-	"github.com/eremetic-framework/eremetic/mock"
+	"github.com/rockerbox/eremetic"
+	"github.com/rockerbox/eremetic/mock"
 )
 
 func callbackReceiver() (chan eremetic.CallbackData, *httptest.Server) {

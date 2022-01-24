@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/eremetic-framework/eremetic/api"
-	"github.com/eremetic-framework/eremetic/config"
+	"github.com/rockerbox/eremetic/api"
+	"github.com/rockerbox/eremetic/config"
 )
 
 func apiV0Routes(h Handler, conf *config.Config) Routes {
