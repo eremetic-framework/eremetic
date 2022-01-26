@@ -2,6 +2,7 @@ eremetic.yml
 db/*.db
 docker/static
 docker/templates
+docker/eremetic
 server/assets/assets.go
 .DS_Store
 ._*
