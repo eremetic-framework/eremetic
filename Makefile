@@ -1,9 +1,9 @@
 .PHONY: all test test-server test-docker docker docker-clean publish-docker
 
-REPO=github.com/eremetic-framework/eremetic
+REPO=github.com/rockerbox/eremetic
 VERSION?=$(shell git describe HEAD | sed s/^v//)
 DATE?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
-DOCKERNAME?=alde/eremetic
+DOCKERNAME?=rockerbox/eremetic
 DOCKERTAG?=${DOCKERNAME}:${VERSION}
 LDFLAGS=-X ${REPO}/version.Version=${VERSION} -X ${REPO}/version.BuildDate=${DATE}
 TOOLS=${GOPATH}/bin/go-bindata \
@@ -13,7 +13,7 @@ SRC=$(shell find . -name '*.go')
 STATIC=$(shell find server/static server/templates)
 TESTFLAGS="-v"
 
-DOCKER_GO_SRC_PATH=/go/src/github.com/eremetic-framework/eremetic
+DOCKER_GO_SRC_PATH=/go/src/github.com/rockerbox/eremetic
 DOCKER_GOLANG_RUN_CMD=docker run --rm -v "$(PWD)":/opt/eremetic -w /opt/eremetic golang:1.12 bash -c
 
 PACKAGES=$(shell go list ./... | grep -v /vendor/)
@@ -44,15 +44,15 @@ lint:
 	golint -set_exit_status $(shell go list ./... | grep -v /vendor/ | grep -v assets)
 
 server/assets/assets.go: server/generate.go ${STATIC}
-	go generate github.com/eremetic-framework/eremetic/server
+	go generate github.com/rockerbox/eremetic/server
 
 eremetic: ${TOOLS} server/assets/assets.go
 eremetic: ${SRC}
-	go build -ldflags "${LDFLAGS}" -o $@ github.com/eremetic-framework/eremetic/cmd/eremetic
+	go build -ldflags "${LDFLAGS}" -o $@ github.com/rockerbox/eremetic/cmd/eremetic
 
 docker/eremetic: ${TOOLS} server/assets/assets.go
 docker/eremetic: ${SRC}
-	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@ github.com/eremetic-framework/eremetic/cmd/eremetic
+	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@ github.com/rockerbox/eremetic/cmd/eremetic
 
 docker: docker/eremetic docker/Dockerfile docker/marathon.sh
 	docker build -t ${DOCKERTAG} docker

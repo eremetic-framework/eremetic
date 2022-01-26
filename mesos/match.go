@@ -10,7 +10,7 @@ import (
 
 	"time"
 
-	"github.com/eremetic-framework/eremetic"
+	"github.com/rockerbox/eremetic"
 )
 
 type resourceMatcher struct {

@@ -6,7 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/eremetic-framework/eremetic/config"
+	"github.com/rockerbox/eremetic/config"
 )
 
 func TestMain(t *testing.T) {

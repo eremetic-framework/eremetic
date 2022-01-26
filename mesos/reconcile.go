@@ -8,7 +8,7 @@ import (
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 	mesossched "github.com/mesos/mesos-go/api/v0/scheduler"
 
-	"github.com/eremetic-framework/eremetic"
+	"github.com/rockerbox/eremetic"
 )
 
 var (
