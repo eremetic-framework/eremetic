@@ -3,7 +3,7 @@
 REPO=github.com/rockerbox/eremetic
 VERSION?=$(shell git describe HEAD | sed s/^v//)
 DATE?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
-DOCKERNAME?=alde/eremetic
+DOCKERNAME?=rockerbox/eremetic
 DOCKERTAG?=${DOCKERNAME}:${VERSION}
 LDFLAGS=-X ${REPO}/version.Version=${VERSION} -X ${REPO}/version.BuildDate=${DATE}
 TOOLS=${GOPATH}/bin/go-bindata \
