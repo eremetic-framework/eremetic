@@ -55,7 +55,7 @@ docker/eremetic: ${SRC}
 	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -installsuffix cgo -o $@ github.com/rockerbox/eremetic/cmd/eremetic
 
 docker: docker/eremetic docker/Dockerfile docker/marathon.sh
-	docker build -t ${DOCKERTAG} docker
+	docker build --platform=linux/amd64 -t ${DOCKERTAG} docker
 
 docker-clean: docker/Dockerfile docker/marathon.sh
 	# Create the docker/eremetic binary in the Docker container using the
