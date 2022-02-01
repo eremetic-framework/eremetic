@@ -53,6 +53,7 @@ func DefaultConfig() *Config {
 		Checkpoint:      true,
 		FailoverTimeout: 2592000.0,
 		QueueSize:       100,
+		FrameworkID:     "1234",
 	}
 }
 
