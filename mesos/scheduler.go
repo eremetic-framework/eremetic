@@ -131,7 +131,9 @@ func (s *Scheduler) Reregistered(driver mesossched.SchedulerDriver, masterInfo *
 
 // Disconnected is called when the Scheduler is Disconnected
 func (s *Scheduler) Disconnected(mesossched.SchedulerDriver) {
-	logrus.Debugf("Framework disconnected with master, attempting to connect a new driver")
+	logrus.Debugf("Framework disconnected with master, attempting to connect a new driver after 3 minute delay")
+	time.Sleep(3 * time.Minute)
+	logrus.Debugf("Attempting to connect a new driver")
 	driver, err := createDriver(s, s.settings)
 	s.driver = driver
 
