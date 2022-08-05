@@ -177,7 +177,7 @@ Run `make eremetic`
 
 ## Running on mesos
 
-Eremetic can itself by run on mesos using e.g marathon. An
+Eremetic can itself be run on mesos using e.g marathon. An
 [example configuration](misc/eremetic.json) for marathon is provided that is
 ready to be submitted through the api.
 
