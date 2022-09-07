@@ -169,9 +169,10 @@ loop:
 						"task_id_after_ReadUnmaskedTask": t.ID,
 						"task_id_original":               tid,
 					}).WithError(err).Error("Unable to ReadUnmaskedTask")
-					metrics.TasksDelayed.Inc()
-					go func() { s.tasks <- tid }()
-					break loop
+					// metrics.TasksDelayed.Inc()
+					// go func() { s.tasks <- tid }()
+					// break loop
+                                        continue
 				}
 			}
 
