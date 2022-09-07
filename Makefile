@@ -24,8 +24,8 @@ deps: ${TOOLS}
 
 ${TOOLS}:
     curl https://github.com/kevinburke/go-bindata/releases/download/v3.22.0/go-bindata-linux-amd64 > $GOPATH/bin/go-bindata
-	go get -u github.com/elazarl/go-bindata-assetfs/...
-	go get -u github.com/smartystreets/goconvey
+	go get -u github.com/elazarl/go-bindata-assetfs@v1.0.0
+	go get -u github.com/smartystreets/goconvey@v1.6.4
 
 test: eremetic
 	go test ${TESTFLAGS} ${PACKAGES}
