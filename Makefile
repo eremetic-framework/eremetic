@@ -23,7 +23,7 @@ all: test
 deps: ${TOOLS}
 
 ${TOOLS}:
-    curl https://bin.equinox.io/a/75VeNN6mcnk/github-com-kevinburke-go-bindata-go-bindata-linux-amd64.tar.gz | tar xfz - -C $GOPATH/bin/
+    curl https://github.com/kevinburke/go-bindata/releases/download/v3.22.0/go-bindata-linux-amd64 > $GOPATH/bin/go-bindata
 	go get -u github.com/elazarl/go-bindata-assetfs/...
 	go get -u github.com/smartystreets/goconvey
 
