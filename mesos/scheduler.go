@@ -152,6 +152,9 @@ func (s *Scheduler) ResourceOffers(driver mesossched.SchedulerDriver, offers []*
 	logrus.WithField("offers", len(offers)).Debug("Received offers")
 	var offer *mesosproto.Offer
 	var offers_updated []*mesosproto.Offer
+	var taskAttemptedOfferMatch int
+	taskAttemptedOfferMatch = 0
+
 
 loop:
 	for len(offers) > 0 {
@@ -160,6 +163,12 @@ loop:
 			logrus.Info("Shutting down: declining offers")
 			break loop
 		case tid := <-s.tasks:
+			taskAttemptedOfferMatch++
+
+			if taskAttemptedOfferMatch > len(s.tasks) {
+				break loop
+			}
+
 			logrus.WithField("task_id", tid).Debug("Trying to find offer to launch task with")
 			t, err := s.database.ReadUnmaskedTask(tid)
 
@@ -169,10 +178,9 @@ loop:
 						"task_id_after_ReadUnmaskedTask": t.ID,
 						"task_id_original":               tid,
 					}).WithError(err).Error("Unable to ReadUnmaskedTask")
-					// metrics.TasksDelayed.Inc()
-					// go func() { s.tasks <- tid }()
-					// break loop
-                                        continue
+					// if task is garbage, ignore it and move on
+					metrics.QueueSize.Dec()
+					continue
 				}
 			}
 
@@ -183,7 +191,6 @@ loop:
 					Time:   time.Now().Unix(),
 				})
 				s.database.PutTask(&t)
-
 				continue
 			}
 			offer, offers_updated = matchOffer(t, offers)
@@ -191,8 +198,9 @@ loop:
 			if offer == nil {
 				logrus.WithField("task_id", tid).Warn("Unable to find a matching offer")
 				metrics.TasksDelayed.Inc()
+				// move the task to the end of the tasks list and continue
 				go func() { s.tasks <- tid }()
-				break loop
+				continue
 			}
 
 			t, task := createTaskInfo(t, offer)
@@ -207,7 +215,9 @@ loop:
 				}).Error("createTaskInfo failed to create proper TaskId")
 				metrics.TasksDelayed.Inc()
 				go func() { s.tasks <- tid }()
-				break loop
+				// if the task cant correctly claim the offer, update the offers and continue
+				offers = offers_updated
+				continue
 			}
 			t.UpdateStatus(eremetic.Status{
 				Status: eremetic.TaskStaging,
