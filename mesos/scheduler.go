@@ -155,6 +155,9 @@ func (s *Scheduler) ResourceOffers(driver mesossched.SchedulerDriver, offers []*
 	var taskAttemptedOfferMatch int
 	taskAttemptedOfferMatch = 0
 
+	var originalOfferCount int
+	originalOfferCount = len(offers)
+
 
 loop:
 	for len(offers) > 0 {
@@ -167,6 +170,7 @@ loop:
 
 			if taskAttemptedOfferMatch > len(s.tasks) + 1 {
 				// if we have already tried all the tasks against the offers, lets reject the offer
+				go func() { s.tasks <- tid }()
 				break loop
 			}
 
@@ -247,7 +251,12 @@ loop:
 		}
 	}
 
-	logrus.Debug("No tasks to launch. Declining offers.")
+	logrus.WithFields(logrus.Fields{
+		"original": originalOfferCount,
+		"consumed": originalOfferCount - len(offers),
+		"declining": len(offers)
+	}).Debug("Declining remaining offers")
+
 	for _, offer := range offers {
 		driver.DeclineOffer(offer.Id, defaultFilter)
 	}
