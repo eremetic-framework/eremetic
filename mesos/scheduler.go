@@ -165,7 +165,8 @@ loop:
 		case tid := <-s.tasks:
 			taskAttemptedOfferMatch++
 
-			if taskAttemptedOfferMatch > len(s.tasks) {
+			if taskAttemptedOfferMatch > len(s.tasks) + 1 {
+				// if we have already tried all the tasks against the offers, lets reject the offer
 				break loop
 			}
 
