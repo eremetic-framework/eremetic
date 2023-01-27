@@ -8,6 +8,7 @@ import (
 	ogle "github.com/jacobsa/oglematchers"
 	"github.com/mesos/mesos-go/api/v0/mesosproto"
 
+        "sort"
 	"time"
 
 	"github.com/rockerbox/eremetic"
@@ -132,8 +133,7 @@ func matchOffer(task eremetic.Task, offers []*mesosproto.Offer) (*mesosproto.Off
 	var matcher = createMatcher(task)
 	for i, off := range offers {
 		if matches(matcher, off) {
-			offers[i] = offers[len(offers)-1]
-			offers = offers[:len(offers)-1]
+                        offers = append(offers[:i], offers[i+1:]...) // preserve sort order
 			return off, offers
 		}
 		logrus.WithFields(logrus.Fields{
@@ -143,4 +143,56 @@ func matchOffer(task eremetic.Task, offers []*mesosproto.Offer) (*mesosproto.Off
 		}).Debug("Unable to match offer")
 	}
 	return nil, offers
+}
+
+// Offer sorter to best-fit bin pack by mem
+
+type By func(o1, o2 *mesosproto.Offer) bool
+
+func (by By) Sort(offers []mesosproto.Offer) {
+	os := &offerSorter{
+		offers: offers,
+		by:     by,
+	}
+	sort.Sort(os)
+}
+
+type offerSorter struct {
+	offers []mesosproto.Offer
+	by     func(o1, o2 *mesosproto.Offer) bool
+}
+
+func (s *offerSorter) Len() int {
+	return len(s.offers)
+}
+
+func (s *offerSorter) Swap(i, j int) {
+	s.offers[i], s.offers[j] = s.offers[j], s.offers[i]
+}
+
+func (s *offerSorter) Less(i, j int) bool {
+	return s.by(&s.offers[i], &s.offers[j])
+}
+
+func sortByLeastMemAvailable(offers []mesosproto.Offer) {
+        mem := func(o1, o2 *mesosproto.Offer) bool {
+		var o1mem, o2mem float64
+		for _, res := range o1.Resources {
+			if res.GetName() == "mem" {
+				o1mem = res.Scalar.GetValue()
+			}
+		}
+		for _, res := range o2.Resources {
+			if res.GetName() == "mem" {
+				o2mem = res.Scalar.GetValue()
+			}
+		}
+
+                if o1mem == nil || o2mem == nil {
+                    return false
+                }
+
+		return o1mem > o2mem
+	}
+        By(mem).Sort(offers)
 }

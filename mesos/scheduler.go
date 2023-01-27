@@ -150,6 +150,7 @@ func (s *Scheduler) Disconnected(mesossched.SchedulerDriver) {
 // ResourceOffers handles the Resource Offers
 func (s *Scheduler) ResourceOffers(driver mesossched.SchedulerDriver, offers []*mesosproto.Offer) {
 	logrus.WithField("offers", len(offers)).Debug("Received offers")
+        sortByLeastMemAvailable(offers)
 	var offer *mesosproto.Offer
 	var offers_updated []*mesosproto.Offer
 	var taskAttemptedOfferMatch int
