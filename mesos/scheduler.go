@@ -255,7 +255,7 @@ loop:
 	logrus.WithFields(logrus.Fields{
 		"original": originalOfferCount,
 		"consumed": originalOfferCount - len(offers),
-		"declining": len(offers)
+		"declining": len(offers),
 	}).Debug("Declining remaining offers")
 
 	for _, offer := range offers {
