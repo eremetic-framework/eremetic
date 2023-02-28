@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	defaultFilter = &mesosproto.Filters{RefuseSeconds: proto.Float64(10)}
+	defaultFilter = &mesosproto.Filters{RefuseSeconds: proto.Float64(0)}
 	maxRetries    = 5
 )
 
@@ -152,7 +152,7 @@ func (s *Scheduler) ResourceOffers(driver mesossched.SchedulerDriver, offers []*
 	logrus.WithField("offers", len(offers)).Debug("Received offers")
         sortByLeastMemAvailable(offers)
 	var offer *mesosproto.Offer
-	var offers_updated []*mesosproto.Offer
+	var offersUpdated []*mesosproto.Offer
 	var taskAttemptedOfferMatch int
 	taskAttemptedOfferMatch = 0
 
@@ -161,7 +161,7 @@ func (s *Scheduler) ResourceOffers(driver mesossched.SchedulerDriver, offers []*
 
 
 loop:
-	for len(offers) > 0 {
+	for len(offers) > 4 {
 		select {
 		case <-s.shutdown:
 			logrus.Info("Shutting down: declining offers")
@@ -199,7 +199,7 @@ loop:
 				s.database.PutTask(&t)
 				continue
 			}
-			offer, offers_updated = matchOffer(t, offers)
+			offer, offersUpdated = matchOffer(t, offers)
 
 			if offer == nil {
 				logrus.WithField("task_id", tid).Warn("Unable to find a matching offer")
@@ -222,7 +222,7 @@ loop:
 				metrics.TasksDelayed.Inc()
 				go func() { s.tasks <- tid }()
 				// if the task cant correctly claim the offer, update the offers and continue
-				offers = offers_updated
+				offers = offersUpdated
 				continue
 			}
 			t.UpdateStatus(eremetic.Status{
@@ -244,7 +244,7 @@ loop:
 				metrics.TasksLaunched.Inc()
 			}
 			metrics.QueueSize.Dec()
-			offers = offers_updated
+			offers = offersUpdated
 
 			continue
 		default:

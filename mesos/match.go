@@ -3,6 +3,8 @@ package mesos
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"strconv"
 
 	"github.com/sirupsen/logrus"
 	ogle "github.com/jacobsa/oglematchers"
@@ -145,11 +147,11 @@ func matchOffer(task eremetic.Task, offers []*mesosproto.Offer) (*mesosproto.Off
 	return nil, offers
 }
 
-// Offer sorter to best-fit bin pack by mem
-
+// By is a helper to sort offer to best-fit bin pack by mem
 type By func(o1, o2 *mesosproto.Offer) bool
 
-func (by By) Sort(offers []mesosproto.Offer) {
+// Sort provides sort function across offer array
+func (by By) Sort(offers []*mesosproto.Offer) {
 	os := &offerSorter{
 		offers: offers,
 		by:     by,
@@ -158,7 +160,7 @@ func (by By) Sort(offers []mesosproto.Offer) {
 }
 
 type offerSorter struct {
-	offers []mesosproto.Offer
+	offers []*mesosproto.Offer
 	by     func(o1, o2 *mesosproto.Offer) bool
 }
 
@@ -171,28 +173,21 @@ func (s *offerSorter) Swap(i, j int) {
 }
 
 func (s *offerSorter) Less(i, j int) bool {
-	return s.by(&s.offers[i], &s.offers[j])
+	return s.by(s.offers[i], s.offers[j])
 }
 
-func sortByLeastMemAvailable(offers []mesosproto.Offer) {
-        mem := func(o1, o2 *mesosproto.Offer) bool {
-		var o1mem, o2mem float64
-		for _, res := range o1.Resources {
-			if res.GetName() == "mem" {
-				o1mem = res.Scalar.GetValue()
-			}
-		}
-		for _, res := range o2.Resources {
-			if res.GetName() == "mem" {
-				o2mem = res.Scalar.GetValue()
-			}
-		}
+func sortByLeastMemAvailable(offers []*mesosproto.Offer) {
+    byID := func(o1, o2 *mesosproto.Offer) bool {
+		s1 := o1.GetSlaveId().GetValue()
+		s2 := o2.GetSlaveId().GetValue()
 
-                if o1mem == nil || o2mem == nil {
-                    return false
-                }
+		split1 := strings.Split(s1,"-S")
+		split2 := strings.Split(s2,"-S")
 
-		return o1mem > o2mem
+		o1id, _ := strconv.Atoi(split1[len(split1)-1])
+		o2id, _ := strconv.Atoi(split2[len(split2)-1])
+
+		return o1id > o2id
 	}
-        By(mem).Sort(offers)
+    By(byID).Sort(offers)
 }
