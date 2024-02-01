@@ -176,18 +176,57 @@ func (s *offerSorter) Less(i, j int) bool {
 	return s.by(s.offers[i], s.offers[j])
 }
 
+
 func sortByLeastMemAvailable(offers []*mesosproto.Offer) {
-    byID := func(o1, o2 *mesosproto.Offer) bool {
+	byID := func(o1, o2 *mesosproto.Offer) bool {
 		s1 := o1.GetSlaveId().GetValue()
 		s2 := o2.GetSlaveId().GetValue()
 
-		split1 := strings.Split(s1,"-S")
-		split2 := strings.Split(s2,"-S")
+		split1 := strings.Split(s1, "-S")
+		split2 := strings.Split(s2, "-S")
 
 		o1id, _ := strconv.Atoi(split1[len(split1)-1])
 		o2id, _ := strconv.Atoi(split2[len(split2)-1])
 
 		return o1id > o2id
 	}
-    By(byID).Sort(offers)
+	By(byID).Sort(offers)
+
+	// New part: Printing the contents of the offers after sorting, including memory information.
+	fmt.Println("Sorted Offers:")
+	for _, offer := range offers {
+		// Initialize memory value to print. Assuming a default or not found case as 0 or any relevant default.
+		var memory float64
+		for _, resource := range offer.GetResources() {
+			if resource.GetName() == "mem" { // or "memory" depending on how it's identified
+				memory = resource.GetScalar().GetValue() // Assuming scalar value for memory.
+				break
+			}
+		}
+
+		// Print offer details including memory information.
+		fmt.Printf("Offer ID: %s, Slave ID: %s, Memory: %f\n", offer.GetId().GetValue(), offer.GetSlaveId().GetValue(), memory)
+	}
+}
+
+func sortByMaxMemAvailable(offers []*mesosproto.Offer) {
+    byMaxMem := func(o1, o2 *mesosproto.Offer) bool {
+        // Assuming GetResources returns a slice of resources,
+        // and each resource has a GetName method and a GetValue method.
+        var mem1, mem2 float64 // Assuming memory value could be a floating point.
+        for _, resource := range o1.GetResources() {
+            if resource.GetName() == "mem" { // Assuming "mem" identifies memory.
+                mem1 = resource.GetValue()
+                break
+            }
+        }
+        for _, resource := range o2.GetResources() {
+            if resource.GetName() == "mem" {
+                mem2 = resource.GetValue()
+                break
+            }
+        }
+        return mem1 > mem2 // Change to < if you want to sort by least memory available instead.
+    }
+    By(byMaxMem).Sort(offers)
 }
